@@ -1,14 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { KPICard } from '@/components/dashboard/kpi-card';
+import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { WeeklyChart } from '@/components/dashboard/weekly-chart';
 import { DistributionChart } from '@/components/dashboard/distribution-chart';
 import { PriceAlerts } from '@/components/dashboard/price-alerts';
-import { TopProducts } from '@/components/dashboard/top-products';
+import { TopProductsEnhanced } from '@/components/dashboard/top-products-enhanced';
+import { TrendChart } from '@/components/dashboard/trend-chart';
+import { MonthlySummary } from '@/components/dashboard/monthly-summary';
+import { QuickActions } from '@/components/dashboard/quick-actions';
+import { InsightsPanel } from '@/components/dashboard/insights-panel';
 import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs } from '@/lib/data-utils';
-import { formatearFecha } from '@/lib/formatters';
+import { BarChart3, TrendingUp, Calendar } from 'lucide-react';
 
 export default function DashboardPage() {
   const [cargando, setCargando] = useState(true);
@@ -98,19 +102,44 @@ export default function DashboardPage() {
     fetchDatos();
   }, []);
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  const handleExport = () => {
+    // TODO: Implementar exportación a CSV
+    console.log('Exportando a CSV...');
+  };
+
+  const handleFilter = () => {
+    // TODO: Implementar filtros
+    console.log('Abriendo filtros...');
+  };
+
   // Estado de carga
   if (cargando) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Panel General</h1>
-          <p className="text-[#94a3b8]">Visión general de compras y gastos</p>
+      <div className="space-y-6 animate-fade-in">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
+              Panel General
+            </h1>
+            <p className="text-[#94a3b8]">Visión general de compras y gastos</p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-lg">
+            <div className="w-2 h-2 bg-[#f59e0b] rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-[#f59e0b]">Cargando...</span>
+          </div>
         </div>
 
         {/* Skeleton de KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-28 bg-[#111827] border border-[#1e293b] rounded-lg animate-pulse"></div>
+            <div key={i} className="h-32 bg-[#111827] border border-[#1e293b] rounded-lg animate-pulse relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f59e0b]/5 to-transparent animate-shimmer"></div>
+            </div>
           ))}
         </div>
 
@@ -127,12 +156,17 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-8 max-w-md">
-          <p className="text-[#ef4444] font-semibold mb-2">⚠️ Error de Carga</p>
-          <p className="text-[#94a3b8] text-sm mb-4">{error}</p>
+        <div className="text-center bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-8 max-w-md animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-4 bg-[#ef4444]/10 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-[#ef4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-[#ef4444] font-semibold mb-2">Error de Carga</p>
+          <p className="text-[#94a3b8] text-sm mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-[#f59e0b] text-white rounded-lg hover:bg-[#f59e0b]/80 transition-colors"
+            className="px-6 py-2.5 bg-[#f59e0b] text-white rounded-lg hover:bg-[#f59e0b]/80 transition-all duration-200 font-medium hover:scale-105 active:scale-95"
           >
             Reintentar
           </button>
@@ -142,47 +176,80 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Título */}
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Panel General</h1>
-        <p className="text-[#94a3b8]">Visión general de compras y gastos</p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header mejorado */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
+            Panel General
+          </h1>
+          <p className="text-[#94a3b8]">Visión general de compras y gastos</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#10b981]/10 border border-[#10b981]/30 rounded-lg">
+            <div className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-[#10b981]">Datos en tiempo real</span>
+          </div>
+        </div>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs mejorados */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
+        <KPICardEnhanced
           titulo="Gasto del Día"
           valor={kpiData?.gastoDelDia || 0}
           variacion={kpiData?.variacionDia}
+          icono="euro"
+          tipo="moneda"
         />
-        <KPICard
+        <KPICardEnhanced
           titulo="Gasto del Mes"
           valor={kpiData?.gastoDelMes || 0}
           variacion={kpiData?.variacionMes}
+          icono="activity"
+          tipo="moneda"
         />
-        <KPICard
+        <KPICardEnhanced
           titulo="Facturas Procesadas"
           valor={kpiData?.facturasProcesadas || 0}
+          icono="shopping"
           tipo="numero"
         />
-        <KPICard
+        <KPICardEnhanced
           titulo="Alertas de Precio"
           valor={kpiData?.alertasDePrecio || 0}
+          icono="trending-up"
           tipo="numero"
         />
       </div>
 
-      {/* Gráficos */}
+      {/* Quick Actions */}
+      <QuickActions
+        onRefresh={handleRefresh}
+        onExport={handleExport}
+        onFilter={handleFilter}
+        cargando={cargando}
+      />
+
+      {/* Insights Panel */}
+      <InsightsPanel compras={compras} />
+
+      {/* Gráficos principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <WeeklyChart datos={compras} />
-        <DistributionChart datos={compras} />
+        <TrendChart datos={compras} dias={30} titulo="Tendencia de Gastos" />
+        <DistributionChart datos={compras} titulo="Distribución por Tienda" />
+      </div>
+
+      {/* Gráficos secundarios */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WeeklyChart datos={compras} titulo="Gasto Semanal" />
+        <MonthlySummary datos={compras} titulo="Resumen Mensual" />
       </div>
 
       {/* Alertas y Top Productos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PriceAlerts compras={compras} />
-        <TopProducts compras={compras} />
+        <TopProductsEnhanced compras={compras} limite={8} />
       </div>
     </div>
   );

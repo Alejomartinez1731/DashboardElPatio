@@ -23,12 +23,18 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-[#0d1117] border-r border-[#1e293b] flex flex-col fixed h-screen left-0 top-0 z-50">
+    <aside className="w-64 bg-[#0d1117] backdrop-blur-xl border-r border-[#1e293b] flex flex-col fixed h-screen left-0 top-0 z-50">
       {/* Logo */}
-      <div className="p-6 border-b border-[#1e293b]">
-        <div className="text-2xl mb-1">🍽️</div>
-        <h1 className="text-xl font-bold text-white">El Patio & Grill</h1>
-        <p className="text-xs text-[#f59e0b] uppercase tracking-wider">Dashboard</p>
+      <div className="p-6 border-b border-[#1e293b] bg-gradient-to-b from-[#f59e0b]/5 to-transparent">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#f59e0b] to-[#fbbf24] rounded-xl flex items-center justify-center shadow-lg shadow-[#f59e0b]/20">
+            <span className="text-lg">🍽️</span>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white">El Patio & Grill</h1>
+            <p className="text-xs text-[#f59e0b] uppercase tracking-wider font-semibold">Dashboard</p>
+          </div>
+        </div>
       </div>
 
       {/* Navegación - Principal */}
@@ -85,13 +91,16 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-[#1e293b]">
-        <div className="flex items-center justify-between text-xs text-[#64748b] mb-2">
-          <span>Conectado a Google Sheets</span>
-          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+      <div className="p-4 border-t border-[#1e293b] bg-gradient-to-t from-[#f59e0b]/5 to-transparent">
+        <div className="flex items-center justify-between text-xs text-[#94a3b8] mb-2">
+          <span>Google Sheets</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse"></span>
+            Conectado
+          </span>
         </div>
-        <div className="text-xs text-[#475569]">
-          v1.0.0 - Solo Lectura
+        <div className="text-xs text-[#64748b] font-mono">
+          v1.0.0
         </div>
       </div>
     </aside>
