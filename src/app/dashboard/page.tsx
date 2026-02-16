@@ -374,7 +374,13 @@ export default function DashboardPage() {
   }
 
   if (activeTab === 'historico') {
-    console.log('Filtradas:', comprasFiltradas.length, 'de', compras.length);
+    console.log('📊 Estado de Histórico:');
+    console.log('  - comprasFiltradas.length:', comprasFiltradas.length);
+    console.log('  - compras.length:', compras.length);
+    console.log('  - comprasComoTabla.length:', comprasComoTabla.length);
+    console.log('  - datosTabla.length:', datosTabla.length);
+    console.log('  - datosTabla[0]:', datosTabla[0]);
+    console.log('  - datosTabla[1]:', datosTabla[1]);
   }
 
   return (
