@@ -303,7 +303,7 @@ export default function DashboardPage() {
     : [];
 
   const datosTabla = activeTab === 'historico' && comprasComoTabla.length > 0
-    ? [Object.values(activeData[0] || {}).map((h: string) => String(h).toUpperCase()], ...comprasComoTabla]
+    ? [Object.values(activeData[0] || {}).map((h: string) => String(h).toUpperCase()), ...comprasComoTabla]
     : activeData;
 
   if (activeTab === 'historico') {
