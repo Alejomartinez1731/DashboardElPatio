@@ -62,7 +62,7 @@ export default function DashboardPage() {
   // Ordenamiento
   const [sortField, setSortField] = useState<SortField>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   useEffect(() => {
     async function fetchDatos() {
@@ -337,7 +337,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <QuickActions onRefresh={handleRefresh} onExport={handleExport} onFilter={handleFilter} cargando={cargando} />
+      <QuickActions
+        onRefresh={handleRefresh}
+        onExport={handleExport}
+        onFilter={handleFilter}
+        cargando={cargando}
+        filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
+      />
 
       {/* Panel de Filtros */}
       {showFilters && (

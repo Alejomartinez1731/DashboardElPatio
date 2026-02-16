@@ -9,13 +9,15 @@ interface QuickActionsProps {
   onExport?: () => void;
   onFilter?: () => void;
   cargando?: boolean;
+  filtrosActivos?: boolean;
 }
 
 export function QuickActions({
   onRefresh,
   onExport,
   onFilter,
-  cargando = false
+  cargando = false,
+  filtrosActivos = false
 }: QuickActionsProps) {
   const acciones = [
     {
@@ -36,8 +38,10 @@ export function QuickActions({
     {
       icon: Filter,
       label: 'Filtrar',
-      descripcion: 'Aplicar filtros',
-      color: 'hover:bg-[#3b82f6]/10 hover:border-[#3b82f6]/50 hover:text-[#3b82f6]',
+      descripcion: filtrosActivos ? 'Filtros activos' : 'Aplicar filtros',
+      color: filtrosActivos
+        ? 'bg-[#3b82f6]/10 border-[#3b82f6]/50 text-[#3b82f6]'
+        : 'hover:bg-[#3b82f6]/10 hover:border-[#3b82f6]/50 hover:text-[#3b82f6]',
       onClick: onFilter,
     },
     {
