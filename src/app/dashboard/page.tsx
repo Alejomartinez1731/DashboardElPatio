@@ -581,21 +581,26 @@ export default function DashboardPage() {
                         const numValue = parseFloat(cellStr);
                         const isNumber = !isNaN(numValue) && cellStr !== '' && cell !== null;
 
-                        // Detectar si es una fecha (formato dd/mm/yyyy o similar)
-                        const esFecha = !isNumber && (
-                          cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
-                          (cellStr.length >= 8 && cellStr.length <= 10 && !isNaN(Date.parse(cellStr)))
-                        );
-
-                        // Log cuando detectamos una fecha
-                        if (esFecha && rowIdx < 2) {
-                          console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha`);
-                        }
-
                         // Determinar si es una columna de precio (basado en la cabecera)
                         const cabecera = datosTabla[0]?.[cellIdx] || '';
                         const cabeceraLower = String(cabecera).toLowerCase();
                         const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo');
+
+                        // Detectar si es columna de fecha por cabecera
+                        const esColumnaFecha = cabeceraLower.includes('fecha') || cabeceraLower === 'fech' || cabeceraLower === 'date';
+
+                        // Detectar si es una fecha (formato dd/mm/yyyy o similar)
+                        const esFechaPorContenido = !isNumber && (
+                          cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
+                          (cellStr.length >= 8 && cellStr.length <= 10 && !isNaN(Date.parse(cellStr)))
+                        );
+
+                        const esFecha = esColumnaFecha || esFechaPorContenido;
+
+                        // Log cuando detectamos una fecha
+                        if (esFecha && rowIdx < 2) {
+                          console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha (cabecera: "${cabecera}", columnaFecha: ${esColumnaFecha}, porContenido: ${esFechaPorContenido})`);
+                        }
 
                         let displayValue: string | number = cell;
                         let className = 'text-[#94a3b8]';
