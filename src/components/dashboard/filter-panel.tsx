@@ -23,7 +23,7 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
-  const [expandido, setExpandido = useState(true);
+  const [expandido, setExpandido] = useState(true);
 
   // Calcular estadísticas para los sliders
   const precios = compras.flatMap(c => {
