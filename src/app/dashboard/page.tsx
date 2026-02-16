@@ -297,25 +297,48 @@ export default function DashboardPage() {
 
   // Convertir compras filtradas a formato de tabla para Histórico
   const comprasComoTabla = activeTab === 'historico'
-    ? comprasFiltradas.map(c => [
-        c.id.split('-')[1] || '',
-        formatearFecha(c.fecha),
-        c.tienda,
-        c.producto,
-        c.precioUnitario.toFixed(2).replace('.00', ''),
-        c.cantidad.toString(),
-        c.total.toFixed(2).replace('.00', ''),
-        c.telefono || '',
-        c.direccion || ''
-      ])
+    ? comprasFiltradas.map(c => {
+        const row = [
+          c.id.split('-')[1] || '',
+          formatearFecha(c.fecha),
+          c.tienda,
+          c.producto,
+          c.precioUnitario.toFixed(2).replace('.00', ''),
+          c.cantidad.toString(),
+          c.total.toFixed(2).replace('.00', ''),
+          c.telefono || '',
+          c.direccion || ''
+        ];
+        console.log('📝 Row de compra:', row, 'Tipos:', row.map(r => typeof r));
+        return row;
+      })
     : [];
 
   // Cabeceras personalizadas para Histórico
   const cabecerasHistorico = ['ID', 'FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
 
-  const datosTabla = activeTab === 'historico'
+  // Para pestañas que no son histórico, arreglar cabeceras si es necesario
+  let datosTabla = activeTab === 'historico'
     ? [cabecerasHistorico, ...comprasComoTabla]
     : activeData;
+
+  // Reemplazar "row_number" por "ID" en cabeceras de otras pestañas
+  if (activeTab !== 'historico' && datosTabla.length > 0) {
+    datosTabla = datosTabla.map((row, idx) => {
+      if (idx === 0) {
+        // Es la cabecera
+        return row.map((cell: string | number) => {
+          const cellStr = String(cell).toLowerCase().trim();
+          if (cellStr === 'row_number' || cellStr === 'row number') {
+            return 'ID';
+          }
+          return String(cell).toUpperCase();
+        });
+      }
+      return row;
+    });
+    console.log('📊 DatosTabla para', activeTab, ':', datosTabla[0]);
+  }
 
   if (activeTab === 'historico') {
     console.log('Filtradas:', comprasFiltradas.length, 'de', compras.length);
