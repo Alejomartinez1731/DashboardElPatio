@@ -573,12 +573,37 @@ export default function DashboardPage() {
                     // Log solo las primeras 2 filas para no saturar
                     if (rowIdx < 2) {
                       console.log(`🔵 Fila ${rowIdx}:`, row);
+                      console.log(`🔵 Longitud de fila ${rowIdx}:`, row.length, 'cabeceras:', datosTabla[0]?.length);
                     }
-                    return (
+
+                    // Si la fila tiene muchas celdas vacías consecutivas, puede ser un problema de datos
+                    const celdasVaciasConsecutivas = row.reduce((count, cell, idx) => {
+                      if ((cell === '' || cell === null || cell === undefined) && idx < row.length - 1) {
+        // Verificar si las siguientes también están vacías
+        let consecutivas = 1;
+        for (let i = idx + 1; i < Math.min(idx + 5, row.length); i++) {
+          if (row[i] === '' || row[i] === null || row[i] === undefined) {
+            consecutivas++;
+          } else {
+            break;
+          }
+        }
+        if (consecutivas >= 3) {
+          return count + consecutivas;
+        }
+      }
+      return count;
+    }, 0);
+
+    if (celdasVaciasConsecutivas > 3 && rowIdx < 2) {
+      console.warn(`⚠️ Fila ${rowIdx} tiene ${celdasVaciasConsecutivas} celdas vacías consecutivas - puede ser un problema de estructura de datos`);
+    }
+
+    return (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
                       {row.map((cell: string | number, cellIdx: number) => {
                         // Log del tipo de dato de la celda
-                        if (rowIdx < 2) {
+                        if (rowIdx < 2 && cellIdx < 8) {
                           console.log(`🔍 Celda [${rowIdx},${cellIdx}]:`, {
                             valor: cell,
                             tipo: typeof cell,
@@ -591,7 +616,21 @@ export default function DashboardPage() {
                         let cellValue = cell;
                         if (Array.isArray(cell)) {
                           cellValue = cell.join(' ');
-                          console.log(`⚠️ Celda [${rowIdx},${cellIdx}] es array:`, cell, `→ unido: "${cellValue}"`);
+                          if (rowIdx < 2) {
+                            console.log(`⚠️ Celda [${rowIdx},${cellIdx}] es array:`, cell, `→ unido: "${cellValue}"`);
+                          }
+                        }
+
+                        // Si está vacío y no es la última columna, ocultar
+                        if ((cellValue === '' || cellValue === null || cellValue === undefined) && cellIdx < row.length - 1) {
+                          // Verificar si hay datos después de esta celda vacía
+                          const hayDatosDespues = row.slice(cellIdx + 1).some(c =>
+                            c !== '' && c !== null && c !== undefined
+                          );
+                          if (!hayDatosDespues && cellIdx > 3) {
+                            // Si no hay datos después y estamos más allá de la columna 4, ocultar
+                            return null;
+                          }
                         }
 
                         const cellStr = String(cellValue).trim();
@@ -609,7 +648,7 @@ export default function DashboardPage() {
                         // Detectar si es una fecha (formato dd/mm/yyyy o similar)
                         const esFechaPorContenido = !isNumber && (
                           cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
-                          (cellStr.length >= 8 && cellStr.length <= 10 && !isNaN(Date.parse(cellStr)))
+                          (cellStr.match(/^\d{4}\-\d{2}-\d{2}$/) && !isNaN(Date.parse(cellStr))) // yyyy-mm-dd
                         );
 
                         const esFecha = esColumnaFecha || esFechaPorContenido;
