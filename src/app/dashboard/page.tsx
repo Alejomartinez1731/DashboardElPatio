@@ -214,7 +214,7 @@ export default function DashboardPage() {
 
   const handleExport = () => {
     const currentSheetName = TABS.find(t => t.id === activeTab)?.sheetName;
-    const currentData = sheetsData[currentSheetName || '';
+    const currentData = sheetsData[currentSheetName || ''];
     if (!currentData || currentData.length === 0) {
       alert('No hay datos para exportar');
       return;
