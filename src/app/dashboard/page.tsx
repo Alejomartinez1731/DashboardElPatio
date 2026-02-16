@@ -314,7 +314,7 @@ export default function DashboardPage() {
   const cabecerasHistorico = ['ID', 'FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
 
   const datosTabla = activeTab === 'historico'
-    ? (comprasComoTabla.length > 0 ? [cabecerasHistorico, ...comprasComoTabla] : [])
+    ? [cabecerasHistorico, ...comprasComoTabla]
     : activeData;
 
   if (activeTab === 'historico') {

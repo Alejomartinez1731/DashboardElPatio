@@ -35,6 +35,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   const precioMaxGlobal = precios.length > 0 ? Math.max(...precios) : 100;
 
   const handleRangoFechaChange = (rango: typeof filtros.rangoFecha) => {
+    console.log('📅 Cambiando rango de fecha:', rango);
     const ahora = new Date();
     let inicio = null;
     let fin = null;
@@ -63,13 +64,16 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
         break;
     }
 
-    onFiltrosChange({ ...filtros, rangoFecha: rango, fechaInicio: inicio, fechaFin: fin });
+    const nuevosFiltros = { ...filtros, rangoFecha: rango, fechaInicio: inicio, fechaFin: fin };
+    console.log('📅 Nuevos filtros:', nuevosFiltros);
+    onFiltrosChange(nuevosFiltros);
   };
 
   const handleTiendaToggle = (tienda: string) => {
     const nuevasTiendas = filtros.tiendas.includes(tienda)
       ? filtros.tiendas.filter(t => t !== tienda)
       : [...filtros.tiendas, tienda];
+    console.log('🏪 Toggle tienda:', tienda, '→', nuevasTiendas);
     onFiltrosChange({ ...filtros, tiendas: nuevasTiendas });
   };
 
