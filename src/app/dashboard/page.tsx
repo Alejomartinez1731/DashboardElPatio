@@ -6,7 +6,7 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
-import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download, ChevronUp, ChevronDown, SlidersHorizontal, Calendar } from 'lucide-react';
+import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download, ChevronUp, ChevronDown, SlidersHorizontal, FileText } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
 type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'precio_producto' | 'registro_diario';
@@ -25,7 +25,7 @@ const TABS: Tab[] = [
   { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
   { id: 'precio_producto', label: 'Precio x Producto', sheetName: 'precio_producto', icon: AlertCircle, description: 'Comparativa de precios por producto' },
-  { id: 'registro_diario', label: 'Registro Diario', sheetName: 'registro_diario', icon: Calendar, description: 'Registro diario de operaciones' },
+  { id: 'registro_diario', label: 'Registro Diario', sheetName: 'registro_diario', icon: FileText, description: 'Registro diario de operaciones' },
 ];
 
 interface Filtros {
@@ -91,10 +91,18 @@ export default function DashboardPage() {
 
         // Procesar compras
         const hojaHistorico = result.data.historico;
+        console.log('📊 Datos de historico recibidos:', hojaHistorico);
+
         if (hojaHistorico && hojaHistorico.values) {
           const values = hojaHistorico.values as any[][];
+          console.log('📊 Valores de historico:', values.length, 'filas');
+          console.log('📊 Primera fila (cabeceras):', values[0]);
+          console.log('📊 Segunda fila (ejemplo):', values[1]);
+
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
+            console.log('📊 Cabeceras procesadas:', cabeceras);
+
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
@@ -119,11 +127,16 @@ export default function DashboardPage() {
               }
             }
 
+            console.log('✅ Compras procesadas:', comprasProcesadas.length);
+            console.log('✅ Primera compra:', comprasProcesadas[0]);
+
             setCompras(comprasProcesadas);
             const kpis = calcularKPIs(comprasProcesadas);
             setKpiData(kpis);
             setComprasFiltradas(comprasProcesadas);
           }
+        } else {
+          console.log('❌ No hay valores en historico');
         }
       } catch (err) {
         console.error('Error cargando datos:', err);
