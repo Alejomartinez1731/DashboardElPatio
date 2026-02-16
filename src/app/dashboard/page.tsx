@@ -303,14 +303,26 @@ export default function DashboardPage() {
                   {activeData.slice(1).map((row: string[], rowIdx: number) => (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
                       {row.map((cell: string, cellIdx: number) => {
-                        const isNumber = !isNaN(parseFloat(cell)) && cell !== '';
+                        const numValue = parseFloat(cell);
+                        const isNumber = !isNaN(numValue) && cell !== '' && cell !== null;
                         const isPrice = cellIdx >= 4 && cellIdx <= 6;
+
+                        // Formatear números a 2 decimales
+                        let displayValue = cell || '-';
+                        if (isNumber && !isNaN(numValue)) {
+                          displayValue = numValue.toFixed(2);
+                          // Remover ceros innecesarios después del punto decimal
+                          if (displayValue.endsWith('.00')) {
+                            displayValue = numValue.toFixed(0);
+                          }
+                        }
+
                         return (
                           <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${
                             isPrice ? 'text-right' : 'text-left'
                           }`}>
                             <span className={isNumber && isPrice ? 'text-white font-mono' : 'text-[#94a3b8]'}>
-                              {cell || '-'}
+                              {displayValue}
                             </span>
                           </td>
                         );
