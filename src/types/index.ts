@@ -12,7 +12,7 @@ export interface SheetData {
 }
 
 // Tipos de hojas disponibles
-export type SheetName = 'historico' | 'historico_precios' | 'costosos' | 'gasto_tienda' | 'precio_producto';
+export type SheetName = 'historico' | 'historico_precios' | 'costosos' | 'gasto_tienda' | 'precio_producto' | 'registro_diario';
 
 // Datos de una compra normalizada
 export interface Compra {
