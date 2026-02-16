@@ -498,25 +498,16 @@ export default function DashboardPage() {
           </div>
 
           {numRows === 0 ? (
-            (() => {
-              console.log('❌ Mostrando mensaje de "No hay datos"');
-              return (
-                <div className="text-center py-16">
-                  <Table className="w-16 h-16 mx-auto mb-4 text-[#64748b]" />
-                  <p className="text-[#64748b]">No hay datos en esta tabla</p>
-                </div>
-              );
-            })()
+            <div className="text-center py-16">
+              <Table className="w-16 h-16 mx-auto mb-4 text-[#64748b]" />
+              <p className="text-[#64748b]">No hay datos en esta tabla</p>
+            </div>
           ) : (
-            (() => {
-              console.log('✅ Renderizando tabla con', datosTabla.length, 'filas');
-              console.log('✅ datosTabla.slice(1).length:', datosTabla.slice(1).length);
-              return (
-                <div className="overflow-x-auto rounded-lg border border-[#1e293b]">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[#0d1117] sticky top-0">
-                      <tr>
-                        {datosTabla[0]?.map((header: string, idx: number) => (
+            <div className="overflow-x-auto rounded-lg border border-[#1e293b]">
+              <table className="w-full text-sm">
+                <thead className="bg-[#0d1117] sticky top-0">
+                  <tr>
+                    {datosTabla[0]?.map((header: string, idx: number) => (
                       <th
                         key={idx}
                         onClick={() => activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && handleSort(header.toLowerCase() as SortField)}
@@ -537,14 +528,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e293b]">
-                  {datosTabla.slice(1).map((row: any[], rowIdx: number) => {
-                    if (rowIdx === 0) {
-                      console.log('🔵 Renderizando primera fila de datos (rowIdx 0):', row);
-                    }
-                    if (rowIdx === 1) {
-                      console.log('🔵 Renderizando segunda fila de datos (rowIdx 1):', row);
-                    }
-                    return (
+                  {datosTabla.slice(1).map((row: any[], rowIdx: number) => (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
                       {row.map((cell: string | number, cellIdx: number) => {
                         const numValue = parseFloat(String(cell));
@@ -565,13 +549,11 @@ export default function DashboardPage() {
                         );
                       })}
                     </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>
-            );
-          })}
+          )}
 
           {/* Paginación */}
           {activeTab === 'historico' && numFilasFiltradas > 50 && (
