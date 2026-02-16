@@ -100,7 +100,13 @@ export default function DashboardPage() {
           console.log('📊 Segunda fila (ejemplo):', values[1]);
 
           if (values.length > 1) {
-            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
+            // Normalizar cabeceras: minúsculas, sin espacios, sin tildes
+            const cabeceras = values[0].map((h: string) => {
+              return h.toLowerCase()
+                .trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Quitar tildes
+                .replace(/\s+/g, '_'); // Reemplazar espacios con guiones bajos
+            });
             console.log('📊 Cabeceras procesadas:', cabeceras);
 
             const comprasProcesadas: Compra[] = [];
@@ -110,19 +116,24 @@ export default function DashboardPage() {
               const obj: any = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
+              console.log(`📝 Procesando fila ${i}:`, obj);
+
               const compra: Compra = {
                 id: `compra-${i}`,
                 fecha: parsearFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio unitario'] || '0') || 0,
+                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
                 total: parseFloat(obj.total || '0') || 0,
                 telefono: obj.telefono,
                 direccion: obj.direccion,
               };
 
-              if (compra.producto && !excluirFilaResumen(compra.producto)) {
+              const excluida = excluirFilaResumen(compra.producto);
+              console.log(`📝 Fila ${i}: producto="${compra.producto}", excluida=${excluida}`);
+
+              if (compra.producto && !excluida) {
                 comprasProcesadas.push(compra);
               }
             }
