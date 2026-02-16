@@ -33,26 +33,27 @@ export async function getN8NData(): Promise<Record<SheetName, SheetData>> {
     }
 
     // Convertir datos de n8n al formato SheetData que espera el dashboard
+    // n8n devuelve { historico: { values: [[...]] }, ... }
     const result: Record<SheetName, SheetData> = {
       historico: {
         range: 'Historico!A1:Z',
-        values: n8nResponse.data.historico || [],
+        values: (n8nResponse.data.historico?.values) || [],
       },
       historico_precios: {
-        range: 'Histórico de Precios!A1:Z',
-        values: n8nResponse.data.historico_precios || [],
+        range: 'Historico de precios!A1:Z',
+        values: (n8nResponse.data.historico_precios?.values) || [],
       },
       costosos: {
         range: 'Producto más costoso!A1:Z',
-        values: n8nResponse.data.producto_mas_costoso || [],
+        values: (n8nResponse.data.producto_mas_costoso?.values) || [],
       },
       gasto_tienda: {
         range: 'Gasto Por Tienda!A1:Z',
-        values: n8nResponse.data.gasto_por_tienda || [],
+        values: (n8nResponse.data.gasto_por_tienda?.values) || [],
       },
       precio_producto: {
         range: 'Precio x Producto!A1:Z',
-        values: n8nResponse.data.precio_por_producto || [],
+        values: (n8nResponse.data.precio_por_producto?.values) || [],
       },
     };
 
