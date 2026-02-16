@@ -38,12 +38,12 @@ export default function DashboardPage() {
           throw new Error(result.message || 'Error desconocido');
         }
 
-        // Procesar datos de "Histórico de Precios"
-        const hojaPrecios = result.data.historico_precios;
+        // Procesar datos de "Historico" (hoja principal de compras)
+        const hojaHistorico = result.data.historico;
 
-        if (hojaPrecios && hojaPrecios.values) {
+        if (hojaHistorico && hojaHistorico.values) {
           // Convertir filas crudas a compras
-          const values = hojaPrecios.values as any[][];
+          const values = hojaHistorico.values as any[][];
 
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
