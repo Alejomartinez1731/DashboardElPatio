@@ -364,7 +364,14 @@ export default function DashboardPage() {
           const cellStr = String(cell).toLowerCase().trim();
 
           // Reemplazos específicos
-          if (cellStr === 'row_number' || cellStr === 'row number') {
+          if (cellStr === 'row_number' || cellStr === 'row number' || cellStr.startsWith('col')) {
+            if (activeTab === 'precio_producto') {
+              // Cabeceras específicas para Precio x Producto
+              const colNum = cellStr.replace(/\D/g, '');
+              if (colNum === '1') return 'PRODUCTO';
+              if (colNum === '2') return 'PRECIO PROMEDIO';
+              return `COLUMNA ${colNum}`;
+            }
             return 'ID';
           }
           if (cellStr === 'fecha' || cellStr === 'date') {
@@ -376,7 +383,7 @@ export default function DashboardPage() {
           if (cellStr === 'descripcion' || cellStr === 'descripción' || cellStr === 'producto' || cellStr === 'product') {
             return 'PRODUCTO';
           }
-          if (cellStr === 'precio_unitario' || cellStr === 'precio unitario' || cellStr === 'precio') {
+          if (cellStr === 'precio_unitario' || cellStr === 'precio unitario' || cellStr === 'precio' || cellStr === 'precio_promedio' || cellStr === 'precio promedio') {
             return 'PRECIO';
           }
           if (cellStr === 'cantidad' || cellStr === 'quantity') {
