@@ -357,59 +357,84 @@ export default function DashboardPage() {
 
   // Normalizar cabeceras en todas las pestañas
   if (datosTabla.length > 0) {
-    datosTabla = datosTabla.map((row, idx) => {
-      if (idx === 0) {
-        // Es la cabecera - normalizarla
-        return row.map((cell: string | number) => {
-          const cellStr = String(cell).toLowerCase().trim();
+    // Para Precio x Producto, la estructura es diferente (transpuesta)
+    if (activeTab === 'precio_producto' && datosTabla.length > 0) {
+      // La fila 0 probablemente tiene los datos del primer producto
+      // Y las fechas están como columnas
+      console.log('📊 Detectada estructura transpuesta en precio_producto');
+      console.log('📊 Primera fila (datos del producto):', datosTabla[1]);
 
-          // Reemplazos específicos
-          if (cellStr === 'row_number' || cellStr === 'row number' || cellStr.startsWith('col')) {
-            if (activeTab === 'precio_producto') {
-              // Cabeceras específicas para Precio x Producto
-              const colNum = cellStr.replace(/\D/g, '');
-              if (colNum === '1') return 'PRODUCTO';
-              if (colNum === '2') return 'PRECIO PROMEDIO';
-              return `COLUMNA ${colNum}`;
-            }
-            return 'ID';
-          }
-          if (cellStr === 'fecha' || cellStr === 'date') {
-            return 'FECHA';
-          }
-          if (cellStr === 'tienda' || cellStr === 'store') {
-            return 'TIENDA';
-          }
-          if (cellStr === 'descripcion' || cellStr === 'descripción' || cellStr === 'producto' || cellStr === 'product') {
-            return 'PRODUCTO';
-          }
-          if (cellStr === 'precio_unitario' || cellStr === 'precio unitario' || cellStr === 'precio' || cellStr === 'precio_promedio' || cellStr === 'precio promedio') {
-            return 'PRECIO';
-          }
-          if (cellStr === 'cantidad' || cellStr === 'quantity') {
-            return 'CANTIDAD';
-          }
-          if (cellStr === 'total') {
-            return 'TOTAL';
-          }
-          if (cellStr === 'telefono' || cellStr === 'teléfono') {
-            return 'TELÉFONO';
-          }
-          if (cellStr === 'direccion' || cellStr === 'dirección') {
-            return 'DIRECCIÓN';
-          }
-
-          // Para otras cabeceras, limpiar y poner en mayúsculas
-          return cellStr
-            .replace(/_/g, ' ')        // Guiones bajos a espacios
-            .replace(/-/g, ' ')        // Guiones a espacios
-            .replace(/\s+/g, ' ')      // Múltiples espacios a uno solo
-            .trim()
-            .toUpperCase();
-        });
+      // Crear cabeceras apropiadas basadas en los datos
+      const nuevasCabeceras = ['PRODUCTO'];
+      for (let i = 3; i < datosTabla[0].length - 1; i++) {
+        const valor = datosTabla[0][i];
+        // Si es una fecha, usarla como cabecera
+        if (valor && valor.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          nuevasCabeceras.push(valor); // Usar la fecha como cabecera
+        } else {
+          nuevasCabeceras.push(String(valor || `COLUMNA ${i}`));
+        }
       }
-      return row;
-    });
+      nuevasCabeceras.push('TOTAL');
+
+      console.log('📊 Nuevas cabeceras para precio_producto:', nuevasCabeceras);
+      datosTabla[0] = nuevasCabeceras;
+    } else {
+      // Para otras pestañas, normalizar normalmente
+      datosTabla = datosTabla.map((row, idx) => {
+        if (idx === 0) {
+          // Es la cabecera - normalizarla
+          return row.map((cell: string | number) => {
+            const cellStr = String(cell).toLowerCase().trim();
+
+            // Reemplazos específicos
+            if (cellStr === 'row_number' || cellStr === 'row number' || cellStr.startsWith('col')) {
+              if (activeTab === 'precio_producto') {
+                // Cabeceras específicas para Precio x Producto
+                const colNum = cellStr.replace(/\D/g, '');
+                if (colNum === '1') return 'PRODUCTO';
+                if (colNum === '2') return 'PRECIO PROMEDIO';
+                return `COLUMNA ${colNum}`;
+              }
+              return 'ID';
+            }
+            if (cellStr === 'fecha' || cellStr === 'date') {
+              return 'FECHA';
+            }
+            if (cellStr === 'tienda' || cellStr === 'store') {
+              return 'TIENDA';
+            }
+            if (cellStr === 'descripcion' || cellStr === 'descripción' || cellStr === 'producto' || cellStr === 'product') {
+              return 'PRODUCTO';
+            }
+            if (cellStr === 'precio_unitario' || cellStr === 'precio unitario' || cellStr === 'precio' || cellStr === 'precio_promedio' || cellStr === 'precio promedio' || cellStr === 'sum de precio unitario') {
+              return 'PRECIO';
+            }
+            if (cellStr === 'cantidad' || cellStr === 'quantity') {
+              return 'CANTIDAD';
+            }
+            if (cellStr === 'total') {
+              return 'TOTAL';
+            }
+            if (cellStr === 'telefono' || cellStr === 'teléfono') {
+              return 'TELÉFONO';
+            }
+            if (cellStr === 'direccion' || cellStr === 'dirección') {
+              return 'DIRECCIÓN';
+            }
+
+            // Para otras cabeceras, limpiar y poner en mayúsculas
+            return cellStr
+              .replace(/_/g, ' ')        // Guiones bajos a espacios
+              .replace(/-/g, ' ')        // Guiones a espacios
+              .replace(/\s+/g, ' ')      // Múltiples espacios a uno solo
+              .trim()
+              .toUpperCase();
+          });
+        }
+        return row;
+      });
+    }
 
     console.log('📊 Cabeceras normalizadas para', activeTab, ':', datosTabla[0]);
   }
