@@ -355,22 +355,56 @@ export default function DashboardPage() {
     ? [cabecerasHistorico, ...comprasComoTabla]
     : activeData;
 
-  // Reemplazar "row_number" por "ID" en cabeceras de otras pestañas
-  if (activeTab !== 'historico' && datosTabla.length > 0) {
+  // Normalizar cabeceras en todas las pestañas
+  if (datosTabla.length > 0) {
     datosTabla = datosTabla.map((row, idx) => {
       if (idx === 0) {
-        // Es la cabecera
+        // Es la cabecera - normalizarla
         return row.map((cell: string | number) => {
           const cellStr = String(cell).toLowerCase().trim();
+
+          // Reemplazos específicos
           if (cellStr === 'row_number' || cellStr === 'row number') {
             return 'ID';
           }
-          return String(cell).toUpperCase();
+          if (cellStr === 'fecha' || cellStr === 'date') {
+            return 'FECHA';
+          }
+          if (cellStr === 'tienda' || cellStr === 'store') {
+            return 'TIENDA';
+          }
+          if (cellStr === 'descripcion' || cellStr === 'descripción' || cellStr === 'producto' || cellStr === 'product') {
+            return 'PRODUCTO';
+          }
+          if (cellStr === 'precio_unitario' || cellStr === 'precio unitario' || cellStr === 'precio') {
+            return 'PRECIO';
+          }
+          if (cellStr === 'cantidad' || cellStr === 'quantity') {
+            return 'CANTIDAD';
+          }
+          if (cellStr === 'total') {
+            return 'TOTAL';
+          }
+          if (cellStr === 'telefono' || cellStr === 'teléfono') {
+            return 'TELÉFONO';
+          }
+          if (cellStr === 'direccion' || cellStr === 'dirección') {
+            return 'DIRECCIÓN';
+          }
+
+          // Para otras cabeceras, limpiar y poner en mayúsculas
+          return cellStr
+            .replace(/_/g, ' ')        // Guiones bajos a espacios
+            .replace(/-/g, ' ')        // Guiones a espacios
+            .replace(/\s+/g, ' ')      // Múltiples espacios a uno solo
+            .trim()
+            .toUpperCase();
         });
       }
       return row;
     });
-    console.log('📊 DatosTabla para', activeTab, ':', datosTabla[0]);
+
+    console.log('📊 Cabeceras normalizadas para', activeTab, ':', datosTabla[0]);
   }
 
   if (activeTab === 'historico') {
@@ -531,18 +565,45 @@ export default function DashboardPage() {
                   {datosTabla.slice(1).map((row: any[], rowIdx: number) => (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
                       {row.map((cell: string | number, cellIdx: number) => {
-                        const numValue = parseFloat(String(cell));
-                        const isNumber = !isNaN(numValue) && cell !== '' && cell !== null;
-                        const isPrice = cellIdx >= 4 && cellIdx <= 6;
+                        const cellStr = String(cell).trim();
+                        const numValue = parseFloat(cellStr);
+                        const isNumber = !isNaN(numValue) && cellStr !== '' && cell !== null;
 
-                        let displayValue = cell;
-                        if (isNumber && !isNaN(numValue)) {
-                          displayValue = numValue.toFixed(2).replace('.00', '');
+                        // Detectar si es una fecha (formato dd/mm/yyyy o similar)
+                        const esFecha = !isNumber && (
+                          cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
+                          (cellStr.length >= 8 && cellStr.length <= 10 && !isNaN(Date.parse(cellStr)))
+                        );
+
+                        // Determinar si es una columna de precio (basado en la cabecera)
+                        const cabecera = datosTabla[0]?.[cellIdx] || '';
+                        const cabeceraLower = String(cabecera).toLowerCase();
+                        const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo');
+
+                        let displayValue: string | number = cell;
+                        let className = 'text-[#94a3b8]';
+
+                        if (esFecha) {
+                          // Formatear fecha
+                          const fecha = parsearFecha(cellStr);
+                          displayValue = formatearFecha(fecha);
+                          className = 'text-white';
+                        } else if (isNumber) {
+                          // Formatear número
+                          if (esPrecio || cabeceraLower === 'cantidad') {
+                            displayValue = numValue.toFixed(2).replace('.00', '');
+                            className = 'text-white font-mono';
+                          } else {
+                            displayValue = numValue.toFixed(2).replace('.00', '');
+                          }
                         }
 
+                        // Alineación: precios a la derecha, todo lo demás a la izquierda
+                        const alignClass = esPrecio ? 'text-right' : 'text-left';
+
                         return (
-                          <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${isPrice ? 'text-right' : 'text-left'}`}>
-                            <span className={isNumber && isPrice ? 'text-white font-mono' : 'text-[#94a3b8]'}>
+                          <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${alignClass}`}>
+                            <span className={className}>
                               {displayValue || '-'}
                             </span>
                           </td>
