@@ -359,26 +359,67 @@ export default function DashboardPage() {
   if (datosTabla.length > 0) {
     // Para Precio x Producto, la estructura es diferente (transpuesta)
     if (activeTab === 'precio_producto' && datosTabla.length > 0) {
-      // La fila 0 probablemente tiene los datos del primer producto
-      // Y las fechas están como columnas
-      console.log('📊 Detectada estructura transpuesta en precio_producto');
-      console.log('📊 Primera fila (datos del producto):', datosTabla[1]);
+      console.log('📊 ESTRUCTURA precio_producto:');
+      console.log('📊 Fila 0 (cabeceras originales?):', datosTabla[0]);
+      console.log('📊 Fila 1 (primera fila de datos):', datosTabla[1]);
+      console.log('📊 Total filas:', datosTabla.length);
 
-      // Crear cabeceras apropiadas basadas en los datos
-      const nuevasCabeceras = ['PRODUCTO'];
-      for (let i = 3; i < datosTabla[0].length - 1; i++) {
-        const valor = datosTabla[0][i];
-        // Si es una fecha, usarla como cabecera
-        if (valor && valor.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          nuevasCabeceras.push(valor); // Usar la fecha como cabecera
-        } else {
-          nuevasCabeceras.push(String(valor || `COLUMNA ${i}`));
+      // Si la primera fila tiene "Descripcion" como cabecera, probablemente
+      // la estructura es: ID | Descripcion | vacio | fecha1 | fecha2 | ...
+      if (datosTabla[0][1] && String(datosTabla[0][1]).toLowerCase().includes('descripcion')) {
+        console.log('📊 Detectado: Estructura con Descripcion en fila 0');
+
+        // Crear cabeceras correctas
+        const nuevasCabeceras = ['ID', 'PRODUCTO'];
+
+        // Agregar fechas como cabeceras
+        for (let i = 3; i < datosTabla[0].length; i++) {
+          const valor = datosTabla[0][i];
+          if (valor && String(valor).match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Es una fecha, usarla
+            nuevasCabeceras.push(valor);
+          } else if (valor && valor !== '') {
+            nuevasCabeceras.push(String(valor).toUpperCase());
+          }
         }
-      }
-      nuevasCabeceras.push('TOTAL');
 
-      console.log('📊 Nuevas cabeceras para precio_producto:', nuevasCabeceras);
-      datosTabla[0] = nuevasCabeceras;
+        console.log('📊 Nuevas cabeceras creadas:', nuevasCabeceras);
+        datosTabla[0] = nuevasCabeceras;
+
+        // Ahora verificar si hay datos dispersos que necesitan unirse
+        // Por ejemplo, "24" en una columna y "ous" en otra
+        datosTabla = datosTabla.map((row, rowIdx) => {
+          if (rowIdx === 0) return row; // Mantener cabeceras
+
+          // Si hay muchas celdas vacías, intentar compactar
+          const newRow = [];
+          let productoActual = row[1] || ''; // Descripción está en columna 1
+
+          // Agregar ID
+          newRow.push(row[0]);
+
+          // Agregar producto
+          newRow.push(productoActual);
+
+          // Agregar el resto de datos (fechas y valores)
+          for (let i = 2; i < row.length; i++) {
+            newRow.push(row[i]);
+          }
+
+          console.log(`📊 Fila ${rowIdx} compactada:`, newRow);
+          return newRow;
+        });
+      } else {
+        console.log('📊 Estructura no reconocida, usando cabeceras genéricas');
+        // Crear cabeceras genéricas pero con nombres más bonitos que "COL-X"
+        datosTabla[0] = datosTabla[0].map((cell, idx) => {
+          const cellStr = String(cell).toLowerCase().trim();
+          if (cellStr === 'col-1' || cellStr === 'column1' || idx === 1) return 'PRODUCTO';
+          if (cellStr === 'col-2' || cellStr === 'column2' || idx === 2) return 'CANTIDAD';
+          if (cellStr.match(/^col-\d+$/)) return `DATOS ${idx}`;
+          return String(cell).toUpperCase();
+        });
+      }
     } else {
       // Para otras pestañas, normalizar normalmente
       datosTabla = datosTabla.map((row, idx) => {
@@ -389,13 +430,6 @@ export default function DashboardPage() {
 
             // Reemplazos específicos
             if (cellStr === 'row_number' || cellStr === 'row number' || cellStr.startsWith('col')) {
-              if (activeTab === 'precio_producto') {
-                // Cabeceras específicas para Precio x Producto
-                const colNum = cellStr.replace(/\D/g, '');
-                if (colNum === '1') return 'PRODUCTO';
-                if (colNum === '2') return 'PRECIO PROMEDIO';
-                return `COLUMNA ${colNum}`;
-              }
               return 'ID';
             }
             if (cellStr === 'fecha' || cellStr === 'date') {
@@ -423,6 +457,11 @@ export default function DashboardPage() {
               return 'DIRECCIÓN';
             }
 
+            // Para cabeceras tipo "COL-X", mejorarlas
+            if (cellStr.match(/^col-\d+$/)) {
+              return `DATOS ${cellStr.replace('col-', '')}`;
+            }
+
             // Para otras cabeceras, limpiar y poner en mayúsculas
             return cellStr
               .replace(/_/g, ' ')        // Guiones bajos a espacios
@@ -436,7 +475,7 @@ export default function DashboardPage() {
       });
     }
 
-    console.log('📊 Cabeceras normalizadas para', activeTab, ':', datosTabla[0]);
+    console.log('📊 Cabeceras finales para', activeTab, ':', datosTabla[0]);
   }
 
   if (activeTab === 'historico') {
