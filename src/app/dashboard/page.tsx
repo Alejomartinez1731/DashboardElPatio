@@ -137,6 +137,7 @@ export default function DashboardPage() {
 
   // Aplicar filtros cuando cambian
   useEffect(() => {
+    console.log('🔍 Aplicando filtros:', filtros);
     let filtradas = [...compras];
 
     // Filtro por rango de fechas
@@ -144,16 +145,19 @@ export default function DashboardPage() {
       const inicio = new Date(filtros.fechaInicio);
       inicio.setHours(0, 0, 0, 0);
       filtradas = filtradas.filter(c => c.fecha >= inicio);
+      console.log('📅 Filtro fecha inicio:', inicio, '→', filtradas.length, 'filas');
     }
     if (filtros.fechaFin) {
       const fin = new Date(filtros.fechaFin);
       fin.setHours(23, 59, 59, 999);
       filtradas = filtradas.filter(c => c.fecha <= fin);
+      console.log('📅 Filtro fecha fin:', fin, '→', filtradas.length, 'filas');
     }
 
     // Filtro por tiendas
     if (filtros.tiendas.length > 0) {
       filtradas = filtradas.filter(c => filtros.tiendas.includes(normalizarTienda(c.tienda)));
+      console.log('🏪 Filtro tiendas:', filtros.tiendas, '→', filtradas.length, 'filas');
     }
 
     // Filtro por búsqueda de producto
@@ -162,14 +166,17 @@ export default function DashboardPage() {
       filtradas = filtradas.filter(c =>
         c.producto.toLowerCase().includes(busquedaLower)
       );
+      console.log('🔎 Filtro búsqueda:', filtros.busqueda, '→', filtradas.length, 'filas');
     }
 
     // Filtro por rango de precios
     if (filtros.precioMin !== null) {
       filtradas = filtradas.filter(c => c.precioUnitario >= filtros.precioMin!);
+      console.log('💰 Filtro precio min:', filtros.precioMin, '→', filtradas.length, 'filas');
     }
     if (filtros.precioMax !== null) {
       filtradas = filtradas.filter(c => c.precioUnitario <= filtros.precioMax!);
+      console.log('💰 Filtro precio max:', filtros.precioMax, '→', filtradas.length, 'filas');
     }
 
     // Aplicar ordenamiento
@@ -205,6 +212,7 @@ export default function DashboardPage() {
       return aVal < bVal ? 1 : -1;
     });
 
+    console.log('✅ Filtrado final:', filtradas.length, 'de', compras.length, 'filas');
     setComprasFiltradas(filtradas);
   }, [compras, filtros, sortField, sortOrder]);
 
@@ -302,8 +310,11 @@ export default function DashboardPage() {
       ])
     : [];
 
-  const datosTabla = activeTab === 'historico' && comprasComoTabla.length > 0
-    ? [Object.values(activeData[0] || {}).map((h: string) => String(h).toUpperCase()), ...comprasComoTabla]
+  // Cabeceras personalizadas para Histórico
+  const cabecerasHistorico = ['ID', 'FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
+
+  const datosTabla = activeTab === 'historico'
+    ? (comprasComoTabla.length > 0 ? [cabecerasHistorico, ...comprasComoTabla] : [])
     : activeData;
 
   if (activeTab === 'historico') {
