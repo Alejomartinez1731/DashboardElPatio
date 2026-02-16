@@ -10,15 +10,66 @@ import { TrendChart } from '@/components/dashboard/trend-chart';
 import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
-import { Compra, KPIData, SheetName } from '@/types';
+import { Compra, KPIData } from '@/types';
 import { calcularKPIs } from '@/lib/data-utils';
-import { BarChart3, TrendingUp, Calendar } from 'lucide-react';
+import {
+  BarChart3,
+  TrendingUp,
+  PieChart,
+  Calendar,
+  AlertTriangle,
+  ShoppingBag,
+  LayoutDashboard
+} from 'lucide-react';
+
+type TabId = 'general' | 'tendencias' | 'distribucion' | 'alertas' | 'productos';
+
+interface Tab {
+  id: TabId;
+  label: string;
+  icon: typeof LayoutDashboard;
+  description: string;
+}
+
+const TABS: Tab[] = [
+  {
+    id: 'general',
+    label: 'Vista General',
+    icon: LayoutDashboard,
+    description: 'Resumen ejecutivo y KPIs principales'
+  },
+  {
+    id: 'tendencias',
+    label: 'Tendencias',
+    icon: TrendingUp,
+    description: 'Evolución de gastos en el tiempo'
+  },
+  {
+    id: 'distribucion',
+    label: 'Distribución',
+    icon: PieChart,
+    description: 'Gastos por tienda y categorías'
+  },
+  {
+    id: 'alertas',
+    label: 'Alertas',
+    icon: AlertTriangle,
+    description: 'Productos con cambios de precio'
+  },
+  {
+    id: 'productos',
+    label: 'Productos',
+    icon: ShoppingBag,
+    description: 'Productos más comprados'
+  },
+];
 
 export default function DashboardPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compras, setCompras] = useState<Compra[]>([]);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>('general');
 
   useEffect(() => {
     async function fetchDatos() {
@@ -38,11 +89,9 @@ export default function DashboardPage() {
           throw new Error(result.message || 'Error desconocido');
         }
 
-        // Procesar datos de "Historico" (hoja principal de compras)
         const hojaHistorico = result.data.historico;
 
         if (hojaHistorico && hojaHistorico.values) {
-          // Convertir filas crudas a compras
           const values = hojaHistorico.values as any[][];
 
           if (values.length > 1) {
@@ -57,7 +106,6 @@ export default function DashboardPage() {
                 obj[cab] = fila[idx];
               });
 
-              // Mapear campos según estructura de Google Sheets
               const compra: Compra = {
                 id: `compra-${i}-${Date.now()}`,
                 fecha: parsearFecha(obj.fecha || obj.fechado || ''),
@@ -70,7 +118,6 @@ export default function DashboardPage() {
                 direccion: obj.direccion,
               };
 
-              // Filtrar filas de resumen
               if (compra.producto && !excluirFilaResumen(compra.producto)) {
                 comprasProcesadas.push(compra);
               }
@@ -78,7 +125,6 @@ export default function DashboardPage() {
 
             setCompras(comprasProcesadas);
 
-            // Calcular KPIs
             const kpis = calcularKPIs(comprasProcesadas);
             setKpiData(kpis);
           } else {
@@ -107,12 +153,10 @@ export default function DashboardPage() {
   };
 
   const handleExport = () => {
-    // TODO: Implementar exportación a CSV
     console.log('Exportando a CSV...');
   };
 
   const handleFilter = () => {
-    // TODO: Implementar filtros
     console.log('Abriendo filtros...');
   };
 
@@ -120,7 +164,6 @@ export default function DashboardPage() {
   if (cargando) {
     return (
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
@@ -177,7 +220,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header mejorado */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
@@ -193,7 +236,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPIs mejorados */}
+      {/* KPIs - Siempre visibles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICardEnhanced
           titulo="Gasto del Día"
@@ -231,25 +274,94 @@ export default function DashboardPage() {
         cargando={cargando}
       />
 
-      {/* Insights Panel */}
-      <InsightsPanel compras={compras} />
+      {/* Tabs Navigation */}
+      <div className="bg-[#111827] border border-[#1e293b] rounded-xl overflow-hidden">
+        {/* Tab Headers */}
+        <div className="flex overflow-x-auto border-b border-[#1e293b] scrollbar-thin scrollbar-thumb-[#f59e0b]/20 scrollbar-track-transparent">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  flex items-center gap-3 px-6 py-4 whitespace-nowrap transition-all duration-200 relative
+                  ${isActive
+                    ? 'text-[#f59e0b] bg-[#f59e0b]/5'
+                    : 'text-[#94a3b8] hover:text-white hover:bg-[#0d1117]/50'
+                  }
+                `}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{tab.label}</span>
+                {isActive && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Gráficos principales */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TrendChart datos={compras} dias={30} titulo="Tendencia de Gastos" />
-        <DistributionChart datos={compras} titulo="Distribución por Tienda" />
-      </div>
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === 'general' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
+                <LayoutDashboard className="w-5 h-5" />
+                <p className="text-sm">{TABS.find(t => t.id === 'general')?.description}</p>
+              </div>
+              <InsightsPanel compras={compras} />
+            </div>
+          )}
 
-      {/* Gráficos secundarios */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <WeeklyChart datos={compras} titulo="Gasto Semanal" />
-        <MonthlySummary datos={compras} titulo="Resumen Mensual" />
-      </div>
+          {activeTab === 'tendencias' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
+                <TrendingUp className="w-5 h-5" />
+                <p className="text-sm">{TABS.find(t => t.id === 'tendencias')?.description}</p>
+              </div>
+              <TrendChart datos={compras} dias={30} titulo="Tendencia de Gastos (30 días)" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <WeeklyChart datos={compras} titulo="Gasto Semanal" />
+                <MonthlySummary datos={compras} titulo="Resumen Mensual" />
+              </div>
+            </div>
+          )}
 
-      {/* Alertas y Top Productos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PriceAlerts compras={compras} />
-        <TopProductsEnhanced compras={compras} limite={8} />
+          {activeTab === 'distribucion' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
+                <PieChart className="w-5 h-5" />
+                <p className="text-sm">{TABS.find(t => t.id === 'distribucion')?.description}</p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DistributionChart datos={compras} titulo="Distribución por Tienda" />
+                <TopProductsEnhanced compras={compras} limite={10} titulo="Top 10 Productos" />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'alertas' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
+                <AlertTriangle className="w-5 h-5" />
+                <p className="text-sm">{TABS.find(t => t.id === 'alertas')?.description}</p>
+              </div>
+              <PriceAlerts compras={compras} />
+            </div>
+          )}
+
+          {activeTab === 'productos' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
+                <ShoppingBag className="w-5 h-5" />
+                <p className="text-sm">{TABS.find(t => t.id === 'productos')?.description}</p>
+              </div>
+              <TopProductsEnhanced compras={compras} limite={15} titulo="Top 15 Productos Más Comprados" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -265,7 +377,6 @@ function parsearFecha(fecha: string | Date): Date {
     return new Date();
   }
 
-  // Formato DD/MM/YYYY
   if (fecha.includes('/')) {
     const partes = fecha.split('/');
     if (partes.length === 3) {
