@@ -565,17 +565,29 @@ export default function DashboardPage() {
 
 function parsearFecha(fecha: string | Date): Date {
   if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
-  if (!fecha || typeof fecha !== 'string') return new Date();
+  if (!fecha || typeof fecha !== 'string') {
+    console.log('⚠️ Fecha inválida (vacía o no string):', fecha);
+    return new Date();
+  }
+
+  console.log('📅 Parseando fecha:', fecha);
+
   if (fecha.includes('/')) {
     const partes = fecha.split('/');
+    console.log('📅 Partes de fecha:', partes);
     if (partes.length === 3) {
       const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
+      console.log('📅 Día:', dia, 'Mes:', mes, 'Año:', anio);
       if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
-        return new Date(anio, mes - 1, dia);
+        const date = new Date(anio, mes - 1, dia);
+        console.log('✅ Fecha parseada:', date);
+        return date;
       }
     }
   }
+
   const parsed = new Date(fecha);
+  console.log('📅 Fecha parseada con Date():', parsed);
   return isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
