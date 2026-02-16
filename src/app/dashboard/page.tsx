@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
+import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { Compra, KPIData, SheetName } from '@/types';
-import { calcularKPIs } from '@/lib/data-utils';
-import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download } from 'lucide-react';
-import { formatearMoneda } from '@/lib/formatters';
+import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
+import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
 type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'precio_producto';
 
@@ -19,50 +20,49 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  {
-    id: 'historico',
-    label: 'Histórico',
-    sheetName: 'historico',
-    icon: Table,
-    description: 'Tabla completa de historial de compras'
-  },
-  {
-    id: 'historico_precios',
-    label: 'Histórico de Precios',
-    sheetName: 'historico_precios',
-    icon: TrendingUp,
-    description: 'Evolución de precios por producto'
-  },
-  {
-    id: 'producto_costoso',
-    label: 'Producto más Costoso',
-    sheetName: 'costosos',
-    icon: ShoppingBag,
-    description: 'Ranking de productos por precio'
-  },
-  {
-    id: 'gasto_tienda',
-    label: 'Gasto por Tienda',
-    sheetName: 'gasto_tienda',
-    icon: PieChart,
-    description: 'Gastos acumulados por proveedor/tienda'
-  },
-  {
-    id: 'precio_producto',
-    label: 'Precio x Producto',
-    sheetName: 'precio_producto',
-    icon: AlertCircle,
-    description: 'Comparativa de precios por producto'
-  },
+  { id: 'historico', label: 'Histórico', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
+  { id: 'historico_precios', label: 'Histórico de Precios', sheetName: 'historico_precios', icon: TrendingUp, description: 'Evolución de precios por producto' },
+  { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
+  { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
+  { id: 'precio_producto', label: 'Precio x Producto', sheetName: 'precio_producto', icon: AlertCircle, description: 'Comparativa de precios por producto' },
 ];
+
+interface Filtros {
+  fechaInicio: Date | null;
+  fechaFin: Date | null;
+  rangoFecha: 'todo' | 'hoy' | 'semana' | 'mes' | 'mesPasado' | 'anio';
+  tiendas: string[];
+  busqueda: string;
+  precioMin: number | null;
+  precioMax: number | null;
+}
+
+type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'total';
 
 export default function DashboardPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compras, setCompras] = useState<Compra[]>([]);
+  const [comprasFiltradas, setComprasFiltradas] = useState<Compra[]>([]);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('historico');
   const [sheetsData, setSheetsData] = useState<Record<string, string[][]>>({});
+
+  // Filtros
+  const [filtros, setFiltros] = useState<Filtros>({
+    fechaInicio: null,
+    fechaFin: null,
+    rangoFecha: 'todo',
+    tiendas: [],
+    busqueda: '',
+    precioMin: null,
+    precioMax: null,
+  });
+
+  // Ordenamiento
+  const [sortField, setSortField] = useState<SortField>('fecha');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     async function fetchDatos() {
@@ -71,20 +71,13 @@ export default function DashboardPage() {
         setError(null);
 
         const response = await fetch('/api/sheets');
-
-        if (!response.ok) {
-          throw new Error('Error al obtener datos de Google Sheets');
-        }
+        if (!response.ok) throw new Error('Error al obtener datos');
 
         const result = await response.json();
+        if (!result.success) throw new Error(result.message || 'Error desconocido');
 
-        if (!result.success) {
-          throw new Error(result.message || 'Error desconocido');
-        }
-
-        // Guardar datos crudos de todas las hojas
+        // Guardar datos crudos
         const allData: Record<string, string[][]> = {};
-
         TABS.forEach(tab => {
           const sheetData = result.data[tab.sheetName];
           if (sheetData && sheetData.values && Array.isArray(sheetData.values)) {
@@ -93,11 +86,9 @@ export default function DashboardPage() {
             allData[tab.sheetName] = [];
           }
         });
-
         setSheetsData(allData);
-        console.log('Datos cargados:', Object.keys(allData).map(k => `${k}: ${allData[k].length} filas`));
 
-        // Procesar compras desde la hoja "historico" para KPIs
+        // Procesar compras
         const hojaHistorico = result.data.historico;
         if (hojaHistorico && hojaHistorico.values) {
           const values = hojaHistorico.values as any[][];
@@ -111,7 +102,7 @@ export default function DashboardPage() {
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
               const compra: Compra = {
-                id: `compra-${i}-${Date.now()}`,
+                id: `compra-${i}`,
                 fecha: parsearFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
@@ -130,9 +121,7 @@ export default function DashboardPage() {
             setCompras(comprasProcesadas);
             const kpis = calcularKPIs(comprasProcesadas);
             setKpiData(kpis);
-          } else {
-            setCompras([]);
-            setKpiData({ gastoDelDia: 0, gastoDelMes: 0, facturasProcesadas: 0, alertasDePrecio: 0 });
+            setComprasFiltradas(comprasProcesadas);
           }
         }
       } catch (err) {
@@ -146,20 +135,90 @@ export default function DashboardPage() {
     fetchDatos();
   }, []);
 
+  // Aplicar filtros cuando cambian
+  useEffect(() => {
+    let filtradas = [...compras];
+
+    // Filtro por rango de fechas
+    if (filtros.fechaInicio) {
+      const inicio = new Date(filtros.fechaInicio);
+      inicio.setHours(0, 0, 0, 0);
+      filtradas = filtradas.filter(c => c.fecha >= inicio);
+    }
+    if (filtros.fechaFin) {
+      const fin = new Date(filtros.fechaFin);
+      fin.setHours(23, 59, 59, 999);
+      filtradas = filtradas.filter(c => c.fecha <= fin);
+    }
+
+    // Filtro por tiendas
+    if (filtros.tiendas.length > 0) {
+      filtradas = filtradas.filter(c => filtros.tiendas.includes(normalizarTienda(c.tienda)));
+    }
+
+    // Filtro por búsqueda de producto
+    if (filtros.busqueda) {
+      const busquedaLower = filtros.busqueda.toLowerCase().trim();
+      filtradas = filtradas.filter(c =>
+        c.producto.toLowerCase().includes(busquedaLower)
+      );
+    }
+
+    // Filtro por rango de precios
+    if (filtros.precioMin !== null) {
+      filtradas = filtradas.filter(c => c.precioUnitario >= filtros.precioMin!);
+    }
+    if (filtros.precioMax !== null) {
+      filtradas = filtradas.filter(c => c.precioUnitario <= filtros.precioMax!);
+    }
+
+    // Aplicar ordenamiento
+    filtradas.sort((a, b) => {
+      let aVal: any, bVal: any;
+      switch (sortField) {
+        case 'fecha':
+          aVal = a.fecha.getTime();
+          bVal = b.fecha.getTime();
+          break;
+        case 'tienda':
+          aVal = normalizarTienda(a.tienda);
+          bVal = normalizarTienda(b.tienda);
+          break;
+        case 'producto':
+          aVal = a.producto.toLowerCase();
+          bVal = b.producto.toLowerCase();
+          break;
+        case 'cantidad':
+          aVal = a.cantidad;
+          bVal = b.cantidad;
+          break;
+        case 'precio':
+          aVal = a.precioUnitario;
+          bVal = b.precioUnitario;
+          break;
+        case 'total':
+          aVal = a.total;
+          bVal = b.total;
+          break;
+      }
+      if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
+    });
+
+    setComprasFiltradas(filtradas);
+  }, [compras, filtros, sortField, sortOrder]);
+
   const handleRefresh = () => {
     window.location.reload();
   };
 
   const handleExport = () => {
     const currentSheetName = TABS.find(t => t.id === activeTab)?.sheetName;
-    const currentData = sheetsData[currentSheetName || ''];
-
+    const currentData = sheetsData[currentSheetName || '';
     if (!currentData || currentData.length === 0) {
       alert('No hay datos para exportar');
       return;
     }
-
-    // Convertir a CSV
     const csv = currentData.map(row => row.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -171,7 +230,20 @@ export default function DashboardPage() {
   };
 
   const handleFilter = () => {
-    console.log('Abriendo filtros...');
+    setShowFilters(!showFilters);
+  };
+
+  // Obtener tiendas únicas
+  const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda)))).sort();
+
+  // Función para ordenar
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc');
+    }
   };
 
   if (cargando) {
@@ -213,9 +285,34 @@ export default function DashboardPage() {
   const activeSheetName = TABS.find(t => t.id === activeTab)?.sheetName || 'historico';
   const activeData = sheetsData[activeSheetName] || [];
   const numRows = activeData.length;
+  const numFilasFiltradas = comprasFiltradas.length;
+
+  // Convertir compras filtradas a formato de tabla para Histórico
+  const comprasComoTabla = activeTab === 'historico'
+    ? comprasFiltradas.map(c => [
+        c.id.split('-')[1] || '',
+        formatearFecha(c.fecha),
+        c.tienda,
+        c.producto,
+        c.precioUnitario.toFixed(2).replace('.00', ''),
+        c.cantidad.toString(),
+        c.total.toFixed(2).replace('.00', ''),
+        c.telefono || '',
+        c.direccion || ''
+      ])
+    : [];
+
+  const datosTabla = activeTab === 'historico' && comprasComoTabla.length > 0
+    ? [Object.values(activeData[0] || {}).map((h: string) => String(h).toUpperCase()], ...comprasComoTabla]
+    : activeData;
+
+  if (activeTab === 'historico') {
+    console.log('Filtradas:', comprasFiltradas.length, 'de', compras.length);
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
@@ -231,6 +328,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICardEnhanced titulo="Gasto del Día" valor={kpiData?.gastoDelDia || 0} variacion={kpiData?.variacionDia} icono="euro" tipo="moneda" />
         <KPICardEnhanced titulo="Gasto del Mes" valor={kpiData?.gastoDelMes || 0} variacion={kpiData?.variacionMes} icono="activity" tipo="moneda" />
@@ -238,8 +336,31 @@ export default function DashboardPage() {
         <KPICardEnhanced titulo="Alertas de Precio" valor={kpiData?.alertasDePrecio || 0} icono="trending-up" tipo="numero" />
       </div>
 
+      {/* Quick Actions */}
       <QuickActions onRefresh={handleRefresh} onExport={handleExport} onFilter={handleFilter} cargando={cargando} />
 
+      {/* Panel de Filtros */}
+      {showFilters && (
+        <FilterPanel
+          filtros={filtros}
+          onFiltrosChange={setFiltros}
+          onReset={() => {
+            setFiltros({
+              fechaInicio: null,
+              fechaFin: null,
+              rangoFecha: 'todo',
+              tiendas: [],
+              busqueda: '',
+              precioMin: null,
+              precioMax: null,
+            });
+          }}
+          tiendasUnicas={tiendasUnicas}
+          compras={compras}
+        />
+      )}
+
+      {/* Tabs Navigation */}
       <div className="bg-[#111827] border border-[#1e293b] rounded-xl overflow-hidden">
         <div className="flex overflow-x-auto border-b border-[#1e293b] scrollbar-thin scrollbar-thumb-[#f59e0b]/20 scrollbar-track-transparent">
           {TABS.map((tab) => {
@@ -262,6 +383,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="p-6">
+          {/* Barra de herramientas */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 text-[#94a3b8]">
               {(() => {
@@ -269,17 +391,31 @@ export default function DashboardPage() {
                 return <Icon className="w-5 h-5" />;
               })()}
               <p className="text-sm">{TABS.find(t => t.id === activeTab)?.description}</p>
-              <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
-                {numRows} filas
-              </span>
+              {activeTab === 'historico' && (
+                <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
+                  {numFilasFiltradas} de {numRows} filas
+                  {filtros.busqueda || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' && ' (filtrado)'}
+                </span>
+              )}
             </div>
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs bg-[#f59e0b]/10 hover:bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30 rounded-lg transition-all"
-            >
-              <Download className="w-3 h-3" />
-              Exportar CSV
-            </button>
+            {activeTab === 'historico' && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-all ${
+                    showFilters
+                      ? 'bg-[#f59e0b] text-white border-[#f59e0b]'
+                      : 'bg-[#0d1117] text-[#94a3b8] border-[#1e293b] hover:bg-[#1a2234]'
+                  }`}
+                >
+                  <SlidersHorizontal className="w-3 h-3" />
+                  {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                  {filtros.busqueda || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' ? (
+                    <span className="ml-2 w-2 h-2 bg-[#10b981] rounded-full"></span>
+                  ) : ''}
+                </button>
+              </div>
+            )}
           </div>
 
           {numRows === 0 ? (
@@ -292,37 +428,43 @@ export default function DashboardPage() {
               <table className="w-full text-sm">
                 <thead className="bg-[#0d1117] sticky top-0">
                   <tr>
-                    {activeData[0]?.map((header: string, idx: number) => (
-                      <th key={idx} className="px-4 py-3 text-left font-semibold text-white whitespace-nowrap border-b-2 border-[#f59e0b]">
-                        {header}
+                    {datosTabla[0]?.map((header: string, idx: number) => (
+                      <th
+                        key={idx}
+                        onClick={() => activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && handleSort(header.toLowerCase() as SortField)}
+                        className={`px-4 py-3 text-left font-semibold text-white whitespace-nowrap border-b-2 border-[#f59e0b] cursor-pointer select-none ${
+                          activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) ? 'hover:bg-[#f59e0b]/10' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-1">
+                          {header}
+                          {activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && (
+                            sortField === header.toLowerCase() && (
+                              sortOrder === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                            )
+                          )}
+                        </div>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e293b]">
-                  {activeData.slice(1).map((row: string[], rowIdx: number) => (
+                  {datosTabla.slice(1).map((row: any[], rowIdx: number) => (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
-                      {row.map((cell: string, cellIdx: number) => {
-                        const numValue = parseFloat(cell);
+                      {row.map((cell: string | number, cellIdx: number) => {
+                        const numValue = parseFloat(String(cell));
                         const isNumber = !isNaN(numValue) && cell !== '' && cell !== null;
                         const isPrice = cellIdx >= 4 && cellIdx <= 6;
 
-                        // Formatear números a 2 decimales
-                        let displayValue = cell || '-';
+                        let displayValue = cell;
                         if (isNumber && !isNaN(numValue)) {
-                          displayValue = numValue.toFixed(2);
-                          // Remover ceros innecesarios después del punto decimal
-                          if (displayValue.endsWith('.00')) {
-                            displayValue = numValue.toFixed(0);
-                          }
+                          displayValue = numValue.toFixed(2).replace('.00', '');
                         }
 
                         return (
-                          <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${
-                            isPrice ? 'text-right' : 'text-left'
-                          }`}>
+                          <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${isPrice ? 'text-right' : 'text-left'}`}>
                             <span className={isNumber && isPrice ? 'text-white font-mono' : 'text-[#94a3b8]'}>
-                              {displayValue}
+                              {displayValue || '-'}
                             </span>
                           </td>
                         );
@@ -331,6 +473,15 @@ export default function DashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Paginación */}
+          {activeTab === 'historico' && numFilasFiltradas > 50 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#1e293b]">
+              <p className="text-xs text-[#64748b]">
+                Mostrando primeras 50 de {numFilasFiltradas} filas
+              </p>
             </div>
           )}
         </div>
@@ -342,7 +493,6 @@ export default function DashboardPage() {
 function parsearFecha(fecha: string | Date): Date {
   if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
   if (!fecha || typeof fecha !== 'string') return new Date();
-
   if (fecha.includes('/')) {
     const partes = fecha.split('/');
     if (partes.length === 3) {
@@ -352,7 +502,6 @@ function parsearFecha(fecha: string | Date): Date {
       }
     }
   }
-
   const parsed = new Date(fecha);
   return isNaN(parsed.getTime()) ? new Date() : parsed;
 }
