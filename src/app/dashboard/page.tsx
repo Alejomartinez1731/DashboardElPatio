@@ -593,6 +593,13 @@ function parsearFecha(fecha: string | Date): Date {
 
 function excluirFilaResumen(descripcion: string): boolean {
   if (!descripcion) return true;
-  const exclusiones = ['suma total', 'total general', 'total', 'subtotal', 'sub-total', 'iva', 'vat', 'tax', 'base imponible', 'base', 'recargo', 'equivalencia', 'devolución', 'devolucion', 'devoluc', '-', ''];
-  return exclusiones.some(exclusion => descripcion.toLowerCase().trim().includes(exclusion));
+  const descripcionLower = descripcion.toLowerCase().trim();
+
+  // Excluir si está vacía después de trim
+  if (descripcionLower === '') return true;
+
+  // Excluir palabras clave de resumen
+  const exclusiones = ['suma total', 'total general', 'total', 'subtotal', 'sub-total', 'iva', 'vat', 'tax', 'base imponible', 'base', 'recargo', 'equivalencia', 'devolución', 'devolucion', 'devoluc', '-'];
+
+  return exclusiones.some(exclusion => descripcionLower.includes(exclusion));
 }
