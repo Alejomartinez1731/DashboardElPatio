@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllSheetsData } from '@/lib/google-sheets';
+import { getN8NData, getN8NSheetData } from '@/lib/n8n';
 
 // Configurar revalidación de 5 minutos (los datos se actualizan por la tarde)
 export const revalidate = 300;
@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 /**
- * API Route única que obtiene todas las hojas de Google Sheets
+ * API Route que obtiene todas las hojas de Google Sheets a través de n8n
+ *
+ * n8n se conecta a Google Sheets usando OAuth2 y devuelve los datos ya procesados
  *
  * Query params:
  * - sheet: nombre específico de hoja (opcional, si se omite devuelve todas)
@@ -24,8 +26,7 @@ export async function GET(request: Request) {
 
     // Si se solicita una hoja específica
     if (sheetName) {
-      const { getSheetData } = await import('@/lib/google-sheets');
-      const data = await getSheetData(sheetName);
+      const data = await getN8NSheetData(sheetName);
 
       return NextResponse.json({
         success: true,
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
     }
 
     // Por defecto, devolver todas las hojas
-    const allSheetsData = await getAllSheetsData();
+    const allSheetsData = await getN8NData();
 
     return NextResponse.json({
       success: true,
