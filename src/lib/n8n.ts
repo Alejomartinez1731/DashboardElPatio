@@ -55,6 +55,10 @@ export async function getN8NData(): Promise<Record<SheetName, SheetData>> {
         range: 'Precio x Producto!A1:Z',
         values: (n8nResponse.data.precio_por_producto?.values) || [],
       },
+      registro_diario: {
+        range: 'Registro Diario!A1:Z',
+        values: (n8nResponse.data.registro_diario?.values) || [],
+      },
     };
 
     return result;
