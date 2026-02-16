@@ -295,7 +295,15 @@ export default function DashboardPage() {
   const numRows = activeData.length;
   const numFilasFiltradas = comprasFiltradas.length;
 
-  // Convertir compras filtradas a formato de tabla para Histórico
+  console.log('📊 Estado del dashboard:', {
+    activeTab,
+    activeSheetName,
+    numRows,
+    numFilasFiltradas,
+    totalCompras: compras.length,
+    filtros,
+    sheetsDataKeys: Object.keys(sheetsData)
+  });
   const comprasComoTabla = activeTab === 'historico'
     ? comprasFiltradas.map(c => {
         const row = [
