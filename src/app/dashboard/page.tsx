@@ -577,9 +577,26 @@ export default function DashboardPage() {
                     return (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
                       {row.map((cell: string | number, cellIdx: number) => {
-                        const cellStr = String(cell).trim();
+                        // Log del tipo de dato de la celda
+                        if (rowIdx < 2) {
+                          console.log(`🔍 Celda [${rowIdx},${cellIdx}]:`, {
+                            valor: cell,
+                            tipo: typeof cell,
+                            esArray: Array.isArray(cell),
+                            cabecera: datosTabla[0]?.[cellIdx]
+                          });
+                        }
+
+                        // Si es un array, unir los elementos
+                        let cellValue = cell;
+                        if (Array.isArray(cell)) {
+                          cellValue = cell.join(' ');
+                          console.log(`⚠️ Celda [${rowIdx},${cellIdx}] es array:`, cell, `→ unido: "${cellValue}"`);
+                        }
+
+                        const cellStr = String(cellValue).trim();
                         const numValue = parseFloat(cellStr);
-                        const isNumber = !isNaN(numValue) && cellStr !== '' && cell !== null;
+                        const isNumber = !isNaN(numValue) && cellStr !== '' && cellValue !== null;
 
                         // Determinar si es una columna de precio (basado en la cabecera)
                         const cabecera = datosTabla[0]?.[cellIdx] || '';
@@ -602,7 +619,7 @@ export default function DashboardPage() {
                           console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha (cabecera: "${cabecera}", columnaFecha: ${esColumnaFecha}, porContenido: ${esFechaPorContenido})`);
                         }
 
-                        let displayValue: string | number = cell;
+                        let displayValue: string | number = cellValue;
                         let className = 'text-[#94a3b8]';
 
                         if (esFecha) {
