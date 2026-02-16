@@ -2,65 +2,64 @@
 
 import { useEffect, useState } from 'react';
 import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
-import { WeeklyChart } from '@/components/dashboard/weekly-chart';
-import { DistributionChart } from '@/components/dashboard/distribution-chart';
-import { PriceAlerts } from '@/components/dashboard/price-alerts';
-import { TopProductsEnhanced } from '@/components/dashboard/top-products-enhanced';
-import { TrendChart } from '@/components/dashboard/trend-chart';
-import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
-import { InsightsPanel } from '@/components/dashboard/insights-panel';
-import { Compra, KPIData } from '@/types';
+import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs } from '@/lib/data-utils';
 import {
-  BarChart3,
+  LayoutDashboard,
+  Table,
   TrendingUp,
   PieChart,
-  Calendar,
-  AlertTriangle,
   ShoppingBag,
-  LayoutDashboard
+  AlertCircle
 } from 'lucide-react';
+import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
-type TabId = 'general' | 'tendencias' | 'distribucion' | 'alertas' | 'productos';
+type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'precio_producto';
 
 interface Tab {
   id: TabId;
   label: string;
+  sheetName: SheetName;
   icon: typeof LayoutDashboard;
   description: string;
 }
 
 const TABS: Tab[] = [
   {
-    id: 'general',
-    label: 'Vista General',
-    icon: LayoutDashboard,
-    description: 'Resumen ejecutivo y KPIs principales'
+    id: 'historico',
+    label: 'Histórico',
+    sheetName: 'historico',
+    icon: Table,
+    description: 'Tabla completa de historial de compras'
   },
   {
-    id: 'tendencias',
-    label: 'Tendencias',
+    id: 'historico_precios',
+    label: 'Histórico de Precios',
+    sheetName: 'historico_precios',
     icon: TrendingUp,
-    description: 'Evolución de gastos en el tiempo'
+    description: 'Evolución de precios por producto'
   },
   {
-    id: 'distribucion',
-    label: 'Distribución',
-    icon: PieChart,
-    description: 'Gastos por tienda y categorías'
-  },
-  {
-    id: 'alertas',
-    label: 'Alertas',
-    icon: AlertTriangle,
-    description: 'Productos con cambios de precio'
-  },
-  {
-    id: 'productos',
-    label: 'Productos',
+    id: 'producto_costoso',
+    label: 'Producto más Costoso',
+    sheetName: 'costosos',
     icon: ShoppingBag,
-    description: 'Productos más comprados'
+    description: 'Ranking de productos por precio'
+  },
+  {
+    id: 'gasto_tienda',
+    label: 'Gasto por Tienda',
+    sheetName: 'gasto_tienda',
+    icon: PieChart,
+    description: 'Gastos acumulados por proveedor/tienda'
+  },
+  {
+    id: 'precio_producto',
+    label: 'Precio x Producto',
+    sheetName: 'precio_producto',
+    icon: AlertCircle,
+    description: 'Comparativa de precios por producto'
   },
 ];
 
@@ -69,7 +68,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [compras, setCompras] = useState<Compra[]>([]);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('general');
+  const [activeTab, setActiveTab] = useState<TabId>('historico');
+  const [sheetsData, setSheetsData] = useState<Record<SheetName, string[][]>>({} as any);
+  const [loadingTabs, setLoadingTabs] = useState<Set<TabId>>(new Set());
 
   useEffect(() => {
     async function fetchDatos() {
@@ -89,11 +90,24 @@ export default function DashboardPage() {
           throw new Error(result.message || 'Error desconocido');
         }
 
-        const hojaHistorico = result.data.historico;
+        // Guardar datos crudos de todas las hojas
+        const allData: Record<SheetName, string[][]> = {} as any;
 
+        TABS.forEach(tab => {
+          const sheetData = result.data[tab.sheetName];
+          if (sheetData && sheetData.values) {
+            allData[tab.sheetName] = sheetData.values;
+          } else {
+            allData[tab.sheetName] = [];
+          }
+        });
+
+        setSheetsData(allData);
+
+        // Procesar compras desde la hoja "historico"
+        const hojaHistorico = result.data.historico;
         if (hojaHistorico && hojaHistorico.values) {
           const values = hojaHistorico.values as any[][];
-
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
             const comprasProcesadas: Compra[] = [];
@@ -101,10 +115,7 @@ export default function DashboardPage() {
             for (let i = 1; i < values.length; i++) {
               const fila = values[i];
               const obj: any = {};
-
-              cabeceras.forEach((cab: string, idx: number) => {
-                obj[cab] = fila[idx];
-              });
+              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
               const compra: Compra = {
                 id: `compra-${i}-${Date.now()}`,
@@ -124,7 +135,6 @@ export default function DashboardPage() {
             }
 
             setCompras(comprasProcesadas);
-
             const kpis = calcularKPIs(comprasProcesadas);
             setKpiData(kpis);
           } else {
@@ -169,27 +179,19 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
               Panel General
             </h1>
-            <p className="text-[#94a3b8]">Visión general de compras y gastos</p>
+            <p className="text-[#94a3b8]">Tablas de Google Sheets</p>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-lg">
             <div className="w-2 h-2 bg-[#f59e0b] rounded-full animate-pulse"></div>
             <span className="text-sm font-medium text-[#f59e0b]">Cargando...</span>
           </div>
         </div>
-
-        {/* Skeleton de KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 bg-[#111827] border border-[#1e293b] rounded-lg animate-pulse relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f59e0b]/5 to-transparent animate-shimmer"></div>
             </div>
           ))}
-        </div>
-
-        {/* Skeleton de gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-[#111827] border border-[#1e293b] rounded-lg animate-pulse"></div>
-          <div className="h-80 bg-[#111827] border border-[#1e293b] rounded-lg animate-pulse"></div>
         </div>
       </div>
     );
@@ -207,10 +209,7 @@ export default function DashboardPage() {
           </div>
           <p className="text-[#ef4444] font-semibold mb-2">Error de Carga</p>
           <p className="text-[#94a3b8] text-sm mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-[#f59e0b] text-white rounded-lg hover:bg-[#f59e0b]/80 transition-all duration-200 font-medium hover:scale-105 active:scale-95"
-          >
+          <button onClick={() => window.location.reload()} className="px-6 py-2.5 bg-[#f59e0b] text-white rounded-lg">
             Reintentar
           </button>
         </div>
@@ -226,53 +225,26 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
             Panel General
           </h1>
-          <p className="text-[#94a3b8]">Visión general de compras y gastos</p>
+          <p className="text-[#94a3b8]">Tablas de Google Sheets</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-4 py-2 bg-[#10b981]/10 border border-[#10b981]/30 rounded-lg">
             <div className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-[#10b981]">Datos en tiempo real</span>
+            <span className="text-sm font-medium text-[#10b981]">Conectado a n8n</span>
           </div>
         </div>
       </div>
 
-      {/* KPIs - Siempre visibles */}
+      {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICardEnhanced
-          titulo="Gasto del Día"
-          valor={kpiData?.gastoDelDia || 0}
-          variacion={kpiData?.variacionDia}
-          icono="euro"
-          tipo="moneda"
-        />
-        <KPICardEnhanced
-          titulo="Gasto del Mes"
-          valor={kpiData?.gastoDelMes || 0}
-          variacion={kpiData?.variacionMes}
-          icono="activity"
-          tipo="moneda"
-        />
-        <KPICardEnhanced
-          titulo="Facturas Procesadas"
-          valor={kpiData?.facturasProcesadas || 0}
-          icono="shopping"
-          tipo="numero"
-        />
-        <KPICardEnhanced
-          titulo="Alertas de Precio"
-          valor={kpiData?.alertasDePrecio || 0}
-          icono="trending-up"
-          tipo="numero"
-        />
+        <KPICardEnhanced titulo="Gasto del Día" valor={kpiData?.gastoDelDia || 0} variacion={kpiData?.variacionDia} icono="euro" tipo="moneda" />
+        <KPICardEnhanced titulo="Gasto del Mes" valor={kpiData?.gastoDelMes || 0} variacion={kpiData?.variacionMes} icono="activity" tipo="moneda" />
+        <KPICardEnhanced titulo="Facturas Procesadas" valor={kpiData?.facturasProcesadas || 0} icono="shopping" tipo="numero" />
+        <KPICardEnhanced titulo="Alertas de Precio" valor={kpiData?.alertasDePrecio || 0} icono="trending-up" tipo="numero" />
       </div>
 
       {/* Quick Actions */}
-      <QuickActions
-        onRefresh={handleRefresh}
-        onExport={handleExport}
-        onFilter={handleFilter}
-        cargando={cargando}
-      />
+      <QuickActions onRefresh={handleRefresh} onExport={handleExport} onFilter={handleFilter} cargando={cargando} />
 
       {/* Tabs Navigation */}
       <div className="bg-[#111827] border border-[#1e293b] rounded-xl overflow-hidden">
@@ -285,13 +257,11 @@ export default function DashboardPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center gap-3 px-6 py-4 whitespace-nowrap transition-all duration-200 relative
-                  ${isActive
+                className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap transition-all duration-200 relative ${
+                  isActive
                     ? 'text-[#f59e0b] bg-[#f59e0b]/5'
                     : 'text-[#94a3b8] hover:text-white hover:bg-[#0d1117]/50'
-                  }
-                `}
+                }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{tab.label}</span>
@@ -303,62 +273,51 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content - TABLA CRUDA DE GOOGLE SHEETS */}
         <div className="p-6">
-          {activeTab === 'general' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
-                <LayoutDashboard className="w-5 h-5" />
-                <p className="text-sm">{TABS.find(t => t.id === 'general')?.description}</p>
-              </div>
-              <InsightsPanel compras={compras} />
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
+            {(() => {
+              const Icon = TABS.find(t => t.id === activeTab)?.icon || Table;
+              return <Icon className="w-5 h-5" />;
+            })()}
+            <p className="text-sm">{TABS.find(t => t.id === activeTab)?.description}</p>
+            <span className="ml-auto text-xs bg-[#1e293b] px-2 py-1 rounded">
+              {sheetsData[TABS.find(t => t.id === activeTab)?.sheetName || 'historico']?.length || 0} filas
+            </span>
+          </div>
 
-          {activeTab === 'tendencias' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
-                <TrendingUp className="w-5 h-5" />
-                <p className="text-sm">{TABS.find(t => t.id === 'tendencias')?.description}</p>
-              </div>
-              <TrendChart datos={compras} dias={30} titulo="Tendencia de Gastos (30 días)" />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <WeeklyChart datos={compras} titulo="Gasto Semanal" />
-                <MonthlySummary datos={compras} titulo="Resumen Mensual" />
-              </div>
-            </div>
-          )}
+          {/* TABLA DE DATOS CRUDOS */}
+          <div className="overflow-x-auto rounded-lg border border-[#1e293b]">
+            <table className="w-full text-sm">
+              <thead className="bg-[#0d1117]">
+                <tr>
+                  {sheetsData[TABS.find(t => t.id === activeTab)?.sheetName || 'historico']?.[0]?.map((header: string, idx: number) => (
+                    <th key={idx} className="px-4 py-3 text-left font-semibold text-[#94a3b8] whitespace-nowrap">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1e293b]">
+                {(sheetsData[TABS.find(t => t.id === activeTab)?.sheetName || 'historico']?.slice(1) || []).map((row: string[], rowIdx: number) => (
+                  <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
+                    {row.map((cell: string, cellIdx: number) => (
+                      <td key={cellIdx} className="px-4 py-3 text-[#94a3b8] whitespace-nowrap">
+                        {cell || '-'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {activeTab === 'distribucion' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
-                <PieChart className="w-5 h-5" />
-                <p className="text-sm">{TABS.find(t => t.id === 'distribucion')?.description}</p>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <DistributionChart datos={compras} titulo="Distribución por Tienda" />
-                <TopProductsEnhanced compras={compras} limite={10} titulo="Top 10 Productos" />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'alertas' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
-                <AlertTriangle className="w-5 h-5" />
-                <p className="text-sm">{TABS.find(t => t.id === 'alertas')?.description}</p>
-              </div>
-              <PriceAlerts compras={compras} />
-            </div>
-          )}
-
-          {activeTab === 'productos' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-[#94a3b8] mb-4">
-                <ShoppingBag className="w-5 h-5" />
-                <p className="text-sm">{TABS.find(t => t.id === 'productos')?.description}</p>
-              </div>
-              <TopProductsEnhanced compras={compras} limite={15} titulo="Top 15 Productos Más Comprados" />
+          {/* Mensaje si no hay datos */}
+          {(!sheetsData[TABS.find(t => t.id === activeTab)?.sheetName || 'historico'] ||
+            sheetsData[TABS.find(t => t.id === activeTab)?.sheetName || 'historico']?.length === 0) && (
+            <div className="text-center py-12">
+              <Table className="w-12 h-12 mx-auto mb-4 text-[#64748b]" />
+              <p className="text-[#64748b]">No hay datos en esta tabla</p>
             </div>
           )}
         </div>
@@ -367,16 +326,13 @@ export default function DashboardPage() {
   );
 }
 
-// Función auxiliar para parsear fechas
 function parsearFecha(fecha: string | Date): Date {
   if (fecha instanceof Date) {
     return isNaN(fecha.getTime()) ? new Date() : fecha;
   }
-
   if (!fecha || typeof fecha !== 'string') {
     return new Date();
   }
-
   if (fecha.includes('/')) {
     const partes = fecha.split('/');
     if (partes.length === 3) {
@@ -386,30 +342,12 @@ function parsearFecha(fecha: string | Date): Date {
       }
     }
   }
-
   const parsed = new Date(fecha);
-  if (isNaN(parsed.getTime())) {
-    return new Date();
-  }
-
-  return parsed;
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
-// Función auxiliar para excluir filas de resumen
 function excluirFilaResumen(descripcion: string): boolean {
   if (!descripcion) return true;
-
-  const exclusiones = [
-    'suma total', 'total general',
-    'total', 'subtotal', 'sub-total',
-    'iva', 'vat', 'tax',
-    'base imponible', 'base',
-    'recargo', 'equivalencia',
-    'devolución', 'devolucion', 'devoluc',
-    '-', '',
-  ];
-
-  const descLower = descripcion.toLowerCase().trim();
-
-  return exclusiones.some(exclusion => descLower.includes(exclusion));
+  const exclusiones = ['suma total', 'total general', 'total', 'subtotal', 'sub-total', 'iva', 'vat', 'tax', 'base imponible', 'base', 'recargo', 'equivalencia', 'devolución', 'devolucion', 'devoluc', '-', ''];
+  return exclusiones.some(exclusion => descripcion.toLowerCase().trim().includes(exclusion));
 }
