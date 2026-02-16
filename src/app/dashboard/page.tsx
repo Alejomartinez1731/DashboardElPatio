@@ -569,7 +569,12 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e293b]">
-                  {datosTabla.slice(1).map((row: any[], rowIdx: number) => (
+                  {datosTabla.slice(1).map((row: any[], rowIdx: number) => {
+                    // Log solo las primeras 2 filas para no saturar
+                    if (rowIdx < 2) {
+                      console.log(`🔵 Fila ${rowIdx}:`, row);
+                    }
+                    return (
                     <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
                       {row.map((cell: string | number, cellIdx: number) => {
                         const cellStr = String(cell).trim();
@@ -581,6 +586,11 @@ export default function DashboardPage() {
                           cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
                           (cellStr.length >= 8 && cellStr.length <= 10 && !isNaN(Date.parse(cellStr)))
                         );
+
+                        // Log cuando detectamos una fecha
+                        if (esFecha && rowIdx < 2) {
+                          console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha`);
+                        }
 
                         // Determinar si es una columna de precio (basado en la cabecera)
                         const cabecera = datosTabla[0]?.[cellIdx] || '';
@@ -595,6 +605,9 @@ export default function DashboardPage() {
                           const fecha = parsearFecha(cellStr);
                           displayValue = formatearFecha(fecha);
                           className = 'text-white';
+                          if (rowIdx < 2) {
+                            console.log(`📅 Fecha formateada: "${cellStr}" → "${displayValue}"`);
+                          }
                         } else if (isNumber) {
                           // Formatear número
                           if (esPrecio || cabeceraLower === 'cantidad') {
@@ -617,7 +630,8 @@ export default function DashboardPage() {
                         );
                       })}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
