@@ -9,6 +9,24 @@ import { Card } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useMemo } from 'react';
 
+function parsearFecha(fecha: string | Date): Date {
+  if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
+  if (!fecha || typeof fecha !== 'string') return new Date();
+
+  if (fecha.includes('/')) {
+    const partes = fecha.split('/');
+    if (partes.length === 3) {
+      const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
+      if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
+        return new Date(anio, mes - 1, dia);
+      }
+    }
+  }
+
+  const parsed = new Date(fecha);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
 interface InfoTienda {
   nombre: string;
   color: string;
@@ -46,11 +64,11 @@ export default function ProveedoresPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: new Date(obj.fecha || ''),
+                fecha: parsearFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio unitario'] || '0') || 0,
+                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
                 total: parseFloat(obj.total || '0') || 0,
                 telefono: obj.telefono,
                 direccion: obj.direccion,
