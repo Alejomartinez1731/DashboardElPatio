@@ -362,61 +362,177 @@ export default function DashboardPage() {
       console.log('📊 ESTRUCTURA precio_producto:');
       console.log('📊 Fila 0 (cabeceras originales?):', datosTabla[0]);
       console.log('📊 Fila 1 (primera fila de datos):', datosTabla[1]);
+      console.log('📊 Fila 2 (segunda fila de datos):', datosTabla[2]);
       console.log('📊 Total filas:', datosTabla.length);
 
       // Si la primera fila tiene "Descripcion" como cabecera, probablemente
       // la estructura es: ID | Descripcion | vacio | fecha1 | fecha2 | ...
       if (datosTabla[0][1] && String(datosTabla[0][1]).toLowerCase().includes('descripcion')) {
         console.log('📊 Detectado: Estructura con Descripcion en fila 0');
+        console.log('📊 datosTabla[0]:', datosTabla[0]);
 
-        // Crear cabeceras correctas
+        // Crear cabeceras correctas - solo ID y PRODUCTO
         const nuevasCabeceras = ['ID', 'PRODUCTO'];
 
-        // Agregar fechas como cabeceras
+        // Agregar fechas como cabeceras - recorrer todas las columnas desde la 3
         for (let i = 3; i < datosTabla[0].length; i++) {
           const valor = datosTabla[0][i];
+          console.log(`📊 Procesando cabecera ${i}:`, valor, 'tipo:', typeof valor, 'es fecha yyyy-mm-dd:', String(valor).match(/^\d{4}-\d{2}-\d{2}$/));
+
           if (valor && String(valor).match(/^\d{4}-\d{2}-\d{2}$/)) {
-            // Es una fecha, usarla
-            nuevasCabeceras.push(valor);
+            // Es una fecha en formato yyyy-mm-dd, convertirla manualmente a dd/mm/yyyy
+            const fechaStr = String(valor);
+            const [anio, mes, dia] = fechaStr.split('-');
+            const fechaFormateada = `${dia}/${mes}/${anio}`;
+            console.log(`📊 Fecha convertida: ${valor} → ${fechaFormateada}`);
+            nuevasCabeceras.push(fechaFormateada);
           } else if (valor && valor !== '') {
             nuevasCabeceras.push(String(valor).toUpperCase());
           }
         }
 
         console.log('📊 Nuevas cabeceras creadas:', nuevasCabeceras);
-        datosTabla[0] = nuevasCabeceras;
 
-        // Ahora verificar si hay datos dispersos que necesitan unirse
-        // Por ejemplo, "24" en una columna y "ous" en otra
-        datosTabla = datosTabla.map((row, rowIdx) => {
-          if (rowIdx === 0) return row; // Mantener cabeceras
+        // Crear nuevas filas de datos, omitiendo filas vacías y procesando correctamente
+        const nuevasFilas = [nuevasCabeceras];
 
-          // Si hay muchas celdas vacías, intentar compactar
-          const newRow = [];
-          let productoActual = row[1] || ''; // Descripción está en columna 1
+        // Empezar desde la fila 2 (la fila 1 suele ser de totales/vacía)
+        // Primero, fusionar filas que parecen ser continuación de un producto incompleto
+        const filasFusionadas = [];
 
-          // Agregar ID
-          newRow.push(row[0]);
+        for (let rowIdx = 2; rowIdx < datosTabla.length; rowIdx++) {
+          const row = datosTabla[rowIdx];
 
-          // Agregar producto
-          newRow.push(productoActual);
+          // Si la fila está completamente vacía, saltarla
+          if (!row || row.length === 0) continue;
 
-          // Agregar el resto de datos (fechas y valores)
-          for (let i = 2; i < row.length; i++) {
-            newRow.push(row[i]);
+          console.log(`📊 Procesando fila ${rowIdx}:`, row);
+
+          // Obtener el nombre del producto de la columna 1
+          let productoActual = String(row[1] || '').trim();
+
+          // Si el producto actual parece incompleto (solo números cortos), buscar si la siguiente fila es continuación
+          // Un producto está incompleto si:
+          // 1. Es solo un número (ej: "15", "24", "40")
+          // 2. La siguiente fila tiene un producto que parece ser continuación (texto sin números al inicio)
+          if (productoActual.match(/^\d+$/) && rowIdx + 1 < datosTabla.length) {
+            const nextRow = datosTabla[rowIdx + 1];
+            const nextProducto = String(nextRow[1] || '').trim();
+
+            // Si la siguiente fila NO empieza con número, es probablemente la continuación
+            if (nextProducto && !nextProducto.match(/^\d+/)) {
+              console.log(`📊 Detectado producto incompleto: "${productoActual}" + "${nextProducto}"`);
+
+              // Fusionar las filas
+              const rowFusionada = [...row];
+
+              // Unir los nombres de productos
+              rowFusionada[1] = `${productoActual} ${nextProducto}`;
+
+              // Fusionar los precios (sumar o tomar el que tenga valor)
+              for (let i = 3; i < row.length; i++) {
+                const valor1 = row[i];
+                const valor2 = nextRow[i];
+
+                // Si uno está vacío y el otro no, usar el que tiene valor
+                if ((valor1 === '' || valor1 === '-' || valor1 === null) && valor2 && valor2 !== '' && valor2 !== '-') {
+                  rowFusionada[i] = valor2;
+                }
+                // Si ambos tienen valores numéricos, sumarlos
+                else if (valor1 && valor2 && valor1 !== '-' && valor2 !== '-') {
+                  const num1 = parseFloat(String(valor1)) || 0;
+                  const num2 = parseFloat(String(valor2)) || 0;
+                  if (!isNaN(num1) && !isNaN(num2)) {
+                    rowFusionada[i] = (num1 + num2).toString();
+                  }
+                }
+              }
+
+              filasFusionadas.push(rowFusionada);
+              console.log(`📊 Fila fusionada:`, rowFusionada);
+
+              // Saltar la siguiente fila porque ya la fusionamos
+              rowIdx++; // Incrementar para saltar nextRow
+              continue;
+            }
           }
 
-          console.log(`📊 Fila ${rowIdx} compactada:`, newRow);
-          return newRow;
-        });
+          // Si no se fusionó, agregar la fila tal cual
+          filasFusionadas.push(row);
+        }
+
+        // Ahora procesar las filas fusionadas
+        for (let f = 0; f < filasFusionadas.length; f++) {
+          const row = filasFusionadas[f];
+          const rowIdx = f + 2; // Para logs
+
+          console.log(`📊 Procesando fila fusionada ${rowIdx}:`, row);
+
+          // El producto está en la columna 1
+          let producto = String(row[1] || '').trim();
+
+          // Si es un array, unirlo
+          if (Array.isArray(producto)) {
+            producto = producto.join(' ').trim();
+          }
+
+          console.log(`📊 Producto final fila ${rowIdx}:`, `"${producto}"`);
+
+          // Crear nueva fila procesada
+          const newRow = [
+            row[0] || '', // ID
+            producto, // PRODUCTO
+          ];
+
+          // Agregar los precios (desde columna 3 en adelante)
+          for (let i = 3; i < row.length; i++) {
+            let valor = row[i];
+
+            // Si el valor es un array, unirlo
+            if (Array.isArray(valor)) {
+              valor = valor.join(' ').trim();
+            }
+
+            newRow.push(valor);
+          }
+
+          // Solo agregar la fila si tiene un producto válido
+          if (producto && producto.trim() !== '' && producto.trim() !== '0') {
+            console.log(`📊 Fila ${rowIdx} procesada FINAL:`, newRow);
+            nuevasFilas.push(newRow);
+          } else {
+            console.log(`⚠️ Fila ${rowIdx} descartada: producto vacío`);
+          }
+        }
+
+        datosTabla = nuevasFilas;
       } else {
         console.log('📊 Estructura no reconocida, usando cabeceras genéricas');
-        // Crear cabeceras genéricas pero con nombres más bonitos que "COL-X"
+        // Crear cabeceras genéricas pero SIN CANTIDAD
         datosTabla[0] = datosTabla[0].map((cell, idx) => {
           const cellStr = String(cell).toLowerCase().trim();
           if (cellStr === 'col-1' || cellStr === 'column1' || idx === 1) return 'PRODUCTO';
-          if (cellStr === 'col-2' || cellStr === 'column2' || idx === 2) return 'CANTIDAD';
+          // NO agregar CANTIDAD - saltar índice 2 o renombrar a otra cosa
+          if (cellStr === 'col-2' || cellStr === 'column2' || idx === 2) {
+            // Si el valor original es una fecha, formatearlo
+            const cellVal = String(datosTabla[0][idx] || '');
+            if (cellVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              const fecha = new Date(cellVal + 'T00:00:00');
+              if (!isNaN(fecha.getTime())) {
+                return formatearFecha(fecha);
+              }
+            }
+            return 'DATOS'; // Nombre genérico, no CANTIDAD
+          }
           if (cellStr.match(/^col-\d+$/)) return `DATOS ${idx}`;
+          // Si es una fecha en formato yyyy-mm-dd, formatearla
+          const cellVal = String(cell).trim();
+          if (cellVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const fecha = new Date(cellVal + 'T00:00:00');
+            if (!isNaN(fecha.getTime())) {
+              return formatearFecha(fecha);
+            }
+          }
           return String(cell).toUpperCase();
         });
       }
@@ -664,99 +780,125 @@ export default function DashboardPage() {
     }
 
     return (
-                    <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
-                      {row.map((cell: string | number, cellIdx: number) => {
-                        // Log del tipo de dato de la celda
-                        if (rowIdx < 2 && cellIdx < 8) {
-                          console.log(`🔍 Celda [${rowIdx},${cellIdx}]:`, {
-                            valor: cell,
-                            tipo: typeof cell,
-                            esArray: Array.isArray(cell),
-                            cabecera: datosTabla[0]?.[cellIdx]
-                          });
-                        }
+      <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
+        {row.map((cell: string | number, cellIdx: number) => {
+          // Log del tipo de dato de la celda
+          if (rowIdx < 2 && cellIdx < 8) {
+            console.log(`🔍 Celda [${rowIdx},${cellIdx}]:`, {
+              valor: cell,
+              tipo: typeof cell,
+              esArray: Array.isArray(cell),
+              cabecera: datosTabla[0]?.[cellIdx]
+            });
+          }
 
-                        // Si es un array, unir los elementos
-                        let cellValue = cell;
-                        if (Array.isArray(cell)) {
-                          cellValue = cell.join(' ');
-                          if (rowIdx < 2) {
-                            console.log(`⚠️ Celda [${rowIdx},${cellIdx}] es array:`, cell, `→ unido: "${cellValue}"`);
-                          }
-                        }
+          // Si es un array, unir los elementos
+          let cellValue = cell;
+          if (Array.isArray(cell)) {
+            cellValue = cell.join(' ').trim();
+            if (rowIdx < 2) {
+              console.log(`⚠️ Celda [${rowIdx},${cellIdx}] es array:`, cell, `→ unido: "${cellValue}"`);
+            }
+          }
 
-                        // Si está vacío y no es la última columna, ocultar
-                        if ((cellValue === '' || cellValue === null || cellValue === undefined) && cellIdx < row.length - 1) {
-                          // Verificar si hay datos después de esta celda vacía
-                          const hayDatosDespues = row.slice(cellIdx + 1).some(c =>
-                            c !== '' && c !== null && c !== undefined
-                          );
-                          if (!hayDatosDespues && cellIdx > 3) {
-                            // Si no hay datos después y estamos más allá de la columna 4, ocultar
-                            return null;
-                          }
-                        }
+          // Para Precio x Producto, manejar productos vacíos
+          if (activeTab === 'precio_producto' && cellIdx === 1) {
+            // Columna PRODUCTO - si está vacío, buscar en la fila actual
+            if (!cellValue || cellValue === '' || cellValue === '0') {
+              // Intentar construir el producto de las primeras columnas
+              const partesProducto = [];
+              for (let i = 0; i < Math.min(5, row.length); i++) {
+                const val = row[i];
+                if (val && val !== '' && val !== '0' && i !== 0) { // Saltar ID
+                  let strVal = Array.isArray(val) ? val.join(' ').trim() : String(val).trim();
+                  if (strVal && strVal.match(/^\d+$/)) {
+                    // Si es solo números, puede ser parte de un producto split
+                    partesProducto.push(strVal);
+                  } else if (strVal && !strVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    // No es una fecha, agregar
+                    partesProducto.push(strVal);
+                  }
+                }
+              }
+              if (partesProducto.length > 0) {
+                cellValue = partesProducto.join(' ');
+                console.log(`📊 Reconstruido producto para fila ${rowIdx}:`, cellValue);
+              }
+            }
+          }
 
-                        const cellStr = String(cellValue).trim();
-                        const numValue = parseFloat(cellStr);
-                        const isNumber = !isNaN(numValue) && cellStr !== '' && cellValue !== null;
+          // Si está vacío y no es la última columna, ocultar
+          if ((cellValue === '' || cellValue === null || cellValue === undefined) && cellIdx < row.length - 1) {
+            // Verificar si hay datos después de esta celda vacía
+            const hayDatosDespues = row.slice(cellIdx + 1).some(c =>
+              c !== '' && c !== null && c !== undefined
+            );
+            if (!hayDatosDespues && cellIdx > 3) {
+              // Si no hay datos después y estamos más allá de la columna 4, ocultar
+              return null;
+            }
+          }
 
-                        // Determinar si es una columna de precio (basado en la cabecera)
-                        const cabecera = datosTabla[0]?.[cellIdx] || '';
-                        const cabeceraLower = String(cabecera).toLowerCase();
-                        const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo');
+          const cellStr = String(cellValue).trim();
+          const numValue = parseFloat(cellStr);
+          const isNumber = !isNaN(numValue) && cellStr !== '' && cellValue !== null;
 
-                        // Detectar si es columna de fecha por cabecera
-                        const esColumnaFecha = cabeceraLower.includes('fecha') || cabeceraLower === 'fech' || cabeceraLower === 'date';
+          // Determinar si es una columna de precio (basado en la cabecera)
+          const cabecera = datosTabla[0]?.[cellIdx] || '';
+          const cabeceraLower = String(cabecera).toLowerCase();
+          const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo') || cabeceraLower.match(/^\d{2}\/\d{2}\/\d{4}$/);
 
-                        // Detectar si es una fecha (formato dd/mm/yyyy o similar)
-                        const esFechaPorContenido = !isNumber && (
-                          cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
-                          (cellStr.match(/^\d{4}\-\d{2}-\d{2}$/) && !isNaN(Date.parse(cellStr))) // yyyy-mm-dd
-                        );
+          // Detectar si es columna de fecha por cabecera
+          const esColumnaFecha = cabeceraLower.includes('fecha') || cabeceraLower === 'fech' || cabeceraLower === 'date';
 
-                        const esFecha = esColumnaFecha || esFechaPorContenido;
+          // Detectar si es una fecha (formato dd/mm/yyyy o similar)
+          const esFechaPorContenido = !isNumber && (
+            cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) || // dd/mm/yyyy o dd-mm-yyyy
+            (cellStr.match(/^\d{4}\-\d{2}-\d{2}$/) && !isNaN(Date.parse(cellStr))) // yyyy-mm-dd
+          );
 
-                        // Log cuando detectamos una fecha
-                        if (esFecha && rowIdx < 2) {
-                          console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha (cabecera: "${cabecera}", columnaFecha: ${esColumnaFecha}, porContenido: ${esFechaPorContenido})`);
-                        }
+          const esFecha = esColumnaFecha || esFechaPorContenido;
 
-                        let displayValue: string | number = cellValue;
-                        let className = 'text-[#94a3b8]';
+          // Log cuando detectamos una fecha
+          if (esFecha && rowIdx < 2) {
+            console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha (cabecera: "${cabecera}", columnaFecha: ${esColumnaFecha}, porContenido: ${esFechaPorContenido})`);
+          }
 
-                        if (esFecha) {
-                          // Formatear fecha
-                          const fecha = parsearFecha(cellStr);
-                          displayValue = formatearFecha(fecha);
-                          className = 'text-white';
-                          if (rowIdx < 2) {
-                            console.log(`📅 Fecha formateada: "${cellStr}" → "${displayValue}"`);
-                          }
-                        } else if (isNumber) {
-                          // Formatear número
-                          if (esPrecio || cabeceraLower === 'cantidad') {
-                            displayValue = numValue.toFixed(2).replace('.00', '');
-                            className = 'text-white font-mono';
-                          } else {
-                            displayValue = numValue.toFixed(2).replace('.00', '');
-                          }
-                        }
+          let displayValue: string | number = cellValue;
+          let className = 'text-[#94a3b8]';
 
-                        // Alineación: precios a la derecha, todo lo demás a la izquierda
-                        const alignClass = esPrecio ? 'text-right' : 'text-left';
+          if (esFecha) {
+            // Formatear fecha
+            const fecha = parsearFecha(cellStr);
+            displayValue = formatearFecha(fecha);
+            className = 'text-white';
+            if (rowIdx < 2) {
+              console.log(`📅 Fecha formateada: "${cellStr}" → "${displayValue}"`);
+            }
+          } else if (isNumber) {
+            // Formatear número
+            if (esPrecio || cabeceraLower === 'cantidad') {
+              displayValue = numValue.toFixed(2).replace('.00', '');
+              className = 'text-white font-mono';
+            } else {
+              displayValue = numValue.toFixed(2).replace('.00', '');
+            }
+          }
 
-                        return (
-                          <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${alignClass}`}>
-                            <span className={className}>
-                              {displayValue || '-'}
-                            </span>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    );
-                  })}
+          // Alineación: precios a la derecha, todo lo demás a la izquierda
+          const alignClass = esPrecio ? 'text-right' : 'text-left';
+
+          return (
+            <td key={cellIdx} className={`px-4 py-3 whitespace-nowrap ${alignClass}`}>
+              <span className={className}>
+                {displayValue || '-'}
+              </span>
+            </td>
+          );
+        })}
+      </tr>
+    );
+  })}
                 </tbody>
               </table>
             </div>
