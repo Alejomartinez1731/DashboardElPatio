@@ -3,11 +3,29 @@
 import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
+import { normalizarTienda, COLORES_TIENDA, normalizarFecha } from '@/lib/data-utils';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { useMemo } from 'react';
+
+function parsearFecha(fecha: string | Date): Date {
+  if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
+  if (!fecha || typeof fecha !== 'string') return new Date();
+
+  if (fecha.includes('/')) {
+    const partes = fecha.split('/');
+    if (partes.length === 3) {
+      const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
+      if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
+        return new Date(anio, mes - 1, dia);
+      }
+    }
+  }
+
+  const parsed = new Date(fecha);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
 
 interface PrecioProducto {
   producto: string;
@@ -40,11 +58,11 @@ export default function PreciosPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: new Date(obj.fecha || ''),
+                fecha: parsearFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio unitario'] || '0') || 0,
+                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
                 total: parseFloat(obj.total || '0') || 0,
               };
 
@@ -84,7 +102,9 @@ export default function PreciosPage() {
       const precioMax = Math.max(...precios);
       const primeraCompra = data.compras.sort((a, b) => a.fecha.getTime() - b.fecha.getTime())[0];
       const ultimaCompra = data.compras.sort((a, b) => b.fecha.getTime() - a.fecha.getTime())[0];
-      const variacion = ((ultimaCompra.precioUnitario - primeraCompra.precioUnitario) / primeraCompra.precioUnitario) * 100;
+      const variacion = primeraCompra.precioUnitario > 0
+        ? ((ultimaCompra.precioUnitario - primeraCompra.precioUnitario) / primeraCompra.precioUnitario) * 100
+        : 0;
 
       return {
         producto,
@@ -170,7 +190,7 @@ export default function PreciosPage() {
         <Card className="p-4 bg-[#111827] border-[#1e293b]">
           <p className="text-[#64748b] text-sm mb-1">Precio Promedio</p>
           <p className="text-2xl font-bold text-[#10b981]">
-            {formatearMoneda(preciosProductos.reduce((sum, p) => sum + p.precioPromedio, 0) / preciosProductos.length || 0)}
+            {formatearMoneda(preciosProductos.length > 0 ? preciosProductos.reduce((sum, p) => sum + p.precioPromedio, 0) / preciosProductos.length : 0)}
           </p>
         </Card>
         <Card className="p-4 bg-[#111827] border-[#1e293b]">

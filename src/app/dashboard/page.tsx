@@ -233,8 +233,8 @@ export default function DashboardPage() {
           bVal = b.total;
           break;
       }
-      if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
-      return aVal < bVal ? 1 : -1;
+      if (sortOrder === 'asc') return aVal > bVal ? 1 : (aVal < bVal ? -1 : 0);
+      return aVal < bVal ? 1 : (aVal > bVal ? -1 : 0);
     });
 
     console.log('✅ Filtrado final:', filtradas.length, 'de', compras.length, 'filas');

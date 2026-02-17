@@ -36,7 +36,7 @@ export function normalizarTienda(tienda: string): string {
   if (nombre.includes('caprabo')) return 'Caprabo';
 
   // Si no coincide con ninguna conocida, capitalizar y quitar sufijos corporativos
-  const limpio = tienda.replace(/,?\s*(S\.?A\.?|S\.?L\.?)$/i, '').trim();
+  const limpio = (tienda || '').replace(/,?\s*(S\.?A\.?|S\.?L\.?)$/i, '').trim();
 
   // Verificar si ya está en el mapa de colores
   if (COLORES_TIENDA[limpio]) {
