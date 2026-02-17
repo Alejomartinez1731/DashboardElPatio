@@ -8,7 +8,9 @@ const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
  */
 export async function getN8NData(): Promise<Record<SheetName, SheetData>> {
   if (!N8N_WEBHOOK_URL) {
-    throw new Error('NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada en variables de entorno');
+    console.error('❌ NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada');
+    console.error('Variables de entorno disponibles:', Object.keys(process.env).filter(k => k.includes('N8N') || k.includes('PUBLIC')));
+    throw new Error('NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada en variables de entorno. Por favor configura esta variable en tu plataforma de deployment.');
   }
 
   try {
