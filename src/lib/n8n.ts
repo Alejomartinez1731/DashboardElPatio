@@ -17,8 +17,8 @@ export async function getN8NData(): Promise<Record<SheetName, SheetData>> {
       headers: {
         'Accept': 'application/json',
       },
-      // Agregar cache de 5 minutos
-      next: { revalidate: 300 },
+      // Nota: next.revalidate no se usa en API routes serverless
+      // El cache se maneja a través de headers de respuesta
     });
 
     if (!response.ok) {
