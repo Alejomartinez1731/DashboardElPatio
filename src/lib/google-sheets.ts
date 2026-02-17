@@ -12,6 +12,7 @@ const SHEET_NAMES: Record<SheetName, string> = {
   'costosos': 'Producto más costoso',
   'gasto_tienda': 'Gasto Por Tienda',
   'precio_producto': 'Precio x Producto',
+  'registro_diario': 'Registro Diario',
 };
 
 /**
@@ -45,7 +46,7 @@ export async function getSheetData(sheetName: SheetName, range?: string): Promis
  * Obtiene todas las hojas de datos en paralelo
  */
 export async function getAllSheetsData(): Promise<Record<SheetName, SheetData>> {
-  const sheetNames: SheetName[] = ['historico', 'historico_precios', 'costosos', 'gasto_tienda', 'precio_producto'];
+  const sheetNames: SheetName[] = ['historico', 'historico_precios', 'costosos', 'gasto_tienda', 'precio_producto', 'registro_diario'];
 
   const results = await Promise.allSettled(
     sheetNames.map(async (name): Promise<{ name: SheetName; data: SheetData; success: boolean }> => {

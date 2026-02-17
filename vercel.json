@@ -1,12 +1,4 @@
 {
   "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_N8N_WEBHOOK_URL": {
-      "description": "URL del webhook de n8n para obtener datos de Google Sheets",
-      "value": "https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/dashboard-data"
-    }
-  }
+  "framework": "nextjs"
 }
