@@ -506,34 +506,64 @@ export default function DashboardPage() {
 
         datosTabla = nuevasFilas;
       } else {
-        console.log('📊 Estructura no reconocida, usando cabeceras genéricas');
-        // Crear cabeceras genéricas pero SIN CANTIDAD
+        console.log('📊 Estructura no reconocida, mejorando cabeceras');
+        // Crear cabeceras mejoradas para Precio x Producto
         datosTabla[0] = datosTabla[0].map((cell, idx) => {
           const cellStr = String(cell).toLowerCase().trim();
-          if (cellStr === 'col-1' || cellStr === 'column1' || idx === 1) return 'PRODUCTO';
-          // NO agregar CANTIDAD - saltar índice 2 o renombrar a otra cosa
-          if (cellStr === 'col-2' || cellStr === 'column2' || idx === 2) {
-            // Si el valor original es una fecha, formatearlo
-            const cellVal = String(datosTabla[0][idx] || '');
+
+          // Columna 0: ID
+          if (idx === 0 || cellStr === 'row_number' || cellStr === 'row number' || cellStr === 'col-1') {
+            return '';
+          }
+
+          // Columna 1: Producto
+          if (idx === 1 || cellStr === 'col-1' || cellStr === 'descripcion') {
+            return 'PRODUCTO';
+          }
+
+          // Columna 2: Omitir o marcar como vacía
+          if (idx === 2 || cellStr === 'col-2' || cellStr === 'column2') {
+            return '';
+          }
+
+          // Para columnas a partir de la 3, intentar detectar fechas
+          if (idx >= 3) {
+            const cellVal = String(cell).trim();
+
+            // Si es una fecha en formato yyyy-mm-dd, formatearla a dd/mm/yyyy
             if (cellVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              const fecha = new Date(cellVal + 'T00:00:00');
-              if (!isNaN(fecha.getTime())) {
-                return formatearFecha(fecha);
-              }
+              const [anio, mes, dia] = cellVal.split('-');
+              return `${dia}/${mes}/${anio}`;
             }
-            return 'DATOS'; // Nombre genérico, no CANTIDAD
-          }
-          if (cellStr.match(/^col-\d+$/)) return `DATOS ${idx}`;
-          // Si es una fecha en formato yyyy-mm-dd, formatearla
-          const cellVal = String(cell).trim();
-          if (cellVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            const fecha = new Date(cellVal + 'T00:00:00');
-            if (!isNaN(fecha.getTime())) {
-              return formatearFecha(fecha);
+
+            // Si es una fecha en otros formatos
+            if (cellVal.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+              return cellVal; // Ya está formateada
             }
+
+            // Si está vacío o es un placeholder genérico, retornar vacío
+            if (!cellVal || cellVal === '' || cellStr.match(/^col-\d+$/) || cellStr.match(/^column\d+$/)) {
+              return '';
+            }
+
+            // Para cualquier otro valor, retornarlo formateado
+            return cellVal.toUpperCase();
           }
-          return String(cell).toUpperCase();
+
+          return '';
+        }).filter((header, idx, arr) => {
+          // Filtrar cabeceras vacías solo si TODAS las filas debajo están vacías
+          if (header === '') {
+            // Verificar si hay datos en esta columna
+            const hasData = datosTabla.slice(1).some(row => row[idx] && row[idx] !== '' && row[idx] !== '-');
+            return hasData;
+          }
+          return true;
         });
+
+        // También filtrar las celdas de datos para que coincidan con las cabeceras filtradas
+        const headerIndices = datosTabla[0].map((h, i) => h !== '' ? i : -1).filter(i => i >= 0);
+        datosTabla = datosTabla.map(row => headerIndices.map(idx => row[idx]));
       }
     } else {
       // Para otras pestañas, normalizar normalmente
