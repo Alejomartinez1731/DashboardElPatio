@@ -6,10 +6,10 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
-import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
-type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'precio_producto';
+type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
 
 interface Tab {
   id: TabId;
@@ -23,7 +23,6 @@ const TABS: Tab[] = [
   { id: 'historico_precios', label: 'Histórico de Precios', sheetName: 'historico_precios', icon: TrendingUp, description: 'Evolución de precios por producto' },
   { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
-  { id: 'precio_producto', label: 'Precio x Producto', sheetName: 'precio_producto', icon: AlertCircle, description: 'Comparativa de precios por producto' },
   { id: 'historico', label: 'Base de Datos', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
 ];
 
