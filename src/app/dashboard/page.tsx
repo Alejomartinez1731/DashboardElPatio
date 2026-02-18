@@ -6,10 +6,10 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
-import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download, ChevronUp, ChevronDown, SlidersHorizontal, FileText } from 'lucide-react';
+import { Table, TrendingUp, PieChart, ShoppingBag, AlertCircle, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
-type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'precio_producto' | 'registro_diario';
+type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'precio_producto';
 
 interface Tab {
   id: TabId;
@@ -20,12 +20,11 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: 'historico', label: 'Histórico', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
   { id: 'historico_precios', label: 'Histórico de Precios', sheetName: 'historico_precios', icon: TrendingUp, description: 'Evolución de precios por producto' },
   { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
   { id: 'precio_producto', label: 'Precio x Producto', sheetName: 'precio_producto', icon: AlertCircle, description: 'Comparativa de precios por producto' },
-  { id: 'registro_diario', label: 'Registro Diario', sheetName: 'registro_diario', icon: FileText, description: 'Registro diario de operaciones' },
+  { id: 'historico', label: 'Histórico', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
 ];
 
 interface Filtros {
@@ -330,7 +329,7 @@ export default function DashboardPage() {
     sheetsDataKeys: Object.keys(sheetsData)
   });
   const comprasComoTabla = activeTab === 'historico'
-    ? comprasFiltradas.map(c => {
+    ? compras.map(c => {
         const row = [
           c.id.split('-')[1] || '',
           formatearFecha(c.fecha),
@@ -634,13 +633,13 @@ export default function DashboardPage() {
       <QuickActions
         onRefresh={handleRefresh}
         onExport={handleExport}
-        onFilter={handleFilter}
+        onFilter={activeTab === 'historico' ? undefined : handleFilter}
         cargando={cargando}
         filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
       />
 
-      {/* Panel de Filtros */}
-      {showFilters && (
+      {/* Panel de Filtros - Solo mostrar si NO es histórico */}
+      {activeTab !== 'historico' && showFilters && (
         <FilterPanel
           filtros={filtros}
           onFiltrosChange={setFiltros}
@@ -693,29 +692,10 @@ export default function DashboardPage() {
               <p className="text-sm">{TABS.find(t => t.id === activeTab)?.description}</p>
               {activeTab === 'historico' && (
                 <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
-                  {numFilasFiltradas} de {numRows} filas
-                  {filtros.busqueda || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' && ' (filtrado)'}
+                  {compras.length} filas
                 </span>
               )}
             </div>
-            {activeTab === 'historico' && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-all ${
-                    showFilters
-                      ? 'bg-[#f59e0b] text-white border-[#f59e0b]'
-                      : 'bg-[#0d1117] text-[#94a3b8] border-[#1e293b] hover:bg-[#1a2234]'
-                  }`}
-                >
-                  <SlidersHorizontal className="w-3 h-3" />
-                  {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-                  {filtros.busqueda || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' ? (
-                    <span className="ml-2 w-2 h-2 bg-[#10b981] rounded-full"></span>
-                  ) : ''}
-                </button>
-              </div>
-            )}
           </div>
 
           {numRows === 0 ? (
@@ -901,15 +881,6 @@ export default function DashboardPage() {
   })}
                 </tbody>
               </table>
-            </div>
-          )}
-
-          {/* Paginación */}
-          {activeTab === 'historico' && numFilasFiltradas > 50 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#1e293b]">
-              <p className="text-xs text-[#64748b]">
-                Mostrando primeras 50 de {numFilasFiltradas} filas
-              </p>
             </div>
           )}
         </div>

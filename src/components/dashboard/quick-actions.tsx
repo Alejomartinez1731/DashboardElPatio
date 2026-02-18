@@ -55,8 +55,8 @@ export function QuickActions({
 
   return (
     <Card className="p-4 bg-[#111827] border-[#1e293b]">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {acciones.map((accion) => {
+      <div className={`grid gap-3 ${acciones.filter(a => a.onClick).length === 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-2'}`}>
+        {acciones.filter(a => a.onClick).map((accion) => {
           const Icon = accion.icon;
           return (
             <button
