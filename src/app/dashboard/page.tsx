@@ -528,26 +528,53 @@ export default function DashboardPage() {
 
           // Para columnas a partir de la 3, intentar detectar fechas
           if (idx >= 3) {
-            const cellVal = String(cell).trim();
+            const cellVal = cell;
 
-            // Si es una fecha en formato yyyy-mm-dd, formatearla a dd/mm/yyyy
-            if (cellVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              const [anio, mes, dia] = cellVal.split('-');
-              return `${dia}/${mes}/${anio}`;
-            }
-
-            // Si es una fecha en otros formatos
-            if (cellVal.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-              return cellVal; // Ya está formateada
-            }
-
-            // Si está vacío o es un placeholder genérico, retornar vacío
-            if (!cellVal || cellVal === '' || cellStr.match(/^col-\d+$/) || cellStr.match(/^column\d+$/)) {
+            // Si es un objeto Date, formatearlo
+            if (cellVal instanceof Date) {
+              if (!isNaN(cellVal.getTime())) {
+                return formatearFecha(cellVal);
+              }
               return '';
             }
 
+            const cellStr = String(cellVal).trim();
+
+            // Si está vacío o es un placeholder genérico, retornar vacío
+            if (!cellStr || cellStr === '' || cellStr.match(/^col-\d+$/) || cellStr.match(/^column\d+$/) || cellStr === 'null' || cellStr === 'undefined') {
+              return '';
+            }
+
+            // Si es una fecha en formato yyyy-mm-dd, formatearla a dd/mm/yyyy
+            if (cellStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              const [anio, mes, dia] = cellStr.split('-');
+              return `${dia}/${mes}/${anio}`;
+            }
+
+            // Si es una fecha en formato yyyy/mm/dd
+            if (cellStr.match(/^\d{4}\/\d{2}\/\d{2}$/)) {
+              const [anio, mes, dia] = cellStr.split('/');
+              return `${dia}/${mes}/${anio}`;
+            }
+
+            // Si es una fecha en formato dd/mm/yyyy o dd-mm-yyyy
+            if (cellStr.match(/^\d{2}[\/\-]\d{2}[\/\-]\d{4}$/)) {
+              return cellStr.replace(/-/g, '/');
+            }
+
+            // Si es solo un número de 4 dígitos (podría ser un año)
+            if (cellStr.match(/^\d{4}$/)) {
+              // Intentar parsear como fecha
+              const fecha = new Date(cellStr);
+              if (!isNaN(fecha.getTime())) {
+                return formatearFecha(fecha);
+              }
+              // Si no es una fecha válida, mostrar el año con prefijo
+              return cellStr;
+            }
+
             // Para cualquier otro valor, retornarlo formateado
-            return cellVal.toUpperCase();
+            return cellStr.toUpperCase();
           }
 
           return '';
