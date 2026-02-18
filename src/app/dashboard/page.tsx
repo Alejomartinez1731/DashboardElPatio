@@ -24,7 +24,7 @@ const TABS: Tab[] = [
   { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
   { id: 'precio_producto', label: 'Precio x Producto', sheetName: 'precio_producto', icon: AlertCircle, description: 'Comparativa de precios por producto' },
-  { id: 'historico', label: 'Histórico', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
+  { id: 'historico', label: 'Base de Datos', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
 ];
 
 interface Filtros {
