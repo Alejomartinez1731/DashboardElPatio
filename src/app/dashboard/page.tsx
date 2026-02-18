@@ -407,7 +407,6 @@ export default function DashboardPage() {
         }
         return row;
       });
-    }
 
     console.log('📊 Cabeceras finales para', activeTab, ':', datosTabla[0]);
   }
