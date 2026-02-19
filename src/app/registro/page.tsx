@@ -45,7 +45,8 @@ export default function RegistroPage() {
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
               // Buscar precio unitario en diferentes posibles nombres de columna
-              const precioUnitarioRaw = obj['precio unitario'] || obj['precio_unitario'] || obj['preciounitario'] || obj.precio || obj['precio unit.'] || '0';
+              // La tabla de registro_diario usa 'totalunitario'
+              const precioUnitarioRaw = obj.totalunitario || obj['total unitario'] || obj['precio unitario'] || obj['precio_unitario'] || obj['preciounitario'] || obj.precio || obj['precio unit.'] || '0';
 
               const compra: Compra = {
                 id: `compra-${i}`,
