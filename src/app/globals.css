@@ -2,47 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* ═════════════════════════════════════════════════════════
-   EL PATIO VILA-SECA — Sistema de Diseño / Design Tokens
-   Identidad visual: Rústico-elegante, mediterráneo, cálido
-══════════════════════════════════════════════════════════ */
-
-:root {
-  /* ── FUENTES ── */
-  --font-display:  var(--font-display);   /* Playfair Display */
-  --font-body:     var(--font-body);      /* Lora */
-  --font-elegant:  var(--font-elegant);   /* Cormorant Garamond */
-
-  /* ── COLORES PRINCIPALES ── */
-  --patio-negro:          #1a1209;   /* Fondo principal / base oscura */
-  --patio-marron-oscuro:  #2a1f10;   /* Fondo secundario */
-  --patio-marron-calido:  #3a2a16;   /* Fondo terciario / cards */
-
-  /* ── DORADOS (acento principal de la marca) ── */
-  --patio-oro:            #c9a246;   /* Acento principal: botones, links, detalles */
-  --patio-oro-claro:      #e0c36a;   /* Hover del dorado */
-  --patio-oro-apagado:    #a8874a;   /* Dorado sutil: bordes, textos secundarios */
-
-  /* ── CREMAS / TEXTOS ── */
-  --patio-crema:          #f5ead0;   /* Texto principal sobre fondo oscuro / títulos */
-  --patio-crema-suave:    #ede0c4;   /* Variante crema */
-  --patio-texto:          #e8dcc8;   /* Texto cuerpo */
-  --patio-texto-muted:    #b8a88e;   /* Texto secundario / descripciones */
-
-  /* ── ACENTOS COMPLEMENTARIOS ── */
-  --patio-rojo:           #8b3a2a;   /* Acento cálido (brasa, carne) */
-  --patio-oliva:          #6b7a3a;   /* Acento fresco (ensaladas, natural) */
-
-  /* ── OVERLAYS ── */
-  --patio-overlay:        rgba(26, 18, 9, 0.75);
-  --patio-overlay-light:  rgba(26, 18, 9, 0.50);
-  --patio-borde-sutil:    rgba(201, 162, 70, 0.12);
-  --patio-borde-hover:    rgba(201, 162, 70, 0.30);
-
-  /* ── TRANSICIÓN ── */
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -88,70 +47,61 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* ═════════════════════════════════════════════════════════
+   EL PATIO VILA-SECA — Sistema de Diseño / Design Tokens
+══════════════════════════════════════════════════════════ */
+
 :root {
   --radius: 0.625rem;
 
-  /* ═════════════════════════════════════════════════════════
-     EL PATIO VILA-SECA - Paleta de colores aplicada
-  ═════════════════════════════════════════════════════════ */
+  /* ── FUENTES ── */
+  --font-display:  var(--font-display);
+  --font-body:     var(--font-body);
+  --font-elegant:  var(--font-elegant);
 
-  /* Fondos */
-  --background: var(--patio-negro);
-  --foreground: var(--patio-crema);
+  /* ── COLORES PRINCIPALES (Direct values para evitar referencias circulares) ── */
+  --background: #1a1209;
+  --foreground: #f5ead0;
 
-  --card: var(--patio-marron-calido);
-  --card-foreground: var(--patio-crema);
+  --card: #3a2a16;
+  --card-foreground: #f5ead0;
 
-  --popover: var(--patio-marron-oscuro);
-  --popover-foreground: var(--patio-crema);
+  --popover: #2a1f10;
+  --popover-foreground: #f5ead0;
 
-  /* Primary - Dorado de marca */
-  --primary: var(--patio-oro);
-  --primary-foreground: var(--patio-negro);
+  --primary: #c9a246;
+  --primary-foreground: #1a1209;
 
-  /* Secondary - Marrón cálido */
-  --secondary: var(--patio-marron-oscuro);
-  --secondary-foreground: var(--patio-crema);
+  --secondary: #2a1f10;
+  --secondary-foreground: #f5ead0;
 
-  /* Muted */
-  --muted: var(--patio-marron-oscuro);
-  --muted-foreground: var(--patio-texto-muted);
+  --muted: #2a1f10;
+  --muted-foreground: #b8a88e;
 
-  /* Accent */
-  --accent: var(--patio-oro);
-  --accent-foreground: var(--patio-negro);
+  --accent: #c9a246;
+  --accent-foreground: #1a1209;
 
-  /* Destructive */
-  --destructive: var(--patio-rojo);
-  --border: var(--patio-borde-sutil);
-  --input: var(--patio-marron-oscuro);
-  --ring: var(--patio-oro);
+  --destructive: #8b3a2a;
+  --border: rgba(201, 162, 70, 0.12);
+  --input: #2a1f10;
+  --ring: #c9a246;
 
-  /* Colores de tiendas (manteniendo compatibilidad) */
-  --chart-1: 142.1 76.2% 36.3%; /* Mercadona verde */
-  --chart-2: 217.2 91.2% 59.8%; /* BonArea azul */
-  --chart-3: 45 92% 50%; /* Lildi dorado personalizado */
-  --chart-4: 0 84.2% 60.2%; /* Carrefour rojo */
-  --chart-5: 262.1 83.3% 57.8%; /* Aldi púrpura */
+  /* Colores de gráficos */
+  --chart-1: 142.1 76.2% 36.3%;
+  --chart-2: 217.2 91.2% 59.8%;
+  --chart-3: 45 92% 50%;
+  --chart-4: 0 84.2% 60.2%;
+  --chart-5: 262.1 83.3% 57.8%;
 
   /* Sidebar */
-  --sidebar: var(--patio-marron-oscuro);
-  --sidebar-foreground: var(--patio-texto-muted);
-  --sidebar-primary: var(--patio-oro);
-  --sidebar-primary-foreground: var(--patio-negro);
-  --sidebar-accent: var(--patio-oro);
-  --sidebar-accent-foreground: var(--patio-negro);
-  --sidebar-border: var(--patio-borde-sutil);
-  --sidebar-ring: var(--patio-oro);
-
-  /* Colores de tiendas específicos (hexadecimales) */
-  --color-mercadona: #10b981;
-  --color-bonarea: #3b82f6;
-  --color-lidl: #c9a246; /* Dorado El Patio */
-  --color-carrefour: #ef4444;
-  --color-aldi: #8b5cf6;
-  --color-consum: #ec4899;
-  --color-otros: #64748b;
+  --sidebar: #2a1f10;
+  --sidebar-foreground: #b8a88e;
+  --sidebar-primary: #c9a246;
+  --sidebar-primary-foreground: #1a1209;
+  --sidebar-accent: #c9a246;
+  --sidebar-accent-foreground: #1a1209;
+  --sidebar-border: rgba(201, 162, 70, 0.12);
+  --sidebar-ring: #c9a246;
 }
 
 .dark {
@@ -191,10 +141,8 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
     @apply bg-background text-foreground;
   }
 }
@@ -313,14 +261,14 @@
 /* Títulos con tipografía elegante */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  color: var(--patio-crema);
+  color: #f5ead0;
   line-height: 1.2;
   letter-spacing: 0.5px;
 }
 
 /* Texto itálico dorado para énfasis en títulos */
 h1 em, h2 em, h3 em, h4 em, h5 em, h6 em {
-  color: var(--patio-oro);
+  color: #c9a246;
   font-style: italic;
 }
 
@@ -330,65 +278,60 @@ h1 em, h2 em, h3 em, h4 em, h5 em, h6 em {
   font-size: 0.85rem;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--patio-oro);
+  color: #c9a246;
 }
 
 /* Texto cuerpo */
 p {
   font-family: var(--font-body);
-  color: var(--patio-texto-muted);
+  color: #b8a88e;
   line-height: 1.7;
 }
 
 /* Links */
 a {
-  color: var(--patio-oro-apagado);
-  transition: color 0.3s var(--ease-smooth);
+  color: #a8874a;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 a:hover {
-  color: var(--patio-oro-claro);
+  color: #e0c36a;
 }
 
-/* ── CARDS / CONTENEDORES ── */
+/* Cards */
 .card-patio {
   background: rgba(58, 42, 22, 0.6);
-  border: 1px solid var(--patio-borde-sutil);
-  transition: all 0.4s var(--ease-smooth);
+  border: 1px solid rgba(201, 162, 70, 0.12);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card-patio:hover {
-  border-color: var(--patio-borde-hover);
+  border-color: rgba(201, 162, 70, 0.30);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* ── LÍNEAS DECORATIVAS ── */
+/* Líneas decorativas */
 .divider {
   width: 50px;
   height: 1px;
-  background: var(--patio-oro-apagado);
+  background: #a8874a;
 }
 
-/* Borde superior dorado sutil */
-.gold-top-border {
-  border-top: 1px solid var(--patio-borde-sutil);
-}
-
-/* ── SCROLLBAR ── */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--patio-negro);
+  background: #1a1209;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--patio-oro-apagado);
+  background: #a8874a;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--patio-oro);
+  background: #c9a246;
 }
 
-/* ─── CLASES DE UTILIDAD PARA TIPOGRAFÍA ─── */
+/* Clases de utilidad para tipografía */
 .font-display {
   font-family: var(--font-display);
 }
@@ -403,43 +346,43 @@ a:hover {
 
 /* Texto con color dorado */
 .text-patio-oro {
-  color: var(--patio-oro);
+  color: #c9a246;
 }
 
 .text-patio-crema {
-  color: var(--patio-crema);
+  color: #f5ead0;
 }
 
 .text-patio-muted {
-  color: var(--patio-texto-muted);
+  color: #b8a88e;
 }
 
 /* Fondo con los colores de El Patio */
 .bg-patio-negro {
-  background-color: var(--patio-negro);
+  background-color: #1a1209;
 }
 
 .bg-patio-marron {
-  background-color: var(--patio-marron-calido);
+  background-color: #3a2a16;
 }
 
 .bg-patio-oro {
-  background-color: var(--patio-oro);
+  background-color: #c9a246;
 }
 
 /* Borde dorado sutil */
 .border-patio-oro {
-  border-color: var(--patio-borde-sutil);
+  border-color: rgba(201, 162, 70, 0.12);
 }
 
 .border-patio-oro-hover:hover {
-  border-color: var(--patio-borde-hover);
+  border-color: rgba(201, 162, 70, 0.30);
 }
 
-/* Botón con estilo El Patio */
+/* Botones con estilo El Patio */
 .btn-patio {
-  background: var(--patio-oro);
-  color: var(--patio-negro);
+  background: #c9a246;
+  color: #1a1209;
   font-family: var(--font-elegant);
   font-size: 0.85rem;
   font-weight: 600;
@@ -448,29 +391,28 @@ a:hover {
   padding: 14px 36px;
   border: none;
   cursor: pointer;
-  transition: all 0.3s var(--ease-smooth);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-patio:hover {
-  background: var(--patio-oro-claro);
+  background: #e0c36a;
   box-shadow: 0 6px 24px rgba(201, 162, 70, 0.3);
   transform: translateY(-1px);
 }
 
-/* Botón secundario con estilo El Patio */
 .btn-patio-secondary {
   background: transparent;
-  color: var(--patio-oro);
+  color: #c9a246;
   font-family: var(--font-elegant);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
   padding: 13px 35px;
-  border: 1px solid var(--patio-oro-apagado);
+  border: 1px solid #a8874a;
   cursor: pointer;
-  transition: all 0.3s var(--ease-smooth);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-patio-secondary:hover {
   background: rgba(201, 162, 70, 0.1);
-  border-color: var(--patio-oro);
+  border-color: #c9a246;
 }
