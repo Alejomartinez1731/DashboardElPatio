@@ -23,9 +23,21 @@ export async function GET(request: Request) {
     const data = await response.json();
     console.log('📡 Datos recibidos:', Object.keys(data.data || {}));
 
+    // Mapear nombres de n8n a nombres internos del dashboard
+    // n8n usa nombres como 'producto_mas_costoso', 'gasto_por_tienda', etc.
+    const mappedData = {
+      base_de_datos: data.data.base_de_datos || data.data.historico || {},
+      historico: data.data.historico || {},
+      historico_precios: data.data.historico_precios || {},
+      costosos: data.data.producto_mas_costoso || data.data.costosos || {},
+      gasto_tienda: data.data.gasto_por_tienda || data.data.gasto_tienda || {},
+      precio_producto: data.data.precio_por_producto || data.data.precio_producto || {},
+      registro_diario: data.data.registro_diario || {},
+    };
+
     return NextResponse.json({
       success: true,
-      data: data.data,
+      data: mappedData,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
