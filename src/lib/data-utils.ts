@@ -321,8 +321,10 @@ export function obtenerTiendasUnicas(compras: Compra[]): string[] {
 
 /**
  * Calcula KPIs desde compras
+ * @param compras - Lista de compras procesadas
+ * @param historicoPreciosValues - Datos crudos de historico_precios (array de arrays)
  */
-export function calcularKPIs(compras: Compra[]): {
+export function calcularKPIs(compras: Compra[], historicoPreciosValues: string[][] = []): {
   gastoQuincenal: number;
   facturasProcesadas: number;
   alertasDePrecio: number;
@@ -334,10 +336,29 @@ export function calcularKPIs(compras: Compra[]): {
   hace15Dias.setDate(hace15Dias.getDate() - 15);
   hace15Dias.setHours(0, 0, 0, 0);
 
-  // Gasto quincenal (últimos 15 días)
-  const gastoQuincenal = compras
-    .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
-    .reduce((sum, c) => sum + c.total, 0);
+  // Gasto quincenal desde historico_precios (últimos 15 días)
+  let gastoQuincenal = 0;
+
+  if (historicoPreciosValues.length > 1) {
+    const cabeceras = historicoPreciosValues[0].map((h: string) => h.toLowerCase().trim());
+    const idxFecha = cabeceras.indexOf('fecha');
+    const idxTotal = cabeceras.indexOf('total');
+
+    if (idxFecha !== -1 && idxTotal !== -1) {
+      for (let i = 1; i < historicoPreciosValues.length; i++) {
+        const fila = historicoPreciosValues[i];
+        const fechaStr = fila[idxFecha];
+        const totalStr = fila[idxTotal];
+
+        if (fechaStr && totalStr) {
+          const fechaCompra = normalizarFecha(fechaStr);
+          if (fechaCompra >= hace15Dias && fechaCompra <= hoy) {
+            gastoQuincenal += parseFloat(totalStr) || 0;
+          }
+        }
+      }
+    }
+  }
 
   // Facturas procesadas (fechas + tiendas únicas de los últimos 15 días)
   const facturasProcesadas = new Set<string>();
