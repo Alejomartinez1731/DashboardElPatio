@@ -160,13 +160,14 @@ export default function PreciosPage() {
       const mes = fechaActual.getMonth();
       const dia = fechaActual.getDate();
 
-      // Determinar si es primera o segunda quincena
-      const quincena = dia <= 15 ? '1ª Quincena' : '2ª Quincena';
+      // Determinar si es primera o segunda quincena (Q1 o Q2)
+      const esPrimeraQuincena = dia <= 15;
+      const quincena = esPrimeraQuincena ? 'Q1' : 'Q2';
       const clave = `${año}-${mes + 1}-${quincena}`;
 
       // Calcular rango de fechas para este periodo
-      const inicioPeriodo = new Date(año, mes, dia <= 15 ? 1 : 16);
-      const finPeriodo = new Date(año, mes, dia <= 15 ? 15 : (new Date(año, mes + 1, 0).getDate()));
+      const inicioPeriodo = new Date(año, mes, esPrimeraQuincena ? 1 : 16);
+      const finPeriodo = new Date(año, mes, esPrimeraQuincena ? 15 : (new Date(año, mes + 1, 0).getDate()));
 
       // Sumar gastos de este periodo
       let gastoPeriodo = 0;
@@ -192,8 +193,18 @@ export default function PreciosPage() {
       .map(([clave, gasto]) => {
         const [año, mes, quincena] = clave.split('-');
         const nombreMes = new Date(parseInt(año), parseInt(mes) - 1).toLocaleDateString('es-ES', { month: 'short' });
+        const esPrimeraQuincena = quincena === 'Q1';
+
+        // Formato: "Ene 1-15" o "Ene 16-31"
+        const diaInicio = esPrimeraQuincena ? '1' : '16';
+        const diaFin = esPrimeraQuincena ? '15' : new Date(parseInt(año), parseInt(mes), 0).getDate().toString();
+        const rangoDias = `${diaInicio}-${diaFin}`;
+
+        // Capitalizar primera letra del mes
+        const mesCapitalizado = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+
         return {
-          periodo: `${nombreMes} ${quincena}`,
+          periodo: `${mesCapitalizado} ${rangoDias}`,
           gasto: gasto,
         };
       })
