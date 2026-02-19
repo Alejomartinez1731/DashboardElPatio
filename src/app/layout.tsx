@@ -1,19 +1,32 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Playfair_Display, Lora, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+// Fuentes del sistema de diseño El Patio Vila-Seca
+const display = Playfair_Display({
+  variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
 });
 
-const mono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+const body = Lora({
+  variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
+});
+
+const elegant = Cormorant_Garamond({
+  variable: "--font-elegant",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -29,7 +42,12 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <body
-        className={`${jakarta.variable} ${mono.variable} antialiased font-sans`}
+        className={`${display.variable} ${body.variable} ${elegant.variable} antialiased`}
+        style={{
+          fontFamily: 'var(--font-body)',
+          backgroundColor: 'var(--patio-negro)',
+          color: 'var(--patio-texto)',
+        }}
       >
         <div className="flex min-h-screen bg-[#0a0f1a]">
           <Sidebar />
