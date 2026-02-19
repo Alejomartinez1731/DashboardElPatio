@@ -151,6 +151,14 @@ export default function DashboardPage() {
             console.log('✅ Compras procesadas:', comprasProcesadas.length);
             console.log('✅ Primera compra:', comprasProcesadas[0]);
 
+            // Debug: Ver estructura de historico_precios
+            const hojaHistoricoPrecios = result.data.historico_precios;
+            console.log('📊 Datos de historico_precios recibidos:', hojaHistoricoPrecios);
+            if (hojaHistoricoPrecios && hojaHistoricoPrecios.values) {
+              console.log('📊 historico_precios - cabeceras:', hojaHistoricoPrecios.values[0]);
+              console.log('📊 historico_precios - primera fila:', hojaHistoricoPrecios.values[1]);
+            }
+
             setCompras(comprasProcesadas);
             const kpis = calcularKPIs(comprasProcesadas);
             setKpiData(kpis);
