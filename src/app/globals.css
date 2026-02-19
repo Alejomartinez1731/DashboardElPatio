@@ -115,37 +115,50 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* ═════════════════════════════════════════════════════════
+     EL PATIO VILA-SECA - Paleta de colores (modo dark)
+  ═════════════════════════════════════════════════════════ */
+
+  --background: 25 30% 7%;  /* #1a1209 - Negro cálido */
+  --foreground: 40 25% 90%; /* #f5ead0 - Crema */
+
+  --card: 25 25% 18%;       /* #3a2a16 - Marrón cálido */
+  --card-foreground: 40 25% 90%; /* #f5ead0 */
+
+  --popover: 25 25% 12%;    /* #2a1f10 */
+  --popover-foreground: 40 25% 90%; /* #f5ead0 */
+
+  --primary: 40 55% 53%;    /* #c9a246 - Dorado */
+  --primary-foreground: 25 30% 7%; /* #1a1209 */
+
+  --secondary: 25 25% 12%;  /* #2a1f10 */
+  --secondary-foreground: 40 25% 90%; /* #f5ead0 */
+
+  --muted: 25 25% 12%;      /* #2a1f10 */
+  --muted-foreground: 35 15% 65%; /* #b8a88e */
+
+  --accent: 40 55% 53%;     /* #c9a246 - Dorado */
+  --accent-foreground: 25 30% 7%; /* #1a1209 */
+
+  --destructive: 10 55% 42%; /* #8b3a2a */
+  --border: 40 25% 20% / 0.3; /* Borde dorado sutil */
+  --input: 25 25% 12%;      /* #2a1f10 */
+  --ring: 40 55% 53%;       /* #c9a246 - Dorado */
+
+  --chart-1: 142.1 76.2% 36.3%;
+  --chart-2: 217.2 91.2% 59.8%;
+  --chart-3: 40 55% 53%;     /* Dorado */
+  --chart-4: 0 84.2% 60.2%;
+  --chart-5: 262.1 83.3% 57.8%;
+
+  --sidebar: 25 25% 12%;     /* #2a1f10 */
+  --sidebar-foreground: 35 15% 65%; /* #b8a88e */
+  --sidebar-primary: 40 55% 53%; /* #c9a246 */
+  --sidebar-primary-foreground: 25 30% 7%; /* #1a1209 */
+  --sidebar-accent: 40 55% 53%; /* #c9a246 */
+  --sidebar-accent-foreground: 25 30% 7%; /* #1a1209 */
+  --sidebar-border: 40 25% 20% / 0.3;
+  --sidebar-ring: 40 55% 53%; /* #c9a246 */
 }
 
 @layer base {
