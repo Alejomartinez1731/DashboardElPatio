@@ -30,8 +30,8 @@ export default function RegistroPage() {
         if (!response.ok) throw new Error('Error al obtener datos');
         const result = await response.json();
 
-        if (result.success && result.data.historico?.values) {
-          const values = result.data.historico.values as any[][];
+        if (result.success && result.data.registro_diario?.values) {
+          const values = result.data.registro_diario.values as any[][];
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
             const comprasProcesadas: Compra[] = [];
