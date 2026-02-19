@@ -159,7 +159,7 @@ export default function ProveedoresPage() {
   if (cargando) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -180,15 +180,15 @@ export default function ProveedoresPage() {
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Gasto Total</p>
-          <p className="text-2xl font-bold text-[#10b981]">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
+          <p className="text-2xl font-bold text-chart-1">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Tienda Principal</p>
-          <p className="text-2xl font-bold text-[#f59e0b]">{infoTiendas[0]?.nombre || '-'}</p>
+          <p className="text-2xl font-bold text-primary">{infoTiendas[0]?.nombre || '-'}</p>
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Gasto en Principal</p>
-          <p className="text-2xl font-bold text-[#3b82f6]">{formatearMoneda(infoTiendas[0]?.totalGastado || 0)}</p>
+          <p className="text-2xl font-bold text-chart-2">{formatearMoneda(infoTiendas[0]?.totalGastado || 0)}</p>
         </Card>
       </div>
 
@@ -233,8 +233,8 @@ export default function ProveedoresPage() {
                 contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
               />
               <Legend />
-              <Bar yAxisId="left" dataKey="gasto" fill="#f59e0b" name="Gasto Total (€)" />
-              <Bar yAxisId="right" dataKey="compras" fill="#10b981" name="Número de Compras" />
+              <Bar yAxisId="left" dataKey="gasto" fill="hsl(var(--primary))" name="Gasto Total (€)" />
+              <Bar yAxisId="right" dataKey="compras" fill="hsl(var(--chart-1))" name="Número de Compras" />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -264,15 +264,15 @@ export default function ProveedoresPage() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Total Gastado</p>
-                <p className="text-lg font-bold text-[#10b981]">{formatearMoneda(tienda.totalGastado)}</p>
+                <p className="text-lg font-bold text-chart-1">{formatearMoneda(tienda.totalGastado)}</p>
               </div>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Gasto Promedio</p>
-                <p className="text-lg font-bold text-[#f59e0b]">{formatearMoneda(tienda.gastoPromedio)}</p>
+                <p className="text-lg font-bold text-primary">{formatearMoneda(tienda.gastoPromedio)}</p>
               </div>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Productos Únicos</p>
-                <p className="text-lg font-bold text-[#3b82f6]">{tienda.productosUnicos}</p>
+                <p className="text-lg font-bold text-chart-2">{tienda.productosUnicos}</p>
               </div>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Precio Promedio</p>
@@ -320,13 +320,13 @@ export default function ProveedoresPage() {
                   <div key={p.producto} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                        i === 0 ? 'bg-[#f59e0b] text-white' : i === 1 ? 'bg-[#94a3b8] text-white' : 'bg-[#64748b] text-muted-foreground'
+                        i === 0 ? 'bg-primary text-white' : i === 1 ? 'bg-muted-foreground text-white' : 'bg-card text-muted-foreground'
                       }`}>
                         {i + 1}
                       </span>
                       <span className="text-white truncate">{p.producto}</span>
                     </div>
-                    <span className="text-[#10b981] font-semibold">{formatearMoneda(p.total)}</span>
+                    <span className="text-chart-1 font-semibold">{formatearMoneda(p.total)}</span>
                   </div>
                 ))}
               </div>
