@@ -8,6 +8,7 @@ export const COLORES_TIENDA: Record<string, string> = {
   'Carrefour': '#ef4444',
   'Aldi': '#8b5cf6',
   'Consum': '#ec4899',
+  'Corporación Alimentaria Guissona': '#a855f7',
   'Otros': '#64748b',
 };
 
@@ -30,6 +31,7 @@ export function normalizarTienda(tienda: string): string {
   if (nombre.includes('carrefour')) return 'Carrefour';
   if (nombre.includes('aldi')) return 'Aldi';
   if (nombre.includes('consum')) return 'Consum';
+  if (nombre.includes('guissona') || nombre.includes('corporacion alimentaria')) return 'Corporación Alimentaria Guissona';
   if (nombre.includes('eroski')) return 'Eroski';
   if (nombre.includes('dia') && !nombre.includes('media')) return 'Dia';
   if (nombre.includes('condis')) return 'Condis';
