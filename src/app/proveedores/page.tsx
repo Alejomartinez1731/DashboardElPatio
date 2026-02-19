@@ -169,25 +169,25 @@ export default function ProveedoresPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Proveedores</h1>
-        <p className="text-[#94a3b8]">Análisis detallado por tienda/proveedor</p>
+        <p className="text-muted-foreground">Análisis detallado por tienda/proveedor</p>
       </div>
 
       {/* KPIs generales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Total Tiendas</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Total Tiendas</p>
           <p className="text-2xl font-bold text-white">{infoTiendas.length}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Gasto Total</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Gasto Total</p>
           <p className="text-2xl font-bold text-[#10b981]">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Tienda Principal</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Tienda Principal</p>
           <p className="text-2xl font-bold text-[#f59e0b]">{infoTiendas[0]?.nombre || '-'}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Gasto en Principal</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Gasto en Principal</p>
           <p className="text-2xl font-bold text-[#3b82f6]">{formatearMoneda(infoTiendas[0]?.totalGastado || 0)}</p>
         </Card>
       </div>
@@ -195,7 +195,7 @@ export default function ProveedoresPage() {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Distribución por tienda - Pie */}
-        <Card className="p-6 bg-[#111827] border-[#1e293b]">
+        <Card className="p-6 bg-card border-border">
           <h3 className="text-lg font-semibold text-white mb-4">Distribución de Gastos por Tienda</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -221,7 +221,7 @@ export default function ProveedoresPage() {
         </Card>
 
         {/* Gastos y compras - Bar */}
-        <Card className="p-6 bg-[#111827] border-[#1e293b]">
+        <Card className="p-6 bg-card border-border">
           <h3 className="text-lg font-semibold text-white mb-4">Gastos y Número de Compras</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={datosGraficoBarras}>
@@ -243,7 +243,7 @@ export default function ProveedoresPage() {
       {/* Tarjetas de tiendas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {infoTiendas.map((tienda) => (
-          <Card key={tienda.nombre} className="p-6 bg-[#111827] border-[#1e293b] hover:border-[#f59e0b]/30 transition-all">
+          <Card key={tienda.nombre} className="p-6 bg-card border-border hover:border-primary/30 transition-all">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -252,7 +252,7 @@ export default function ProveedoresPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">{tienda.nombre}</h3>
-                  <p className="text-sm text-[#64748b]">{tienda.numCompras} compras realizadas</p>
+                  <p className="text-sm text-muted-foreground">{tienda.numCompras} compras realizadas</p>
                 </div>
               </div>
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center`} style={{ backgroundColor: tienda.color + '20' }}>
@@ -262,65 +262,65 @@ export default function ProveedoresPage() {
 
             {/* Métricas principales */}
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-[#0d1117] p-3 rounded-lg">
-                <p className="text-xs text-[#64748b] mb-1">Total Gastado</p>
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Total Gastado</p>
                 <p className="text-lg font-bold text-[#10b981]">{formatearMoneda(tienda.totalGastado)}</p>
               </div>
-              <div className="bg-[#0d1117] p-3 rounded-lg">
-                <p className="text-xs text-[#64748b] mb-1">Gasto Promedio</p>
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Gasto Promedio</p>
                 <p className="text-lg font-bold text-[#f59e0b]">{formatearMoneda(tienda.gastoPromedio)}</p>
               </div>
-              <div className="bg-[#0d1117] p-3 rounded-lg">
-                <p className="text-xs text-[#64748b] mb-1">Productos Únicos</p>
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Productos Únicos</p>
                 <p className="text-lg font-bold text-[#3b82f6]">{tienda.productosUnicos}</p>
               </div>
-              <div className="bg-[#0d1117] p-3 rounded-lg">
-                <p className="text-xs text-[#64748b] mb-1">Precio Promedio</p>
-                <p className="text-lg font-bold text-[#94a3b8]">{formatearMoneda(tienda.precioPromedio)}</p>
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Precio Promedio</p>
+                <p className="text-lg font-bold text-muted-foreground">{formatearMoneda(tienda.precioPromedio)}</p>
               </div>
             </div>
 
             {/* Información de contacto */}
             {(tienda.telefonos.size > 0 || tienda.direcciones.size > 0) && (
-              <div className="space-y-2 mb-4 pb-4 border-b border-[#1e293b]">
+              <div className="space-y-2 mb-4 pb-4 border-b border-border">
                 {tienda.telefonos.size > 0 && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-[#64748b]" />
-                    <span className="text-[#94a3b8]">{Array.from(tienda.telefonos)[0]}</span>
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{Array.from(tienda.telefonos)[0]}</span>
                   </div>
                 )}
                 {tienda.direcciones.size > 0 && (
                   <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-[#64748b] mt-0.5" />
-                    <span className="text-[#94a3b8] line-clamp-2">{Array.from(tienda.direcciones)[0]}</span>
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <span className="text-muted-foreground line-clamp-2">{Array.from(tienda.direcciones)[0]}</span>
                   </div>
                 )}
               </div>
             )}
 
             {/* Fechas */}
-            <div className="flex items-center justify-between text-sm mb-4 pb-4 border-b border-[#1e293b]">
+            <div className="flex items-center justify-between text-sm mb-4 pb-4 border-b border-border">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#64748b]" />
-                <span className="text-[#64748b]">Primera compra:</span>
-                <span className="text-[#94a3b8]">{formatearFecha(tienda.primeraCompra)}</span>
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Primera compra:</span>
+                <span className="text-muted-foreground">{formatearFecha(tienda.primeraCompra)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#64748b]" />
-                <span className="text-[#64748b]">Última compra:</span>
-                <span className="text-[#94a3b8]">{formatearFecha(tienda.ultimaCompra)}</span>
+                <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Última compra:</span>
+                <span className="text-muted-foreground">{formatearFecha(tienda.ultimaCompra)}</span>
               </div>
             </div>
 
             {/* Productos top */}
             <div>
-              <p className="text-xs text-[#64748b] uppercase tracking-wide font-semibold mb-2">Productos Más Comprados</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Productos Más Comprados</p>
               <div className="space-y-2">
                 {tienda.productosTop.slice(0, 3).map((p, i) => (
                   <div key={p.producto} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                        i === 0 ? 'bg-[#f59e0b] text-white' : i === 1 ? 'bg-[#94a3b8] text-white' : 'bg-[#64748b] text-[#94a3b8]'
+                        i === 0 ? 'bg-[#f59e0b] text-white' : i === 1 ? 'bg-[#94a3b8] text-white' : 'bg-[#64748b] text-muted-foreground'
                       }`}>
                         {i + 1}
                       </span>

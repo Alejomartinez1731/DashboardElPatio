@@ -245,40 +245,40 @@ export default function PreciosPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Análisis de Precios</h1>
-        <p className="text-[#94a3b8]">Evolución y variaciones de precios por producto</p>
+        <p className="text-muted-foreground">Evolución y variaciones de precios por producto</p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Productos Analizados</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Productos Analizados</p>
           <p className="text-2xl font-bold text-white">{preciosProductos.length}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Precio Promedio</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Precio Promedio</p>
           <p className="text-2xl font-bold text-[#10b981]">
             {formatearMoneda(preciosProductos.length > 0 ? preciosProductos.reduce((sum, p) => sum + p.precioPromedio, 0) / preciosProductos.length : 0)}
           </p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Total Compras</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Total Compras</p>
           <p className="text-2xl font-bold text-[#f59e0b]">
             {compras.length}
           </p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Producto Más Comprado</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Producto Más Comprado</p>
           <p className="text-lg font-bold text-[#3b82f6] truncate">
             {topProductos[0]?.producto || '-'}
           </p>
-          <p className="text-xs text-[#64748b]">{topProductos[0]?.numCompras || 0} veces</p>
+          <p className="text-xs text-muted-foreground">{topProductos[0]?.numCompras || 0} veces</p>
         </Card>
       </div>
 
       {/* Gráficos principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Evolución del gasto quincenal */}
-        <Card className="p-6 bg-[#111827] border-[#1e293b]">
+        <Card className="p-6 bg-card border-border">
           <h3 className="text-lg font-semibold text-white mb-4">Evolución del Gasto Quincenal</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={datosGraficoEvolucion}>
@@ -303,7 +303,7 @@ export default function PreciosPage() {
         </Card>
 
         {/* Distribución por rango de precios */}
-        <Card className="p-6 bg-[#111827] border-[#1e293b]">
+        <Card className="p-6 bg-card border-border">
           <h3 className="text-lg font-semibold text-white mb-4">Distribución por Rango de Precios</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={distribucionPrecios}>
@@ -321,31 +321,31 @@ export default function PreciosPage() {
       </div>
 
       {/* Tabla de productos más comprados */}
-      <Card className="overflow-hidden bg-[#111827] border-[#1e293b]">
-        <div className="p-6 border-b border-[#1e293b]">
+      <Card className="overflow-hidden bg-card border-border">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#10b981]" />
             <h3 className="text-lg font-semibold text-white">Productos Más Comprados</h3>
           </div>
-          <p className="text-sm text-[#64748b] mt-1">Ranking por frecuencia de compra</p>
+          <p className="text-sm text-muted-foreground mt-1">Ranking por frecuencia de compra</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#0d1117]">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-[#94a3b8]">#</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-[#94a3b8]">Producto</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Veces Comprado</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Gasto Total</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Precio Prom</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Última Compra</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">#</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Producto</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">Veces Comprado</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">Gasto Total</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">Precio Prom</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">Última Compra</th>
               </tr>
             </thead>
             <tbody>
               {topProductos.map((p, index) => {
                 const ultimaCompra = p.historial[p.historial.length - 1];
                 return (
-                  <tr key={p.producto} className="border-b border-[#1e293b] hover:bg-[#0d1117]/50">
+                  <tr key={p.producto} className="border-b border-border hover:bg-muted/50">
                     <td className="px-4 py-3 text-sm text-white font-bold">{index + 1}</td>
                     <td className="px-4 py-3 text-sm text-white font-medium">{p.producto}</td>
                     <td className="px-4 py-3 text-sm text-right">
@@ -354,8 +354,8 @@ export default function PreciosPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-[#10b981] font-semibold">{formatearMoneda(p.gastoTotal)}</td>
-                    <td className="px-4 py-3 text-sm text-right text-[#64748b]">{formatearMoneda(p.precioPromedio)}</td>
-                    <td className="px-4 py-3 text-sm text-right text-[#64748b]">{formatearFecha(ultimaCompra?.fecha || new Date())}</td>
+                    <td className="px-4 py-3 text-sm text-right text-muted-foreground">{formatearMoneda(p.precioPromedio)}</td>
+                    <td className="px-4 py-3 text-sm text-right text-muted-foreground">{formatearFecha(ultimaCompra?.fecha || new Date())}</td>
                   </tr>
                 );
               })}

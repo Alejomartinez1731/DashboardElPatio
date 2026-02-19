@@ -34,11 +34,11 @@ export function DistributionChart({ datos, titulo = 'Distribución por Tienda' }
   }, [datos]);
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b]">
+    <Card className="p-6 bg-card border-border">
       <h3 className="text-lg font-semibold text-white mb-4">{titulo}</h3>
 
       {datosGrafico.length === 0 ? (
-        <div className="flex items-center justify-center h-64 text-[#64748b]">
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
           Sin datos para mostrar
         </div>
       ) : (
@@ -88,8 +88,8 @@ export function DistributionChart({ datos, titulo = 'Distribución por Tienda' }
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: entry.color }}
                 ></div>
-                <span className="text-[#94a3b8]">{entry.tienda}</span>
-                <span className="text-[#64748b] ml-auto">
+                <span className="text-muted-foreground">{entry.tienda}</span>
+                <span className="text-muted-foreground ml-auto">
                   {formatearPorcentaje(entry.porcentaje)}
                 </span>
               </div>

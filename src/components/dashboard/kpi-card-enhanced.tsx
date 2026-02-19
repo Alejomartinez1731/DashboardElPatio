@@ -47,7 +47,7 @@ export function KPICardEnhanced({
   const trendColor = variacion !== undefined ? colorVariacion(variacion) : '#64748b';
 
   return (
-    <Card className="group relative p-6 bg-gradient-to-br from-[#111827] to-[#0d1117] border-[#1e293b] hover:border-[#f59e0b]/50 transition-all duration-300 overflow-hidden">
+    <Card className="group relative p-6 bg-gradient-to-br from-[#111827] to-[#0d1117] border-border hover:border-[#f59e0b]/50 transition-all duration-300 overflow-hidden">
       {/* Efecto de brillo en hover */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#f59e0b]/0 via-[#f59e0b]/5 to-[#f59e0b]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full"></div>
 
@@ -59,12 +59,12 @@ export function KPICardEnhanced({
         {/* Header con icono y título */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <p className="text-xs font-medium text-[#64748b] uppercase tracking-wider mb-1">{titulo}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{titulo}</p>
             <p className="text-3xl font-bold text-white font-mono tracking-tight">
               {valorFormateado}
             </p>
             {subtitulo && (
-              <p className="text-xs text-[#94a3b8] mt-1">{subtitulo}</p>
+              <p className="text-xs text-muted-foreground mt-1">{subtitulo}</p>
             )}
           </div>
 
@@ -88,14 +88,14 @@ export function KPICardEnhanced({
               <TrendIcon className="w-3 h-3" strokeWidth={2.5} />
               <span>{formatearVariacion(Math.abs(variacion))}</span>
             </div>
-            <span className="text-xs text-[#64748b]">vs periodo anterior</span>
+            <span className="text-xs text-muted-foreground">vs periodo anterior</span>
           </div>
         )}
 
         {/* Barra de progreso */}
         {progreso !== undefined && (
           <div className="space-y-1.5">
-            <div className="flex justify-between text-xs text-[#64748b]">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>Progreso</span>
               <span>{progreso.toFixed(0)}%</span>
             </div>
@@ -110,8 +110,8 @@ export function KPICardEnhanced({
 
         {/* Destino (opcional) */}
         {destino && (
-          <div className="mt-3 pt-3 border-t border-[#1e293b]">
-            <p className="text-xs text-[#94a3b8]">
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-xs text-muted-foreground">
               <span className="text-[#f59e0b]">Destino:</span> {destino}
             </p>
           </div>

@@ -44,11 +44,11 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
   const promedioMensual = totalGeneral / resumenMensual.length || 0;
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b]">
+    <Card className="p-6 bg-card border-border">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">{titulo}</h3>
-          <p className="text-xs text-[#64748b] mt-1">Últimos 6 meses</p>
+          <p className="text-xs text-muted-foreground mt-1">Últimos 6 meses</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 bg-[#f59e0b]/10 rounded-lg">
           <Calendar className="w-4 h-4 text-[#f59e0b]" />
@@ -57,13 +57,13 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
       </div>
 
       {/* Resumen general */}
-      <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-[#0d1117] rounded-lg border border-[#1e293b]">
+      <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-muted rounded-lg border border-border">
         <div>
-          <p className="text-xs text-[#64748b] mb-1">Total del periodo</p>
+          <p className="text-xs text-muted-foreground mb-1">Total del periodo</p>
           <p className="text-xl font-bold text-white font-mono">{formatearMoneda(totalGeneral)}</p>
         </div>
         <div>
-          <p className="text-xs text-[#64748b] mb-1">Promedio mensual</p>
+          <p className="text-xs text-muted-foreground mb-1">Promedio mensual</p>
           <p className="text-xl font-bold text-[#10b981] font-mono">{formatearMoneda(promedioMensual)}</p>
         </div>
       </div>
@@ -77,13 +77,13 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
           return (
             <div
               key={`${mes.anio}-${mes.mes}`}
-              className="group flex items-center gap-4 p-3 bg-[#0d1117] hover:bg-[#1a2234] rounded-lg border border-[#1e293b] hover:border-[#f59e0b]/30 transition-all duration-200"
+              className="group flex items-center gap-4 p-3 bg-muted hover:bg-muted/50 rounded-lg border border-border hover:border-primary/30 transition-all duration-200"
             >
               <div className="flex-shrink-0">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                   esMaximo ? 'bg-[#f59e0b]/20' : 'bg-[#1e293b]'
                 }`}>
-                  <ShoppingCart className={`w-5 h-5 ${esMaximo ? 'text-[#f59e0b]' : 'text-[#64748b]'}`} />
+                  <ShoppingCart className={`w-5 h-5 ${esMaximo ? 'text-[#f59e0b]' : 'text-muted-foreground'}`} />
                 </div>
               </div>
 
@@ -91,7 +91,7 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-white capitalize">{mes.mes}</span>
-                    <span className="text-xs text-[#64748b]">{mes.anio}</span>
+                    <span className="text-xs text-muted-foreground">{mes.anio}</span>
                   </div>
                   <span className="text-sm font-bold text-white font-mono">{formatearMoneda(mes.total)}</span>
                 </div>
@@ -104,7 +104,7 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
                       style={{ width: `${porcentaje}%` }}
                     />
                   </div>
-                  <span className="text-xs text-[#64748b] w-12 text-right">{porcentaje.toFixed(0)}%</span>
+                  <span className="text-xs text-muted-foreground w-12 text-right">{porcentaje.toFixed(0)}%</span>
                 </div>
               </div>
             </div>

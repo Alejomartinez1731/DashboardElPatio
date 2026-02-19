@@ -46,9 +46,9 @@ export function TopProductsEnhanced({
 
   if (topProductos.length === 0) {
     return (
-      <Card className="p-6 bg-[#111827] border-[#1e293b]">
+      <Card className="p-6 bg-card border-border">
         <h3 className="text-lg font-semibold text-white mb-4">{titulo}</h3>
-        <div className="flex items-center justify-center h-64 text-[#64748b]">
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
           Sin datos de productos
         </div>
       </Card>
@@ -58,13 +58,13 @@ export function TopProductsEnhanced({
   const maxTotal = topProductos[0].total;
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b]">
+    <Card className="p-6 bg-card border-border">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-[#f59e0b]" />
           <h3 className="text-lg font-semibold text-white">{titulo}</h3>
         </div>
-        <span className="text-xs text-[#64748b]">Top {limite} productos</span>
+        <span className="text-xs text-muted-foreground">Top {limite} productos</span>
       </div>
 
       <div className="space-y-3">
@@ -75,7 +75,7 @@ export function TopProductsEnhanced({
           return (
             <div
               key={item.producto}
-              className="group flex items-center gap-3 p-3 bg-[#0d1117] hover:bg-[#1a2234] rounded-lg border border-[#1e293b] hover:border-[#f59e0b]/30 transition-all duration-200"
+              className="group flex items-center gap-3 p-3 bg-muted hover:bg-muted/50 rounded-lg border border-border hover:border-primary/30 transition-all duration-200"
             >
               {/* Ranking */}
               <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
@@ -85,7 +85,7 @@ export function TopProductsEnhanced({
                   ? 'bg-gradient-to-br from-[#94a3b8] to-[#cbd5e1] text-white'
                   : index === 2
                   ? 'bg-gradient-to-br from-[#b45309] to-[#d97706] text-white'
-                  : 'bg-[#1e293b] text-[#64748b]'
+                  : 'bg-[#1e293b] text-muted-foreground'
               }`}>
                 {index + 1}
               </div>
@@ -96,7 +96,7 @@ export function TopProductsEnhanced({
                     {item.producto}
                   </p>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs text-[#64748b]">{item.cantidad}u</span>
+                    <span className="text-xs text-muted-foreground">{item.cantidad}u</span>
                     <span className="text-sm font-bold text-white font-mono">{formatearMoneda(item.total)}</span>
                   </div>
                 </div>
@@ -112,7 +112,7 @@ export function TopProductsEnhanced({
                       style={{ width: `${porcentaje}%` }}
                     />
                   </div>
-                  <span className="text-xs text-[#64748b] w-10 text-right">{porcentaje.toFixed(0)}%</span>
+                  <span className="text-xs text-muted-foreground w-10 text-right">{porcentaje.toFixed(0)}%</span>
                 </div>
 
                 {/* Tiendas */}
@@ -126,7 +126,7 @@ export function TopProductsEnhanced({
                     />
                   ))}
                   {item.tiendas.length > 3 && (
-                    <span className="text-xs text-[#64748b]">+{item.tiendas.length - 3}</span>
+                    <span className="text-xs text-muted-foreground">+{item.tiendas.length - 3}</span>
                   )}
                 </div>
               </div>

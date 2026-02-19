@@ -31,7 +31,7 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${mono.variable} antialiased font-sans`}
       >
-        <div className="flex min-h-screen bg-[#0a0f1a]">
+        <div className="flex min-h-screen bg-background">
           <Sidebar />
           <div className="flex-1 ml-64">
             <Header />

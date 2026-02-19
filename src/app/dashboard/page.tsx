@@ -304,7 +304,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Panel General</h1>
-            <p className="text-[#94a3b8]">Tablas de Google Sheets</p>
+            <p className="text-muted-foreground">Tablas de Google Sheets</p>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-lg">
             <div className="w-2 h-2 bg-[#f59e0b] rounded-full animate-pulse"></div>
@@ -313,7 +313,7 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-32 bg-[#111827] border border-[#1e293b] rounded-lg animate-pulse"></div>
+            <div key={i} className="h-32 bg-card border border-border rounded-lg animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -325,7 +325,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-8">
           <p className="text-[#ef4444] font-semibold mb-2">Error de Carga</p>
-          <p className="text-[#94a3b8] text-sm mb-6">{error}</p>
+          <p className="text-muted-foreground text-sm mb-6">{error}</p>
           <button onClick={() => window.location.reload()} className="px-6 py-2.5 bg-[#f59e0b] text-white rounded-lg">
             Reintentar
           </button>
@@ -458,7 +458,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-[#94a3b8] bg-clip-text text-transparent">
             Panel General
           </h1>
-          <p className="text-[#94a3b8]">Tablas de Google Sheets</p>
+          <p className="text-muted-foreground">Tablas de Google Sheets</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-4 py-2 bg-[#10b981]/10 border border-[#10b981]/30 rounded-lg">
@@ -506,8 +506,8 @@ export default function DashboardPage() {
       )}
 
       {/* Tabs Navigation */}
-      <div className="bg-[#111827] border border-[#1e293b] rounded-xl overflow-hidden">
-        <div className="flex overflow-x-auto border-b border-[#1e293b] scrollbar-thin scrollbar-thumb-[#f59e0b]/20 scrollbar-track-transparent">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="flex overflow-x-auto border-b border-border scrollbar-thin scrollbar-thumb-[#f59e0b]/20 scrollbar-track-transparent">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -516,7 +516,7 @@ export default function DashboardPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap transition-all duration-200 relative ${
-                  isActive ? 'text-[#f59e0b] bg-[#f59e0b]/5' : 'text-[#94a3b8] hover:text-white hover:bg-[#0d1117]/50'
+                  isActive ? 'text-[#f59e0b] bg-[#f59e0b]/5' : 'text-muted-foreground hover:text-white hover:bg-muted/50'
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -530,7 +530,7 @@ export default function DashboardPage() {
         <div className="p-6">
           {/* Barra de herramientas */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-[#94a3b8]">
+            <div className="flex items-center gap-2 text-muted-foreground">
               {(() => {
                 const Icon = TABS.find(t => t.id === activeTab)?.icon || Table;
                 return <Icon className="w-5 h-5" />;
@@ -553,13 +553,13 @@ export default function DashboardPage() {
 
           {numRows === 0 ? (
             <div className="text-center py-16">
-              <Table className="w-16 h-16 mx-auto mb-4 text-[#64748b]" />
-              <p className="text-[#64748b]">No hay datos en esta tabla</p>
+              <Table className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">No hay datos en esta tabla</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-[#1e293b]">
+            <div className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-[#0d1117] sticky top-0">
+                <thead className="bg-muted sticky top-0">
                   <tr>
                     {datosTabla[0]?.map((header: string, idx: number) => {
                       // Ocultar columnas con cabecera vacía
@@ -617,7 +617,7 @@ export default function DashboardPage() {
     }
 
     return (
-      <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
+      <tr key={rowIdx} className="hover:bg-muted/50 transition-colors">
         {row.map((cell: string | number, cellIdx: number) => {
           // Ocultar celda si la cabecera correspondiente está vacía
           const cabecera = datosTabla[0]?.[cellIdx] || '';
@@ -679,7 +679,7 @@ export default function DashboardPage() {
           }
 
           let displayValue: string | number = cellValue;
-          let className = 'text-[#94a3b8]';
+          let className = 'text-muted-foreground';
 
           if (esFecha) {
             // Formatear fecha

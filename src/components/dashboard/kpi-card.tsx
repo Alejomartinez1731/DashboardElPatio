@@ -21,14 +21,14 @@ export function KPICard({ titulo, valor, tipo = 'moneda', variacion, icono }: KP
   const Icono = variacion === undefined ? Minus : esPositivo ? TrendingUp : TrendingDown;
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b] hover:bg-[#1a2234] transition-colors duration-200 relative overflow-hidden">
+    <Card className="p-6 bg-card border-border hover:bg-muted/50 transition-colors duration-200 relative overflow-hidden">
       {/* Círculo decorativo */}
       <div className="absolute top-0 right-0 w-20 h-20 bg-[#f59e0b]/5 rounded-bl-full"></div>
 
       <div className="relative">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <p className="text-sm text-[#94a3b8] mb-1">{titulo}</p>
+            <p className="text-sm text-muted-foreground mb-1">{titulo}</p>
             <p className="text-2xl font-bold text-white font-mono">{valorFormateado}</p>
           </div>
 

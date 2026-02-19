@@ -54,7 +54,7 @@ export function QuickActions({
   ];
 
   return (
-    <Card className="p-4 bg-[#111827] border-[#1e293b]">
+    <Card className="p-4 bg-card border-border">
       <div className={`grid gap-3 ${acciones.filter(a => a.onClick).length === 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-2'}`}>
         {acciones.filter(a => a.onClick).map((accion) => {
           const Icon = accion.icon;
@@ -65,7 +65,7 @@ export function QuickActions({
               disabled={accion.disabled}
               className={`
                 group flex flex-col items-center gap-2 p-4
-                bg-[#0d1117] border border-[#1e293b] rounded-lg
+                bg-muted border border-border rounded-lg
                 transition-all duration-200
                 ${accion.color}
                 ${accion.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95'}
@@ -76,9 +76,9 @@ export function QuickActions({
                 transition-all duration-200
                 ${!accion.disabled ? 'group-hover:scale-110' : ''}
               `}>
-                <Icon className="w-5 h-5 text-[#94a3b8] group-hover:text-current transition-colors" />
+                <Icon className="w-5 h-5 text-muted-foreground group-hover:text-current transition-colors" />
               </div>
-              <span className="text-xs font-medium text-[#94a3b8] group-hover:text-white transition-colors">
+              <span className="text-xs font-medium text-muted-foreground group-hover:text-white transition-colors">
                 {accion.label}
               </span>
             </button>

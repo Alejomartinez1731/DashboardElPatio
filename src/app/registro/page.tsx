@@ -116,7 +116,7 @@ export default function RegistroPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-[#94a3b8]">Cargando registro de compras...</p>
+          <p className="text-muted-foreground">Cargando registro de compras...</p>
         </div>
       </div>
     );
@@ -138,94 +138,94 @@ export default function RegistroPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Registro de Compras</h1>
-        <p className="text-[#94a3b8]">Historial completo de todas las compras realizadas</p>
+        <p className="text-muted-foreground">Historial completo de todas las compras realizadas</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Total Compras</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Total Compras</p>
           <p className="text-2xl font-bold text-white">{compras.length}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Gasto Total</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Gasto Total</p>
           <p className="text-2xl font-bold text-[#10b981]">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Tiendas</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Tiendas</p>
           <p className="text-2xl font-bold text-[#f59e0b]">{tiendasUnicas.length}</p>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Filtrando</p>
+        <Card className="p-4 bg-card border-border">
+          <p className="text-muted-foreground text-sm mb-1">Filtrando</p>
           <p className="text-2xl font-bold text-[#3b82f6]">{comprasFiltradas.length}</p>
         </Card>
       </div>
 
       {/* Filtros */}
-      <Card className="p-4 bg-[#111827] border-[#1e293b]">
+      <Card className="p-4 bg-card border-border">
         <div className="flex flex-wrap gap-4">
           {/* Búsqueda */}
           <div className="flex-1 min-w-[250px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Buscar por producto o tienda..."
                 value={busqueda}
                 onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
-                className="w-full pl-10 pr-4 py-2 bg-[#0d1117] border border-[#1e293b] rounded-lg text-white placeholder-[#64748b] focus:outline-none focus:border-[#f59e0b]"
+                className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
               />
             </div>
           </div>
 
           {/* Filtro por tienda */}
           <div className="relative">
-            <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+            <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <select
               value={filtroTienda}
               onChange={(e) => { setFiltroTienda(e.target.value); setPagina(1); }}
-              className="pl-10 pr-8 py-2 bg-[#0d1117] border border-[#1e293b] rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:border-[#f59e0b]"
+              className="pl-10 pr-8 py-2 bg-muted border border-border rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:border-primary"
             >
               <option value="todas">Todas las tiendas</option>
               {tiendasUnicas.map(tienda => (
                 <option key={tienda} value={tienda}>{tienda}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b] pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           </div>
         </div>
       </Card>
 
       {/* Tabla */}
-      <Card className="overflow-hidden bg-[#111827] border-[#1e293b]">
+      <Card className="overflow-hidden bg-card border-border">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#0d1117] border-b border-[#1e293b]">
+            <thead className="bg-muted border-b border-border">
               <tr>
                 <th className="px-4 py-3 text-left">
-                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-2 text-sm font-semibold text-[#94a3b8] hover:text-white transition-colors">
+                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-white transition-colors">
                     <Calendar className="w-4 h-4" />
                     Fecha
                     {sortField === 'fecha' && (sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />)}
                   </button>
                 </th>
                 <th className="px-4 py-3 text-left">
-                  <button onClick={() => handleSort('tienda')} className="flex items-center gap-2 text-sm font-semibold text-[#94a3b8] hover:text-white transition-colors">
+                  <button onClick={() => handleSort('tienda')} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-white transition-colors">
                     <Store className="w-4 h-4" />
                     Tienda
                     {sortField === 'tienda' && (sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />)}
                   </button>
                 </th>
                 <th className="px-4 py-3 text-left">
-                  <button onClick={() => handleSort('producto')} className="flex items-center gap-2 text-sm font-semibold text-[#94a3b8] hover:text-white transition-colors">
+                  <button onClick={() => handleSort('producto')} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-white transition-colors">
                     Producto
                     {sortField === 'producto' && (sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />)}
                   </button>
                 </th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-[#94a3b8]">Cant.</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-[#94a3b8]">Precio Unit.</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-muted-foreground">Cant.</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-muted-foreground">Precio Unit.</th>
                 <th className="px-4 py-3 text-right">
-                  <button onClick={() => handleSort('total')} className="flex items-center gap-2 text-sm font-semibold text-[#94a3b8] hover:text-white transition-colors ml-auto">
+                  <button onClick={() => handleSort('total')} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-white transition-colors ml-auto">
                     Total
                     {sortField === 'total' && (sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />)}
                   </button>
@@ -235,7 +235,7 @@ export default function RegistroPage() {
             <tbody>
               {comprasPaginadas.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-[#64748b]">
+                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                     No se encontraron compras con los filtros actuales
                   </td>
                 </tr>
@@ -244,8 +244,8 @@ export default function RegistroPage() {
                   const tiendaNormalizada = normalizarTienda(compra.tienda);
                   const colorTienda = COLORES_TIENDA[tiendaNormalizada] || COLORES_TIENDA['Otros'];
                   return (
-                    <tr key={compra.id} className="border-b border-[#1e293b] hover:bg-[#0d1117]/50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-[#94a3b8]">{formatearFecha(compra.fecha)}</td>
+                    <tr key={compra.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{formatearFecha(compra.fecha)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorTienda }} />
@@ -253,8 +253,8 @@ export default function RegistroPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-white font-medium">{compra.producto}</td>
-                      <td className="px-4 py-3 text-sm text-center text-[#94a3b8]">{compra.cantidad}</td>
-                      <td className="px-4 py-3 text-sm text-center text-[#94a3b8]">{formatearMoneda(compra.precioUnitario)}</td>
+                      <td className="px-4 py-3 text-sm text-center text-muted-foreground">{compra.cantidad}</td>
+                      <td className="px-4 py-3 text-sm text-center text-muted-foreground">{formatearMoneda(compra.precioUnitario)}</td>
                       <td className="px-4 py-3 text-sm text-right font-bold text-white">{formatearMoneda(compra.total)}</td>
                     </tr>
                   );
@@ -266,8 +266,8 @@ export default function RegistroPage() {
 
         {/* Paginación */}
         {totalPaginas > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 bg-[#0d1117] border-t border-[#1e293b]">
-            <p className="text-sm text-[#64748b]">
+          <div className="flex items-center justify-between px-4 py-3 bg-muted border-t border-border">
+            <p className="text-sm text-muted-foreground">
               Mostrando {(pagina - 1) * ITEMS_POR_PAGINA + 1} - {Math.min(pagina * ITEMS_POR_PAGINA, comprasFiltradas.length)} de {comprasFiltradas.length} compras
             </p>
             <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export default function RegistroPage() {
               >
                 Anterior
               </button>
-              <span className="text-sm text-[#94a3b8] px-2">
+              <span className="text-sm text-muted-foreground px-2">
                 Página {pagina} de {totalPaginas}
               </span>
               <button

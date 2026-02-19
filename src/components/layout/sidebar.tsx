@@ -23,9 +23,9 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-[#0d1117] backdrop-blur-xl border-r border-[#1e293b] flex flex-col fixed h-screen left-0 top-0 z-50">
+    <aside className="w-64 bg-muted backdrop-blur-xl border-r border-border flex flex-col fixed h-screen left-0 top-0 z-50">
       {/* Logo */}
-      <div className="p-6 border-b border-[#1e293b] bg-gradient-to-b from-[#f59e0b]/5 to-transparent">
+      <div className="p-6 border-b border-border bg-gradient-to-b from-[#f59e0b]/5 to-transparent">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-[#f59e0b] to-[#fbbf24] rounded-xl flex items-center justify-center shadow-lg shadow-[#f59e0b]/20">
             <span className="text-lg">🍽️</span>
@@ -40,7 +40,7 @@ export function Sidebar() {
       {/* Navegación - Principal */}
       <div className="flex-1 overflow-y-auto">
         <nav className="p-4 space-y-2">
-          <div className="text-xs text-[#64748b] uppercase tracking-wide font-semibold mb-2 px-4">
+          <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4">
             Principal
           </div>
           {navegacion.slice(0, 3).map((item) => {
@@ -55,7 +55,7 @@ export function Sidebar() {
                   'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
                   isActive
                     ? 'bg-[#f59e0b]/15 text-[#f59e0b] font-semibold border-l-3 border-[#f59e0b]'
-                    : 'text-[#94a3b8] hover:bg-[#1a2234] hover:text-white'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-white'
                 )}
               >
                 <Icono className="w-5 h-5" strokeWidth={2} />
@@ -64,7 +64,7 @@ export function Sidebar() {
             );
           })}
 
-          <div className="text-xs text-[#64748b] uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
+          <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
             Gestión
           </div>
           {navegacion.slice(3).map((item) => {
@@ -79,7 +79,7 @@ export function Sidebar() {
                   'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
                   isActive
                     ? 'bg-[#f59e0b]/15 text-[#f59e0b] font-semibold border-l-3 border-[#f59e0b]'
-                    : 'text-[#94a3b8] hover:bg-[#1a2234] hover:text-white'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-white'
                 )}
               >
                 <Icono className="w-5 h-5" strokeWidth={2} />
@@ -91,15 +91,15 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-[#1e293b] bg-gradient-to-t from-[#f59e0b]/5 to-transparent">
-        <div className="flex items-center justify-between text-xs text-[#94a3b8] mb-2">
+      <div className="p-4 border-t border-border bg-gradient-to-t from-[#f59e0b]/5 to-transparent">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
           <span>Google Sheets</span>
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse"></span>
             Conectado
           </span>
         </div>
-        <div className="text-xs text-[#64748b] font-mono">
+        <div className="text-xs text-muted-foreground font-mono">
           v1.0.0
         </div>
       </div>

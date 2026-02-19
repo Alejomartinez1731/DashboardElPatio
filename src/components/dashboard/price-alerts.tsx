@@ -22,14 +22,14 @@ export function PriceAlerts({ compras, limite = 5, titulo = 'Alertas de Precio' 
   const alertasVisibles = alertas.slice(0, limite);
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b]">
+    <Card className="p-6 bg-card border-border">
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />
         <h3 className="text-lg font-semibold text-white">{titulo}</h3>
       </div>
 
       {alertasVisibles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-48 text-[#64748b]">
+        <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
           <span className="text-4xl mb-2">✅</span>
           <p className="text-sm">Sin alertas de precio hoy</p>
         </div>
@@ -38,12 +38,12 @@ export function PriceAlerts({ compras, limite = 5, titulo = 'Alertas de Precio' 
           {alertasVisibles.map((alerta) => (
             <Card
               key={alerta.id}
-              className="p-4 bg-[#1a2234] border border-[#1e293b] hover:border-[#f59e0b]/50 transition-colors"
+              className="p-4 bg-[#1a2234] border border-border hover:border-[#f59e0b]/50 transition-colors"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <p className="font-semibold text-white text-sm mb-1">{alerta.producto}</p>
-                  <div className="flex items-center gap-2 text-xs text-[#64748b]">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{alerta.tienda}</span>
                     <span>•</span>
                     <span>{formatearFecha(alerta.fecha)}</span>
@@ -60,7 +60,7 @@ export function PriceAlerts({ compras, limite = 5, titulo = 'Alertas de Precio' 
 
               <div className="flex items-center gap-3">
                 <div className="text-sm">
-                  <span className="text-[#64748b] line-through mr-2">
+                  <span className="text-muted-foreground line-through mr-2">
                     {formatearMoneda(alerta.precioAnterior)}
                   </span>
                   <span className="text-white font-semibold font-mono">
@@ -74,7 +74,7 @@ export function PriceAlerts({ compras, limite = 5, titulo = 'Alertas de Precio' 
       )}
 
       {alertas.length > limite && (
-        <p className="text-xs text-[#64748b] mt-3 text-center">
+        <p className="text-xs text-muted-foreground mt-3 text-center">
           Mostrando {limite} de {alertas.length} alertas
         </p>
       )}

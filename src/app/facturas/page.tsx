@@ -136,51 +136,51 @@ export default function FacturasPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Historial de Facturas</h1>
-        <p className="text-[#94a3b8]">Todas las facturas agrupadas por fecha y tienda</p>
+        <p className="text-muted-foreground">Todas las facturas agrupadas por fecha y tienda</p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
+        <Card className="p-4 bg-card border-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#f59e0b]/10 rounded-lg flex items-center justify-center">
               <Receipt className="w-5 h-5 text-[#f59e0b]" />
             </div>
             <div>
-              <p className="text-[#64748b] text-xs mb-1">Total Facturas</p>
+              <p className="text-muted-foreground text-xs mb-1">Total Facturas</p>
               <p className="text-xl font-bold text-white">{stats.totalFacturas}</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
+        <Card className="p-4 bg-card border-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#10b981]/10 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-[#10b981]" />
             </div>
             <div>
-              <p className="text-[#64748b] text-xs mb-1">Gasto Total</p>
+              <p className="text-muted-foreground text-xs mb-1">Gasto Total</p>
               <p className="text-xl font-bold text-[#10b981]">{formatearMoneda(stats.gastoTotal)}</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
+        <Card className="p-4 bg-card border-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#3b82f6]/10 rounded-lg flex items-center justify-center">
               <ShoppingCart className="w-5 h-5 text-[#3b82f6]" />
             </div>
             <div>
-              <p className="text-[#64748b] text-xs mb-1">Promedio</p>
+              <p className="text-muted-foreground text-xs mb-1">Promedio</p>
               <p className="text-xl font-bold text-[#3b82f6]">{formatearMoneda(stats.gastoPromedio)}</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-[#111827] border-[#1e293b]">
+        <Card className="p-4 bg-card border-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#8b5cf6]/10 rounded-lg flex items-center justify-center">
               <Store className="w-5 h-5 text-[#8b5cf6]" />
             </div>
             <div>
-              <p className="text-[#64748b] text-xs mb-1">Tienda Principal</p>
+              <p className="text-muted-foreground text-xs mb-1">Tienda Principal</p>
               <p className="text-sm font-bold text-[#8b5cf6] truncate">{stats.tiendaMasFrecuente}</p>
             </div>
           </div>
@@ -197,10 +197,10 @@ export default function FacturasPage() {
         .map(([mes, facturasMes]) => (
           <div key={mes} className="space-y-4">
             {/* Mes header */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#111827] border border-[#1e293b] rounded-lg">
+            <div className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg">
               <Calendar className="w-5 h-5 text-[#f59e0b]" />
               <h2 className="text-lg font-bold text-white capitalize">{mes}</h2>
-              <span className="text-sm text-[#64748b]">({facturasMes.length} facturas)</span>
+              <span className="text-sm text-muted-foreground">({facturasMes.length} facturas)</span>
               <span className="ml-auto text-sm font-semibold text-[#10b981]">
                 {formatearMoneda(facturasMes.reduce((sum, f) => sum + f.total, 0))}
               </span>
@@ -213,13 +213,13 @@ export default function FacturasPage() {
                 return (
                   <Card
                     key={factura.id}
-                    className={`overflow-hidden bg-[#111827] border-[#1e293b] hover:border-[#f59e0b]/30 transition-all ${
+                    className={`overflow-hidden bg-card border-border hover:border-primary/30 transition-all ${
                       expandida ? 'border-[#f59e0b]' : ''
                     }`}
                   >
                     {/* Header de factura (siempre visible) */}
                     <div
-                      className="p-4 cursor-pointer hover:bg-[#0d1117]/50 transition-colors"
+                      className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => toggleFactura(factura.id)}
                     >
                       <div className="flex items-center gap-4">
@@ -232,13 +232,13 @@ export default function FacturasPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-semibold text-white">{factura.tiendaNormalizada}</h3>
-                            <span className="text-xs text-[#64748b]">•</span>
-                            <span className="text-sm text-[#94a3b8]">{formatearFecha(factura.fecha)}</span>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-sm text-muted-foreground">{formatearFecha(factura.fecha)}</span>
                           </div>
                           <div className="flex items-center gap-3 text-sm">
-                            <span className="text-[#64748b]">{factura.numProductos} productos</span>
-                            <span className="text-[#64748b]">•</span>
-                            <span className="text-[#64748b]">ID: {factura.id}</span>
+                            <span className="text-muted-foreground">{factura.numProductos} productos</span>
+                            <span className="text-muted-foreground">•</span>
+                            <span className="text-muted-foreground">ID: {factura.id}</span>
                           </div>
                         </div>
 
@@ -250,9 +250,9 @@ export default function FacturasPage() {
                         {/* Toggle icon */}
                         <div className="ml-4">
                           {expandida ? (
-                            <ChevronUp className="w-5 h-5 text-[#94a3b8]" />
+                            <ChevronUp className="w-5 h-5 text-muted-foreground" />
                           ) : (
-                            <ChevronDown className="w-5 h-5 text-[#94a3b8]" />
+                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
                           )}
                         </div>
                       </div>
@@ -260,20 +260,20 @@ export default function FacturasPage() {
 
                     {/* Detalle de productos (expansible) */}
                     {expandida && (
-                      <div className="border-t border-[#1e293b] bg-[#0d1117]/30">
+                      <div className="border-t border-border bg-muted/30">
                         <div className="p-4">
-                          <p className="text-xs text-[#64748b] uppercase tracking-wide font-semibold mb-3">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3">
                             Productos de esta factura
                           </p>
                           <div className="space-y-2">
                             {factura.items.map((item, idx) => (
                               <div
                                 key={item.id}
-                                className="flex items-center justify-between p-2 bg-[#0d1117] rounded-lg hover:bg-[#1a2234] transition-colors"
+                                className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/50 transition-colors"
                               >
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm text-white font-medium truncate">{item.producto}</p>
-                                  <p className="text-xs text-[#64748b]">
+                                  <p className="text-xs text-muted-foreground">
                                     {item.cantidad} × {formatearMoneda(item.precioUnitario)}
                                   </p>
                                 </div>
@@ -295,10 +295,10 @@ export default function FacturasPage() {
 
       {/* No hay facturas */}
       {facturas.length === 0 && (
-        <Card className="p-12 bg-[#111827] border-[#1e293b] text-center">
-          <Receipt className="w-16 h-16 mx-auto mb-4 text-[#64748b]" />
-          <p className="text-[#94a3b8] text-lg mb-2">No hay facturas registradas</p>
-          <p className="text-[#64748b] text-sm">Las facturas aparecerán aquí una vez que realices compras</p>
+        <Card className="p-12 bg-card border-border text-center">
+          <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground text-lg mb-2">No hay facturas registradas</p>
+          <p className="text-muted-foreground text-sm">Las facturas aparecerán aquí una vez que realices compras</p>
         </Card>
       )}
     </div>

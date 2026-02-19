@@ -120,7 +120,7 @@ export function InsightsPanel({ compras }: InsightsPanelProps) {
   }
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-[#111827] to-[#0d1117] border-[#1e293b]">
+    <Card className="p-6 bg-gradient-to-br from-[#111827] to-[#0d1117] border-border">
       <div className="flex items-center gap-2 mb-4">
         <Lightbulb className="w-5 h-5 text-[#f59e0b]" />
         <h3 className="text-lg font-semibold text-white">Insights del Día</h3>
@@ -132,14 +132,14 @@ export function InsightsPanel({ compras }: InsightsPanelProps) {
           return (
             <div
               key={index}
-              className="flex items-start gap-3 p-4 bg-[#0d1117] hover:bg-[#1a2234] rounded-lg border border-[#1e293b] hover:border-[#f59e0b]/30 transition-all duration-200"
+              className="flex items-start gap-3 p-4 bg-muted hover:bg-muted/50 rounded-lg border border-border hover:border-primary/30 transition-all duration-200"
             >
               <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${estilosIcono[insight.tipo]}`}>
                 <Icon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white mb-1">{insight.titulo}</p>
-                <p className="text-xs text-[#94a3b8] leading-relaxed">{insight.descripcion}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{insight.descripcion}</p>
               </div>
             </div>
           );

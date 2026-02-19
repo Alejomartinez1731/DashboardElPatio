@@ -97,9 +97,9 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     filtros.precioMax !== null;
 
   return (
-    <div className="bg-[#111827] border border-[#1e293b] rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#1e293b]">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-5 h-5 text-[#f59e0b]" />
           <h3 className="font-semibold text-white">Filtros</h3>
@@ -115,9 +115,9 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
           )}
           <button
             onClick={() => setExpandido(!expandido)}
-            className="p-1 hover:bg-[#1a2234] rounded-lg transition-colors"
+            className="p-1 hover:bg-muted/50 rounded-lg transition-colors"
           >
-            <ChevronDown className={`w-5 h-5 text-[#94a3b8] transition-transform ${expandido ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandido ? 'rotate-180' : ''}`} />
           </button>
         </div>
       </div>
@@ -126,7 +126,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
         <div className="p-4 space-y-4">
           {/* Rango de Fecha */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-[#94a3b8] mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Calendar className="w-4 h-4" />
               Rango de Fecha
             </label>
@@ -145,7 +145,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   className={`px-3 py-2 text-xs rounded-lg border transition-all ${
                     filtros.rangoFecha === opcion.value
                       ? 'bg-[#f59e0b] border-[#f59e0b] text-white font-semibold'
-                      : 'bg-[#0d1117] border-[#1e293b] text-[#94a3b8] hover:border-[#f59e0b]/50 hover:text-white'
+                      : 'bg-muted border-border text-muted-foreground hover:border-[#f59e0b]/50 hover:text-white'
                   }`}
                 >
                   {opcion.label}
@@ -156,7 +156,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
 
           {/* Filtro por Tienda */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-[#94a3b8] mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Store className="w-4 h-4" />
               Filtrar por Tienda
             </label>
@@ -168,7 +168,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
                     filtros.tiendas.includes(tienda)
                       ? 'bg-[#f59e0b] border-[#f59e0b] text-white font-semibold'
-                      : 'bg-[#0d1117] border-[#1e293b] text-[#94a3b8] hover:border-[#f59e0b]/50'
+                      : 'bg-muted border-border text-muted-foreground hover:border-[#f59e0b]/50'
                   }`}
                 >
                   {tienda}
@@ -178,7 +178,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
             {filtros.tiendas.length > 0 && (
               <button
                 onClick={() => onFiltrosChange({ ...filtros, tiendas: [] })}
-                className="text-xs text-[#64748b] underline hover:text-[#f59e0b]"
+                className="text-xs text-muted-foreground underline hover:text-[#f59e0b]"
               >
                 Deseleccionar todas
               </button>
@@ -187,7 +187,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
 
           {/* Búsqueda */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-[#94a3b8] mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <Search className="w-4 h-4" />
               Buscar Producto
             </label>
@@ -197,12 +197,12 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                 value={filtros.busqueda}
                 onChange={(e) => onFiltrosChange({ ...filtros, busqueda: e.target.value })}
                 placeholder="Escribe para buscar..."
-                className="w-full px-3 py-2 bg-[#0d1117] border border-[#1e293b] rounded-lg text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#f59e0b]"
+                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
               />
               {filtros.busqueda && (
                 <button
                   onClick={() => onFiltrosChange({ ...filtros, busqueda: '' })}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -212,32 +212,32 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
 
           {/* Rango de Precios */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-[#94a3b8] mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
               <SlidersHorizontal className="w-4 h-4" />
               Rango de Precios
             </label>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#64748b] w-20">Mín:</span>
+                <span className="text-xs text-muted-foreground w-20">Mín:</span>
                 <input
                   type="number"
                   value={filtros.precioMin ?? ''}
                   onChange={(e) => onFiltrosChange({ ...filtros, precioMin: e.target.value ? parseFloat(e.target.value) : null })}
                   placeholder={precioMinGlobal.toFixed(2)}
-                  className="flex-1 px-3 py-1.5 bg-[#0d1117] border border-[#1e293b] rounded-lg text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-[#f59e0b]"
+                  className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
                 />
-                <span className="text-xs text-[#64748b]">€</span>
+                <span className="text-xs text-muted-foreground">€</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#64748b] w-20">Máx:</span>
+                <span className="text-xs text-muted-foreground w-20">Máx:</span>
                 <input
                   type="number"
                   value={filtros.precioMax ?? ''}
                   onChange={(e) => onFiltrosChange({ ...filtros, precioMax: e.target.value ? parseFloat(e.target.value) : null })}
                   placeholder={precioMaxGlobal.toFixed(2)}
-                  className="flex-1 px-3 py-1.5 bg-[#0d1117] border border-[#1e293b] rounded-lg text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-[#f59e0b]"
+                  className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
                 />
-                <span className="text-xs text-[#64748b]">€</span>
+                <span className="text-xs text-muted-foreground">€</span>
               </div>
             </div>
           </div>

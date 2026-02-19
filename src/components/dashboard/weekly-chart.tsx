@@ -40,7 +40,7 @@ export function WeeklyChart({ datos, titulo = 'Gasto Semanal' }: WeeklyChartProp
   const maxMonto = Math.max(...datosGrafico.map(d => d.monto), 1);
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b]">
+    <Card className="p-6 bg-card border-border">
       <h3 className="text-lg font-semibold text-white mb-4">{titulo}</h3>
 
       <ResponsiveContainer width="100%" height={250}>

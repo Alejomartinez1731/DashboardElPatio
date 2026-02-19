@@ -47,14 +47,14 @@ export function TrendChart({ datos, titulo = 'Tendencia de Gastos', dias = 30 }:
   const promedio = datosGrafico.reduce((sum, d) => sum + d.monto, 0) / datosGrafico.length;
 
   return (
-    <Card className="p-6 bg-[#111827] border-[#1e293b]">
+    <Card className="p-6 bg-card border-border">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">{titulo}</h3>
-          <p className="text-xs text-[#64748b] mt-1">Últimos {dias} días</p>
+          <p className="text-xs text-muted-foreground mt-1">Últimos {dias} días</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-[#64748b]">Promedio diario</p>
+          <p className="text-xs text-muted-foreground">Promedio diario</p>
           <p className="text-lg font-bold text-[#f59e0b] font-mono">{formatearMoneda(promedio)}</p>
         </div>
       </div>
