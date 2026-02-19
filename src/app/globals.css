@@ -5,39 +5,53 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
+  /* ═════════════════════════════════════════════════════════
+     EL PATIO VILA-SECA - Paleta de colores
+  ═════════════════════════════════════════════════════════ */
+
+  --color-background: hsl(25 30% 7%);  /* #1a1209 - Negro cálido */
+  --color-foreground: hsl(40 25% 90%); /* #f5ead0 - Crema */
+
+  --color-card: hsl(25 25% 18%);       /* #3a2a16 - Marrón cálido */
+  --color-card-foreground: hsl(40 25% 90%); /* #f5ead0 - Crema */
+
+  --color-popover: hsl(25 25% 12%);    /* #2a1f10 - Marrón oscuro */
+  --color-popover-foreground: hsl(40 25% 90%); /* #f5ead0 - Crema */
+
+  --color-primary: hsl(40 55% 53%);    /* #c9a246 - Dorado */
+  --color-primary-foreground: hsl(25 30% 7%); /* #1a1209 - Negro cálido */
+
+  --color-secondary: hsl(25 25% 12%);  /* #2a1f10 */
+  --color-secondary-foreground: hsl(40 25% 90%); /* #f5ead0 */
+
+  --color-muted: hsl(25 25% 12%);      /* #2a1f10 */
+  --color-muted-foreground: hsl(35 15% 65%); /* #b8a88e - Texto muted */
+
+  --color-accent: hsl(40 55% 53%);     /* #c9a246 - Dorado */
+  --color-accent-foreground: hsl(25 30% 7%); /* #1a1209 */
+
+  --color-destructive: hsl(10 55% 42%); /* #8b3a2a */
+  --color-border: hsl(40 25% 20% / 0.3); /* Borde dorado sutil */
+  --color-input: hsl(25 25% 12%);      /* #2a1f10 */
+  --color-ring: hsl(40 55% 53%);       /* #c9a246 - Dorado */
+
+  /* Colores de gráficos */
+  --color-chart-1: hsl(142.1 76.2% 36.3%);
+  --color-chart-2: hsl(217.2 91.2% 59.8%);
+  --color-chart-3: hsl(40 55% 53%);
+  --color-chart-4: hsl(0 84.2% 60.2%);
+  --color-chart-5: hsl(262.1 83.3% 57.8%);
+
+  /* Sidebar */
+  --color-sidebar: hsl(25 25% 12%);
+  --color-sidebar-foreground: hsl(35 15% 65%);
+  --color-sidebar-primary: hsl(40 55% 53%);
+  --color-sidebar-primary-foreground: hsl(25 30% 7%);
+  --color-sidebar-accent: hsl(40 55% 53%);
+  --color-sidebar-accent-foreground: hsl(25 30% 7%);
+  --color-sidebar-border: hsl(40 25% 20% / 0.3);
+  --color-sidebar-ring: hsl(40 55% 53%);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -114,60 +128,12 @@
   --color-otros: #64748b;
 }
 
-.dark {
-  /* ═════════════════════════════════════════════════════════
-     EL PATIO VILA-SECA - Paleta de colores (modo dark)
-  ═════════════════════════════════════════════════════════ */
-
-  --background: 25 30% 7%;  /* #1a1209 - Negro cálido */
-  --foreground: 40 25% 90%; /* #f5ead0 - Crema */
-
-  --card: 25 25% 18%;       /* #3a2a16 - Marrón cálido */
-  --card-foreground: 40 25% 90%; /* #f5ead0 */
-
-  --popover: 25 25% 12%;    /* #2a1f10 */
-  --popover-foreground: 40 25% 90%; /* #f5ead0 */
-
-  --primary: 40 55% 53%;    /* #c9a246 - Dorado */
-  --primary-foreground: 25 30% 7%; /* #1a1209 */
-
-  --secondary: 25 25% 12%;  /* #2a1f10 */
-  --secondary-foreground: 40 25% 90%; /* #f5ead0 */
-
-  --muted: 25 25% 12%;      /* #2a1f10 */
-  --muted-foreground: 35 15% 65%; /* #b8a88e */
-
-  --accent: 40 55% 53%;     /* #c9a246 - Dorado */
-  --accent-foreground: 25 30% 7%; /* #1a1209 */
-
-  --destructive: 10 55% 42%; /* #8b3a2a */
-  --border: 40 25% 20% / 0.3; /* Borde dorado sutil */
-  --input: 25 25% 12%;      /* #2a1f10 */
-  --ring: 40 55% 53%;       /* #c9a246 - Dorado */
-
-  --chart-1: 142.1 76.2% 36.3%;
-  --chart-2: 217.2 91.2% 59.8%;
-  --chart-3: 40 55% 53%;     /* Dorado */
-  --chart-4: 0 84.2% 60.2%;
-  --chart-5: 262.1 83.3% 57.8%;
-
-  --sidebar: 25 25% 12%;     /* #2a1f10 */
-  --sidebar-foreground: 35 15% 65%; /* #b8a88e */
-  --sidebar-primary: 40 55% 53%; /* #c9a246 */
-  --sidebar-primary-foreground: 25 30% 7%; /* #1a1209 */
-  --sidebar-accent: 40 55% 53%; /* #c9a246 */
-  --sidebar-accent-foreground: 25 30% 7%; /* #1a1209 */
-  --sidebar-border: 40 25% 20% / 0.3;
-  --sidebar-ring: 40 55% 53%; /* #c9a246 */
-}
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
     @apply bg-background text-foreground;
   }
 }
