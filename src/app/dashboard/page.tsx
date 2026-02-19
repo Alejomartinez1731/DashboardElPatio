@@ -6,10 +6,10 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
-import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal, Calendar } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
-type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
+type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'registro_diario';
 
 interface Tab {
   id: TabId;
@@ -20,6 +20,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
+  { id: 'registro_diario', label: 'Registro de Compras', sheetName: 'registro_diario', icon: Calendar, description: 'Registro diario de compras y gastos' },
   { id: 'historico_precios', label: 'Histórico de Precios', sheetName: 'historico_precios', icon: TrendingUp, description: 'Evolución de precios por producto' },
   { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
