@@ -47,8 +47,8 @@ export default function FacturasPage() {
       try {
         const response = await fetch('/api/sheets');
         const result = await response.json();
-        if (result.success && result.data.historico?.values) {
-          const values = result.data.historico.values as any[][];
+        if (result.success && result.data.base_de_datos?.values) {
+          const values = result.data.base_de_datos.values as any[][];
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
             const comprasProcesadas: Compra[] = [];
