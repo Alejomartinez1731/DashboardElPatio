@@ -269,7 +269,7 @@ export default function PreciosPage() {
         </Card>
       </div>
 
-      {/* Tabla de variaciones de precios */}
+      {/* Tabla de productos más comprados */}
       <Card className="overflow-hidden bg-[#111827] border-[#1e293b]">
         <div className="p-6 border-b border-[#1e293b]">
           <div className="flex items-center gap-2">
@@ -291,31 +291,20 @@ export default function PreciosPage() {
               </tr>
             </thead>
             <tbody>
-              {topProductos.map((p) => {
-                const esSubida = p.variacion > 0;
-                const esSignificativa = Math.abs(p.variacion) > 5;
+              {topProductos.map((p, index) => {
+                const ultimaCompra = p.historial[p.historial.length - 1];
                 return (
                   <tr key={p.producto} className="border-b border-[#1e293b] hover:bg-[#0d1117]/50">
+                    <td className="px-4 py-3 text-sm text-white font-bold">{index + 1}</td>
                     <td className="px-4 py-3 text-sm text-white font-medium">{p.producto}</td>
-                    <td className="px-4 py-3 text-sm text-right text-[#64748b]">{formatearMoneda(p.precioMin)}</td>
-                    <td className="px-4 py-3 text-sm text-right text-[#94a3b8]">{formatearMoneda(p.precioPromedio)}</td>
-                    <td className="px-4 py-3 text-sm text-right text-[#64748b]">{formatearMoneda(p.precioMax)}</td>
                     <td className="px-4 py-3 text-sm text-right">
-                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-semibold ${
-                        esSignificativa
-                          ? esSubida
-                            ? 'bg-[#ef4444]/10 text-[#ef4444]'
-                            : 'bg-[#10b981]/10 text-[#10b981]'
-                          : 'bg-[#64748b]/10 text-[#64748b]'
-                      }`}>
-                        {esSignificativa ? (
-                          esSubida ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />
-                        ) : (
-                          <Minus className="w-3 h-3" />
-                        )}
-                        <span>{p.variacion > 0 ? '+' : ''}{p.variacion.toFixed(1)}%</span>
-                      </div>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#f59e0b]/10 text-[#f59e0b] font-semibold">
+                        {p.numCompras}
+                      </span>
                     </td>
+                    <td className="px-4 py-3 text-sm text-right text-[#10b981] font-semibold">{formatearMoneda(p.gastoTotal)}</td>
+                    <td className="px-4 py-3 text-sm text-right text-[#64748b]">{formatearMoneda(p.precioPromedio)}</td>
+                    <td className="px-4 py-3 text-sm text-right text-[#64748b]">{formatearFecha(ultimaCompra?.fecha || new Date())}</td>
                   </tr>
                 );
               })}
