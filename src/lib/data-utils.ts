@@ -362,12 +362,23 @@ export function calcularKPIs(compras: Compra[], historicoPreciosValues: string[]
 
   // Facturas procesadas (fechas + tiendas únicas de los últimos 15 días)
   const facturasProcesadas = new Set<string>();
-  compras
-    .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
-    .forEach(c => {
-      const key = `${c.fecha.toDateString()}-${c.tienda}`;
-      facturasProcesadas.add(key);
-    });
+  const comprasUltimos15Dias = compras.filter(c => c.fecha >= hace15Dias && c.fecha <= hoy);
+
+  console.log('🧾 Facturas - Compras últimos 15 días:', comprasUltimos15Dias.length);
+  console.log('🧾 Facturas - Compras:', comprasUltimos15Dias.map(c => ({
+    fecha: c.fecha.toDateString(),
+    tienda: c.tienda,
+    producto: c.producto,
+    total: c.total
+  })));
+
+  comprasUltimos15Dias.forEach(c => {
+    const key = `${c.fecha.toDateString()}-${c.tienda}`;
+    facturasProcesadas.add(key);
+  });
+
+  console.log('🧾 Facturas únicas:', Array.from(facturasProcesadas));
+  console.log('🧾 Total facturas:', facturasProcesadas.size);
 
   // Alertas de precio
   const alertas = detectarAlertasPrecio(compras);
