@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [compras, setCompras] = useState<Compra[]>([]);
   const [comprasFiltradas, setComprasFiltradas] = useState<Compra[]>([]);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('base_datos');
+  const [activeTab, setActiveTab] = useState<TabId>('historico_precios');
   const [sheetsData, setSheetsData] = useState<Record<string, string[][]>>({});
 
   // Filtros
