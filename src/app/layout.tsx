@@ -43,8 +43,9 @@ export default function RootLayout({
     <html lang="es" className="dark">
       <body
         className={`${display.variable} ${body.variable} ${elegant.variable} antialiased`}
+        style={{ backgroundColor: '#1a1209', color: '#e8dcc8' }}
       >
-        <div className="flex min-h-screen" style={{ backgroundColor: 'var(--patio-negro)', color: 'var(--patio-texto)' }}>
+        <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex-1 ml-64">
             <Header />
