@@ -32,11 +32,8 @@ export default function RegistroPage() {
 
         if (result.success && result.data.registro_diario?.values) {
           const values = result.data.registro_diario.values as any[][];
-          console.log('📊 Registro diario - cabeceras:', values[0]);
-          console.log('📊 Registro diario - primera fila de datos:', values[1]);
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-            console.log('📊 Registro diario - cabeceras normalizadas:', cabeceras);
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
@@ -58,24 +55,9 @@ export default function RegistroPage() {
                 total: parseFloat(obj.total || '0') || 0,
               };
 
-              // Log primeras 3 compras ANTES del filtro
-              if (i <= 3) {
-                console.log(`🔍 Fila ${i}:`, {
-                  producto: compra.producto,
-                  precioUnitarioRaw,
-                  precioUnitario: compra.precioUnitario,
-                  total: compra.total,
-                  incluyeTotal: compra.producto.toLowerCase().includes('total')
-                });
-              }
-
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
                 comprasProcesadas.push(compra);
               }
-            }
-            console.log('✅ Registro diario - compras procesadas:', comprasProcesadas.length);
-            if (comprasProcesadas.length > 0) {
-              console.log('📊 Primera compra:', comprasProcesadas[0]);
             }
             setCompras(comprasProcesadas);
           }
