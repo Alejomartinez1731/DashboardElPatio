@@ -336,6 +336,9 @@ export function calcularKPIs(compras: Compra[], historicoPreciosValues: string[]
   hace15Dias.setDate(hace15Dias.getDate() - 15);
   hace15Dias.setHours(0, 0, 0, 0);
 
+  console.log('📅 Fecha actual (hoy):', hoy.toISOString());
+  console.log('📅 Fecha hace 15 días:', hace15Dias.toISOString());
+
   // Gasto quincenal desde historico_precios (últimos 15 días)
   let gastoQuincenal = 0;
 
@@ -360,13 +363,22 @@ export function calcularKPIs(compras: Compra[], historicoPreciosValues: string[]
     }
   }
 
+  // Ver todas las compras y sus fechas para debugging
+  console.log('🧾 TODAS las compras:', compras.map(c => ({
+    fecha: c.fecha.toISOString(),
+    fechaStr: c.fecha.toDateString(),
+    tienda: c.tienda,
+    producto: c.producto,
+    dentroRango: c.fecha >= hace15Dias && c.fecha <= hoy
+  })));
+
   // Facturas procesadas (fechas + tiendas únicas de los últimos 15 días)
   const facturasProcesadas = new Set<string>();
   const comprasUltimos15Dias = compras.filter(c => c.fecha >= hace15Dias && c.fecha <= hoy);
 
   console.log('🧾 Facturas - Compras últimos 15 días:', comprasUltimos15Dias.length);
   console.log('🧾 Facturas - Compras:', comprasUltimos15Dias.map(c => ({
-    fecha: c.fecha.toDateString(),
+    fecha: c.fecha.toISOString(),
     tienda: c.tienda,
     producto: c.producto,
     total: c.total
