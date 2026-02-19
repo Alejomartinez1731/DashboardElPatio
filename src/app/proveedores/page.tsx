@@ -213,7 +213,7 @@ export default function ProveedoresPage() {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
                 formatter={(valor: any) => [formatearMoneda(valor), 'Gasto']}
               />
             </PieChart>
@@ -225,12 +225,12 @@ export default function ProveedoresPage() {
           <h3 className="text-lg font-semibold text-white mb-4">Gastos y Número de Compras</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={datosGraficoBarras}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="name" stroke="#64748b" tick={{ fill: '#64748b' }} />
-              <YAxis yAxisId="left" stroke="#64748b" tick={{ fill: '#64748b' }} />
-              <YAxis yAxisId="right" orientation="right" stroke="#64748b" tick={{ fill: '#64748b' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+              <XAxis dataKey="name" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
+              <YAxis yAxisId="left" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
+              <YAxis yAxisId="right" orientation="right" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
               />
               <Legend />
               <Bar yAxisId="left" dataKey="gasto" fill="#f59e0b" name="Gasto Total (€)" />

@@ -55,7 +55,7 @@ export function TrendChart({ datos, titulo = 'Tendencia de Gastos', dias = 30 }:
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Promedio diario</p>
-          <p className="text-lg font-bold text-[#f59e0b] font-mono">{formatearMoneda(promedio)}</p>
+          <p className="text-lg font-bold text-primary font-mono">{formatearMoneda(promedio)}</p>
         </div>
       </div>
 
@@ -69,30 +69,30 @@ export function TrendChart({ datos, titulo = 'Tendencia de Gastos', dias = 30 }:
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#1e293b"
+            stroke="#334155"
             vertical={false}
             opacity={0.5}
           />
           <XAxis
             dataKey="fecha"
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: '#94A3B8', fontSize: 11 }}
             stroke="none"
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: '#94A3B8', fontSize: 11 }}
             stroke="none"
             tickFormatter={(valor) => valor >= 1000 ? `${(valor/1000).toFixed(0)}k` : valor}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#1E293B',
+              border: '1px solid #475569',
               borderRadius: '8px',
-              color: '#f1f5f9',
+              color: '#F8FAFC',
             }}
             formatter={(valor: any) => [formatearMoneda(Number(valor) || 0), 'Gasto']}
-            labelStyle={{ color: '#94a3b8' }}
+            labelStyle={{ color: '#94A3B8' }}
           />
           <Area
             type="monotone"

@@ -282,11 +282,11 @@ export default function PreciosPage() {
           <h3 className="text-lg font-semibold text-white mb-4">Evolución del Gasto Quincenal</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={datosGraficoEvolucion}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="periodo" stroke="#64748b" tick={{ fill: '#64748b' }} />
-              <YAxis stroke="#64748b" tick={{ fill: '#64748b' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+              <XAxis dataKey="periodo" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
+              <YAxis stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
                 formatter={(valor: any) => [formatearMoneda(valor), 'Gasto']}
               />
@@ -307,11 +307,11 @@ export default function PreciosPage() {
           <h3 className="text-lg font-semibold text-white mb-4">Distribución por Rango de Precios</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={distribucionPrecios}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="rango" stroke="#64748b" tick={{ fill: '#64748b' }} />
-              <YAxis stroke="#64748b" tick={{ fill: '#64748b' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+              <XAxis dataKey="rango" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
+              <YAxis stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
               />
               <Bar dataKey="cantidad" fill="#f59e0b" radius={[8, 8, 0, 0]} />

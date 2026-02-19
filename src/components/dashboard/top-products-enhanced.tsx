@@ -61,7 +61,7 @@ export function TopProductsEnhanced({
     <Card className="p-6 bg-card border-border">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-[#f59e0b]" />
+          <Trophy className="w-5 h-5 text-primary" />
           <h3 className="text-lg font-semibold text-white">{titulo}</h3>
         </div>
         <span className="text-xs text-muted-foreground">Top {limite} productos</span>
@@ -80,12 +80,12 @@ export function TopProductsEnhanced({
               {/* Ranking */}
               <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
                 index === 0
-                  ? 'bg-gradient-to-br from-[#f59e0b] to-[#fbbf24] text-white'
+                  ? 'bg-gradient-to-br from-primary to-amber-400 text-white'
                   : index === 1
-                  ? 'bg-gradient-to-br from-[#94a3b8] to-[#cbd5e1] text-white'
+                  ? 'bg-gradient-to-br from-muted-foreground to-slate-400 text-white'
                   : index === 2
-                  ? 'bg-gradient-to-br from-[#b45309] to-[#d97706] text-white'
-                  : 'bg-[#1e293b] text-muted-foreground'
+                  ? 'bg-gradient-to-br from-amber-700 to-amber-600 text-white'
+                  : 'bg-card text-muted-foreground'
               }`}>
                 {index + 1}
               </div>
@@ -102,12 +102,12 @@ export function TopProductsEnhanced({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         esTop3
-                          ? 'bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]'
-                          : 'bg-[#64748b]'
+                          ? 'bg-gradient-to-r from-primary to-amber-400'
+                          : 'bg-muted-foreground'
                       }`}
                       style={{ width: `${porcentaje}%` }}
                     />

@@ -6,51 +6,55 @@
 
 @theme inline {
   /* ═════════════════════════════════════════════════════════
-     EL PATIO VILA-SECA - Paleta de colores
+     DASHBOARD EL PATIO - Paleta de colores moderna
+     Estilo: Azul oscuro elegante con acentos dorados
   ═════════════════════════════════════════════════════════ */
 
-  --color-background: hsl(25 30% 7%);  /* #1a1209 - Negro cálido */
-  --color-foreground: hsl(40 25% 90%); /* #f5ead0 - Crema */
+  /* Fondos */
+  --color-background: hsl(222 47% 11%);  /* #0F172A - Azul muy oscuro */
+  --color-foreground: hsl(210 40% 98%); /* #F8FAFC - Blanco azulado */
 
-  --color-card: hsl(25 25% 18%);       /* #3a2a16 - Marrón cálido */
-  --color-card-foreground: hsl(40 25% 90%); /* #f5ead0 - Crema */
+  --color-card: hsl(215 25% 23%);       /* #1E293B - Gris azulado */
+  --color-card-foreground: hsl(210 40% 98%); /* #F8FAFC */
 
-  --color-popover: hsl(25 25% 12%);    /* #2a1f10 - Marrón oscuro */
-  --color-popover-foreground: hsl(40 25% 90%); /* #f5ead0 - Crema */
+  --color-popover: hsl(215 25% 23%);    /* #1E293B */
+  --color-popover-foreground: hsl(210 40% 98%); /* #F8FAFC */
 
-  --color-primary: hsl(40 55% 53%);    /* #c9a246 - Dorado */
-  --color-primary-foreground: hsl(25 30% 7%); /* #1a1209 - Negro cálido */
+  /* Primary - Dorado moderno */
+  --color-primary: hsl(38 92% 50%);    /* #F59E0B - Dorado */
+  --color-primary-foreground: hsl(222 47% 11%); /* #0F172A */
 
-  --color-secondary: hsl(25 25% 12%);  /* #2a1f10 */
-  --color-secondary-foreground: hsl(40 25% 90%); /* #f5ead0 */
+  --color-secondary: hsl(215 25% 23%);  /* #1E293B */
+  --color-secondary-foreground: hsl(210 40% 98%); /* #F8FAFC */
 
-  --color-muted: hsl(25 25% 12%);      /* #2a1f10 */
-  --color-muted-foreground: hsl(35 15% 65%); /* #b8a88e - Texto muted */
+  --color-muted: hsl(215 25% 23%);      /* #1E293B */
+  --color-muted-foreground: hsl(215 20% 65%); /* #94A3B8 - Gris azulado */
 
-  --color-accent: hsl(40 55% 53%);     /* #c9a246 - Dorado */
-  --color-accent-foreground: hsl(25 30% 7%); /* #1a1209 */
+  --color-accent: hsl(38 92% 50%);     /* #F59E0B - Dorado */
+  --color-accent-foreground: hsl(222 47% 11%); /* #0F172A */
 
-  --color-destructive: hsl(10 55% 42%); /* #8b3a2a */
-  --color-border: hsl(40 25% 20% / 0.3); /* Borde dorado sutil */
-  --color-input: hsl(25 25% 12%);      /* #2a1f10 */
-  --color-ring: hsl(40 55% 53%);       /* #c9a246 - Dorado */
+  /* Destructive */
+  --color-destructive: hsl(0 84% 60%); /* #EF4444 - Rojo */
+  --color-border: hsl(215 25% 23% / 0.5); /* Borde sutil */
+  --color-input: hsl(215 25% 23%);      /* #1E293B */
+  --color-ring: hsl(38 92% 50%);       /* #F59E0B - Dorado */
 
   /* Colores de gráficos */
-  --color-chart-1: hsl(142.1 76.2% 36.3%);
-  --color-chart-2: hsl(217.2 91.2% 59.8%);
-  --color-chart-3: hsl(40 55% 53%);
-  --color-chart-4: hsl(0 84.2% 60.2%);
-  --color-chart-5: hsl(262.1 83.3% 57.8%);
+  --color-chart-1: hsl(159 84% 39%); /* #10B981 - Verde */
+  --color-chart-2: hsl(217 91% 60%); /* #3B82F6 - Azul */
+  --color-chart-3: hsl(38 92% 50%);  /* #F59E0B - Dorado */
+  --color-chart-4: hsl(0 84% 60%);   /* #EF4444 - Rojo */
+  --color-chart-5: hsl(271 81% 56%); /* A855F7 - Púrpura */
 
   /* Sidebar */
-  --color-sidebar: hsl(25 25% 12%);
-  --color-sidebar-foreground: hsl(35 15% 65%);
-  --color-sidebar-primary: hsl(40 55% 53%);
-  --color-sidebar-primary-foreground: hsl(25 30% 7%);
-  --color-sidebar-accent: hsl(40 55% 53%);
-  --color-sidebar-accent-foreground: hsl(25 30% 7%);
-  --color-sidebar-border: hsl(40 25% 20% / 0.3);
-  --color-sidebar-ring: hsl(40 55% 53%);
+  --color-sidebar: hsl(222 84% 5%);    /* #020617 - Azul casi negro */
+  --color-sidebar-foreground: hsl(215 20% 65%); /* #94A3B8 */
+  --color-sidebar-primary: hsl(38 92% 50%); /* #F59E0B - Dorado */
+  --color-sidebar-primary-foreground: hsl(222 47% 11%); /* #0F172A */
+  --color-sidebar-accent: hsl(38 92% 50%); /* #F59E0B */
+  --color-sidebar-accent-foreground: hsl(222 47% 11%); /* #0F172A */
+  --color-sidebar-border: hsl(215 25% 23% / 0.5);
+  --color-sidebar-ring: hsl(38 92% 50%); /* #F59E0B */
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -65,65 +69,65 @@
   --radius: 0.625rem;
 
   /* ═════════════════════════════════════════════════════════
-     EL PATIO VILA-SECA - Paleta de colores aplicada
-     Identidad visual: Rústico-elegante, mediterráneo, cálido
+     DASHBOARD EL PATIO - Paleta de colores moderna
+     Estilo: Azul oscuro elegante con acentos dorados
   ═════════════════════════════════════════════════════════ */
 
-  /* Fondos - Marrones oscuros cálidos */
-  --background: 25 30% 7%;  /* #1a1209 - Negro cálido */
-  --foreground: 40 25% 90%; /* #f5ead0 - Crema */
+  /* Fondos - Azules oscuros elegantes */
+  --background: 222 47% 11%;  /* #0F172A - Azul muy oscuro */
+  --foreground: 210 40% 98%; /* #F8FAFC - Blanco azulado */
 
-  --card: 25 25% 18%;       /* #3a2a16 - Marrón cálido */
-  --card-foreground: 40 25% 90%; /* #f5ead0 - Crema */
+  --card: 215 25% 23%;       /* #1E293B - Gris azulado */
+  --card-foreground: 210 40% 98%; /* #F8FAFC */
 
-  --popover: 25 25% 12%;    /* #2a1f10 - Marrón oscuro */
-  --popover-foreground: 40 25% 90%; /* #f5ead0 - Crema */
+  --popover: 215 25% 23%;    /* #1E293B */
+  --popover-foreground: 210 40% 98%; /* #F8FAFC */
 
-  /* Primary - Dorado de marca */
-  --primary: 40 55% 53%;    /* #c9a246 - Dorado */
-  --primary-foreground: 25 30% 7%; /* #1a1209 - Negro cálido */
+  /* Primary - Dorado moderno */
+  --primary: 38 92% 50%;    /* #F59E0B - Dorado */
+  --primary-foreground: 222 47% 11%; /* #0F172A */
 
-  /* Secondary - Marrón cálido */
-  --secondary: 25 25% 12%;  /* #2a1f10 */
-  --secondary-foreground: 40 25% 90%; /* #f5ead0 */
+  /* Secondary */
+  --secondary: 215 25% 23%;  /* #1E293B */
+  --secondary-foreground: 210 40% 98%; /* #F8FAFC */
 
   /* Muted */
-  --muted: 25 25% 12%;      /* #2a1f10 */
-  --muted-foreground: 35 15% 65%; /* #b8a88e - Texto muted */
+  --muted: 215 25% 23%;      /* #1E293B */
+  --muted-foreground: 215 20% 65%; /* #94A3B8 - Gris azulado */
 
-  /* Accent - Dorado */
-  --accent: 40 55% 53%;     /* #c9a246 - Dorado */
-  --accent-foreground: 25 30% 7%; /* #1a1209 */
+  /* Accent */
+  --accent: 38 92% 50%;     /* #F59E0B - Dorado */
+  --accent-foreground: 222 47% 11%; /* #0F172A */
 
-  /* Destructive - Rojo cálido */
-  --destructive: 10 55% 42%; /* #8b3a2a */
-  --border: 40 25% 20% / 0.3; /* Borde dorado sutil */
-  --input: 25 25% 12%;      /* #2a1f10 */
-  --ring: 40 55% 53%;       /* #c9a246 - Dorado */
+  /* Destructive */
+  --destructive: 0 84% 60%; /* #EF4444 - Rojo */
+  --border: 215 25% 23% / 0.5; /* Borde sutil */
+  --input: 215 25% 23%;      /* #1E293B */
+  --ring: 38 92% 50%;       /* #F59E0B - Dorado */
 
   /* Colores de gráficos */
-  --chart-1: 142.1 76.2% 36.3%; /* Mercadona verde */
-  --chart-2: 217.2 91.2% 59.8%; /* BonArea azul */
-  --chart-3: 40 92% 50%;    /* Lidl/BonArea dorado */
-  --chart-4: 0 84.2% 60.2%; /* Carrefour rojo */
-  --chart-5: 262.1 83.3% 57.8%; /* Aldi púrpura */
+  --chart-1: 159 84% 39%; /* #10B981 - Verde */
+  --chart-2: 217 91% 60%; /* #3B82F6 - Azul */
+  --chart-3: 38 92% 50%;  /* #F59E0B - Dorado */
+  --chart-4: 0 84% 60%;   /* #EF4444 - Rojo */
+  --chart-5: 271 81% 56%; /* A855F7 - Púrpura */
 
   /* Sidebar */
-  --sidebar: 25 25% 12%;     /* #2a1f10 */
-  --sidebar-foreground: 35 15% 65%; /* #b8a88e */
-  --sidebar-primary: 40 55% 53%; /* #c9a246 - Dorado */
-  --sidebar-primary-foreground: 25 30% 7%; /* #1a1209 */
-  --sidebar-accent: 40 55% 53%; /* #c9a246 */
-  --sidebar-accent-foreground: 25 30% 7%; /* #1a1209 */
-  --sidebar-border: 40 25% 20% / 0.3; /* Borde dorado sutil */
-  --sidebar-ring: 40 55% 53%; /* #c9a246 */
+  --sidebar: 222 84% 5%;     /* #020617 - Azul casi negro */
+  --sidebar-foreground: 215 20% 65%; /* #94A3B8 */
+  --sidebar-primary: 38 92% 50%; /* #F59E0B - Dorado */
+  --sidebar-primary-foreground: 222 47% 11%; /* #0F172A */
+  --sidebar-accent: 38 92% 50%; /* #F59E0B */
+  --sidebar-accent-foreground: 222 47% 11%; /* #0F172A */
+  --sidebar-border: 215 25% 23% / 0.5;
+  --sidebar-ring: 38 92% 50%; /* #F59E0B */
 
   /* Colores de tiendas específicos */
   --color-mercadona: #10b981;
   --color-bonarea: #3b82f6;
-  --color-lidl: #c9a246;      /* Dorado El Patio */
+  --color-lidl: #f59e0b;      /* Dorado moderno */
   --color-carrefour: #ef4444;
-  --color-aldi: #8b5cf6;
+  --color-aldi: #a855f7;
   --color-consum: #ec4899;
   --color-otros: #64748b;
 }

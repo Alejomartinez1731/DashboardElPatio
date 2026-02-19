@@ -101,7 +101,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-5 h-5 text-[#f59e0b]" />
+          <SlidersHorizontal className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-white">Filtros</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -144,8 +144,8 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   onClick={() => handleRangoFechaChange(opcion.value as any)}
                   className={`px-3 py-2 text-xs rounded-lg border transition-all ${
                     filtros.rangoFecha === opcion.value
-                      ? 'bg-[#f59e0b] border-[#f59e0b] text-white font-semibold'
-                      : 'bg-muted border-border text-muted-foreground hover:border-[#f59e0b]/50 hover:text-white'
+                      ? 'bg-primary border-primary text-white font-semibold'
+                      : 'bg-muted border-border text-muted-foreground hover:border-primary/50 hover:text-white'
                   }`}
                 >
                   {opcion.label}
@@ -167,8 +167,8 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   onClick={() => handleTiendaToggle(tienda)}
                   className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
                     filtros.tiendas.includes(tienda)
-                      ? 'bg-[#f59e0b] border-[#f59e0b] text-white font-semibold'
-                      : 'bg-muted border-border text-muted-foreground hover:border-[#f59e0b]/50'
+                      ? 'bg-primary border-primary text-white font-semibold'
+                      : 'bg-muted border-border text-muted-foreground hover:border-primary/50'
                   }`}
                 >
                   {tienda}
@@ -178,7 +178,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
             {filtros.tiendas.length > 0 && (
               <button
                 onClick={() => onFiltrosChange({ ...filtros, tiendas: [] })}
-                className="text-xs text-muted-foreground underline hover:text-[#f59e0b]"
+                className="text-xs text-muted-foreground underline hover:text-primary"
               >
                 Deseleccionar todas
               </button>
@@ -197,7 +197,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                 value={filtros.busqueda}
                 onChange={(e) => onFiltrosChange({ ...filtros, busqueda: e.target.value })}
                 placeholder="Escribe para buscar..."
-                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
+                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
               {filtros.busqueda && (
                 <button
@@ -224,7 +224,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   value={filtros.precioMin ?? ''}
                   onChange={(e) => onFiltrosChange({ ...filtros, precioMin: e.target.value ? parseFloat(e.target.value) : null })}
                   placeholder={precioMinGlobal.toFixed(2)}
-                  className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
+                  className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
                 />
                 <span className="text-xs text-muted-foreground">€</span>
               </div>
@@ -235,7 +235,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   value={filtros.precioMax ?? ''}
                   onChange={(e) => onFiltrosChange({ ...filtros, precioMax: e.target.value ? parseFloat(e.target.value) : null })}
                   placeholder={precioMaxGlobal.toFixed(2)}
-                  className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
+                  className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
                 />
                 <span className="text-xs text-muted-foreground">€</span>
               </div>

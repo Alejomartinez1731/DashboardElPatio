@@ -110,9 +110,9 @@ export function InsightsPanel({ compras }: InsightsPanelProps) {
   }, [compras]);
 
   const estilosIcono = {
-    info: 'bg-[#3b82f6]/10 text-[#3b82f6]',
-    warning: 'bg-[#f59e0b]/10 text-[#f59e0b]',
-    success: 'bg-[#10b981]/10 text-[#10b981]',
+    info: 'bg-chart-2/10 text-chart-2',
+    warning: 'bg-primary/10 text-primary',
+    success: 'bg-chart-1/10 text-chart-1',
   };
 
   if (insights.length === 0) {
@@ -120,9 +120,9 @@ export function InsightsPanel({ compras }: InsightsPanelProps) {
   }
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-[#111827] to-[#0d1117] border-border">
+    <Card className="p-6 bg-gradient-to-br from-background to-card border-border">
       <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-5 h-5 text-[#f59e0b]" />
+        <Lightbulb className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-semibold text-white">Insights del Día</h3>
       </div>
 

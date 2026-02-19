@@ -50,9 +50,9 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
           <h3 className="text-lg font-semibold text-white">{titulo}</h3>
           <p className="text-xs text-muted-foreground mt-1">Últimos 6 meses</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#f59e0b]/10 rounded-lg">
-          <Calendar className="w-4 h-4 text-[#f59e0b]" />
-          <span className="text-sm font-semibold text-[#f59e0b]">6 meses</span>
+        <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
+          <Calendar className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-primary">6 meses</span>
         </div>
       </div>
 
@@ -81,9 +81,9 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
             >
               <div className="flex-shrink-0">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  esMaximo ? 'bg-[#f59e0b]/20' : 'bg-[#1e293b]'
+                  esMaximo ? 'bg-primary/20' : 'bg-card'
                 }`}>
-                  <ShoppingCart className={`w-5 h-5 ${esMaximo ? 'text-[#f59e0b]' : 'text-muted-foreground'}`} />
+                  <ShoppingCart className={`w-5 h-5 ${esMaximo ? 'text-primary' : 'text-muted-foreground'}`} />
                 </div>
               </div>
 
@@ -96,10 +96,10 @@ export function MonthlySummary({ datos, titulo = 'Resumen Mensual' }: MonthlySum
                   <span className="text-sm font-bold text-white font-mono">{formatearMoneda(mes.total)}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
-                        esMaximo ? 'bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]' : 'bg-[#64748b]'
+                        esMaximo ? 'bg-gradient-to-r from-primary to-amber-400' : 'bg-muted-foreground'
                       }`}
                       style={{ width: `${porcentaje}%` }}
                     />

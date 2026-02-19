@@ -47,28 +47,28 @@ export function WeeklyChart({ datos, titulo = 'Gasto Semanal' }: WeeklyChartProp
         <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#1e293b"
+            stroke="#334155"
             vertical={false}
           />
           <XAxis
             dataKey="dia"
-            tick={{ fill: '#94a3b8', fontSize: 12 }}
+            tick={{ fill: '#94A3B8', fontSize: 12 }}
             stroke="none"
           />
           <YAxis
-            tick={{ fill: '#94a3b8', fontSize: 12 }}
+            tick={{ fill: '#94A3B8', fontSize: 12 }}
             stroke="none"
             tickFormatter={(valor) => formatearMoneda(valor)}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#1E293B',
+              border: '1px solid #475569',
               borderRadius: '8px',
-              color: '#f1f5f9',
+              color: '#F8FAFC',
             }}
             formatter={(valor: any) => formatearMoneda(Number(valor) || 0)}
-            labelStyle={{ color: '#94a3b8' }}
+            labelStyle={{ color: '#94A3B8' }}
           />
           <Bar
             dataKey="monto"

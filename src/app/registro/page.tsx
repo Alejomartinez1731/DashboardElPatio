@@ -173,7 +173,7 @@ export default function RegistroPage() {
                 placeholder="Buscar por producto o tienda..."
                 value={busqueda}
                 onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
-                className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-white placeholder-[#64748b] focus:outline-none focus:border-primary"
+                className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -274,7 +274,7 @@ export default function RegistroPage() {
               <button
                 onClick={() => setPagina(p => Math.max(1, p - 1))}
                 disabled={pagina === 1}
-                className="px-3 py-1 text-sm bg-[#1e293b] text-white rounded hover:bg-[#334155] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm bg-card text-white rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
@@ -284,7 +284,7 @@ export default function RegistroPage() {
               <button
                 onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
                 disabled={pagina === totalPaginas}
-                className="px-3 py-1 text-sm bg-[#1e293b] text-white rounded hover:bg-[#334155] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm bg-card text-white rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Siguiente
               </button>

@@ -65,10 +65,10 @@ export function DistributionChart({ datos, titulo = 'Distribución por Tienda' }
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#1E293B',
+                  border: '1px solid #475569',
                   borderRadius: '8px',
-                  color: '#f1f5f9',
+                  color: '#F8FAFC',
                 }}
                 formatter={(valor: any, name: any) => {
                   return [
