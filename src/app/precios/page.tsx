@@ -45,10 +45,13 @@ export default function PreciosPage() {
       try {
         const response = await fetch('/api/sheets');
         const result = await response.json();
-        if (result.success && result.data.historico?.values) {
-          const values = result.data.historico.values as any[][];
+        if (result.success && result.data.base_de_datos?.values) {
+          const values = result.data.base_de_datos.values as any[][];
+          console.log('📊 Precios - Datos recibidos:', values.length, 'filas');
+
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
+            console.log('📊 Precios - Cabeceras:', cabeceras);
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
@@ -56,13 +59,16 @@ export default function PreciosPage() {
               const obj: any = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
+              // Buscar precio unitario en diferentes nombres posibles
+              const precioRaw = obj.totalunitario || obj['precio unitario'] || obj['precio_unitario'] || obj.precio || '0';
+
               const compra: Compra = {
                 id: `compra-${i}`,
                 fecha: parsearFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
+                precioUnitario: parseFloat(precioRaw) || 0,
                 total: parseFloat(obj.total || '0') || 0,
               };
 
@@ -70,11 +76,12 @@ export default function PreciosPage() {
                 comprasProcesadas.push(compra);
               }
             }
+            console.log('✅ Precios - Compras procesadas:', comprasProcesadas.length);
             setCompras(comprasProcesadas);
           }
         }
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error en precios:', err);
       } finally {
         setCargando(false);
       }
