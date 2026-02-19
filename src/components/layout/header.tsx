@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw, Bell, Search, User, Settings } from 'lucide-react';
+import { RefreshCw, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
@@ -46,33 +46,24 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Barra de búsqueda */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted border border-border rounded-lg hover:border-[#f59e0b]/50 transition-colors cursor-pointer group">
-          <Search className="w-4 h-4 text-muted-foreground group-hover:text-[#f59e0b] transition-colors" />
-          <span className="text-sm text-muted-foreground">Buscar...</span>
-          <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#1e293b] rounded text-xs text-muted-foreground font-mono">
-            ⌘K
-          </kbd>
-        </div>
-
         {/* Fecha y hora */}
         {mounted && (
           <div className="hidden sm:block text-right px-3 py-1.5 bg-muted border border-border rounded-lg hover:border-primary/30 transition-colors">
             <p className="text-xs text-muted-foreground">Última actualización</p>
-            <p className="text-xs text-[#f59e0b] font-mono font-medium">
+            <p className="text-xs text-primary font-mono font-medium">
               {fechaActual ? formatearFechaHora(fechaActual) : '--:--'}
             </p>
           </div>
         )}
 
         {/* Separador */}
-        <div className="hidden lg:block w-px h-8 bg-[#1e293b]"></div>
+        <div className="hidden lg:block w-px h-8 bg-card"></div>
 
         {/* Notificaciones */}
-        <button className="relative p-2 text-muted-foreground hover:text-[#f59e0b] hover:bg-[#f59e0b]/10 rounded-lg transition-all duration-200">
+        <button className="relative p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200">
           <Bell className="w-5 h-5" />
           {notificaciones > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#ef4444] rounded-full animate-pulse"></span>
+            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-pulse"></span>
           )}
         </button>
 
@@ -82,7 +73,7 @@ export function Header() {
           size="sm"
           onClick={handleRefresh}
           disabled={cargando}
-          className="border-border hover:bg-[#f59e0b]/10 hover:border-[#f59e0b]/50 hover:text-[#f59e0b] text-muted-foreground transition-all duration-200"
+          className="border-border hover:bg-primary/10 hover:border-primary/50 hover:text-primary text-muted-foreground transition-all duration-200"
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${cargando ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Actualizar</span>
@@ -90,7 +81,7 @@ export function Header() {
 
         {/* Avatar */}
         <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors">
-          <div className="w-8 h-8 bg-gradient-to-br from-[#f59e0b] to-[#fbbf24] rounded-lg flex items-center justify-center text-white text-sm font-semibold">
+          <div className="w-8 h-8 bg-gradient-to-br from-primary to-amber-400 rounded-lg flex items-center justify-center text-white text-sm font-semibold">
             EP
           </div>
         </button>
