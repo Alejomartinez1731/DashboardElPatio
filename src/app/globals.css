@@ -50,52 +50,64 @@
 :root {
   --radius: 0.625rem;
 
-  /* Colores fintech oscuro - El Patio & Grill */
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
+  /* ═════════════════════════════════════════════════════════
+     EL PATIO VILA-SECA - Paleta de colores aplicada
+     Identidad visual: Rústico-elegante, mediterráneo, cálido
+  ═════════════════════════════════════════════════════════ */
 
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
+  /* Fondos - Marrones oscuros cálidos */
+  --background: 25 30% 7%;  /* #1a1209 - Negro cálido */
+  --foreground: 40 25% 90%; /* #f5ead0 - Crema */
 
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
+  --card: 25 25% 18%;       /* #3a2a16 - Marrón cálido */
+  --card-foreground: 40 25% 90%; /* #f5ead0 - Crema */
 
-  --primary: 38 92% 50%; /* Ámbar (#f59e0b) */
-  --primary-foreground: 0 0% 98%;
+  --popover: 25 25% 12%;    /* #2a1f10 - Marrón oscuro */
+  --popover-foreground: 40 25% 90%; /* #f5ead0 - Crema */
 
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
+  /* Primary - Dorado de marca */
+  --primary: 40 55% 53%;    /* #c9a246 - Dorado */
+  --primary-foreground: 25 30% 7%; /* #1a1209 - Negro cálido */
 
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
+  /* Secondary - Marrón cálido */
+  --secondary: 25 25% 12%;  /* #2a1f10 */
+  --secondary-foreground: 40 25% 90%; /* #f5ead0 */
 
-  --accent: 38 92% 50%; /* Ámbar (#f59e0b) */
-  --accent-foreground: 0 0% 98%;
+  /* Muted */
+  --muted: 25 25% 12%;      /* #2a1f10 */
+  --muted-foreground: 35 15% 65%; /* #b8a88e - Texto muted */
 
-  --destructive: 0 84.2% 60.2%; /* Rojo (#ef4444) */
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 217.2 91.2% 59.8%;
+  /* Accent - Dorado */
+  --accent: 40 55% 53%;     /* #c9a246 - Dorado */
+  --accent-foreground: 25 30% 7%; /* #1a1209 */
 
+  /* Destructive - Rojo cálido */
+  --destructive: 10 55% 42%; /* #8b3a2a */
+  --border: 40 25% 20% / 0.3; /* Borde dorado sutil */
+  --input: 25 25% 12%;      /* #2a1f10 */
+  --ring: 40 55% 53%;       /* #c9a246 - Dorado */
+
+  /* Colores de gráficos */
   --chart-1: 142.1 76.2% 36.3%; /* Mercadona verde */
   --chart-2: 217.2 91.2% 59.8%; /* BonArea azul */
-  --chart-3: 38 92% 50%; /* Lidl ámbar */
+  --chart-3: 40 92% 50%;    /* Lidl/BonArea dorado */
   --chart-4: 0 84.2% 60.2%; /* Carrefour rojo */
   --chart-5: 262.1 83.3% 57.8%; /* Aldi púrpura */
 
-  --sidebar: 222.2 84% 4.9%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 38 92% 50%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 38 92% 50%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-border: 217.2 32.6% 17.5%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  /* Sidebar */
+  --sidebar: 25 25% 12%;     /* #2a1f10 */
+  --sidebar-foreground: 35 15% 65%; /* #b8a88e */
+  --sidebar-primary: 40 55% 53%; /* #c9a246 - Dorado */
+  --sidebar-primary-foreground: 25 30% 7%; /* #1a1209 */
+  --sidebar-accent: 40 55% 53%; /* #c9a246 */
+  --sidebar-accent-foreground: 25 30% 7%; /* #1a1209 */
+  --sidebar-border: 40 25% 20% / 0.3; /* Borde dorado sutil */
+  --sidebar-ring: 40 55% 53%; /* #c9a246 */
 
   /* Colores de tiendas específicos */
   --color-mercadona: #10b981;
   --color-bonarea: #3b82f6;
-  --color-lidl: #f59e0b;
+  --color-lidl: #c9a246;      /* Dorado El Patio */
   --color-carrefour: #ef4444;
   --color-aldi: #8b5cf6;
   --color-consum: #ec4899;
@@ -252,4 +264,126 @@
 
 .stagger-4 {
   animation-delay: 0.2s;
+}
+
+/* ═════════════════════════════════════════════════════════
+   MEJORAS UI/UX - EL PATIO VILA-SECA
+══════════════════════════════════════════════════════════ */
+
+/* Scrollbar personalizado con colores de marca */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Mejoras de transición para elementos interactivos */
+button, a, [role="button"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cards con sombra sutil y hover mejorado */
+[class*="bg-card"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[class*="bg-card"]:hover {
+  box-shadow: 0 4px 20px hsla(var(--primary) / 0.15);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Focus visible mejorado */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Text selection con color de marca */
+::selection {
+  background-color: hsla(var(--primary) / 0.3);
+  color: hsl(var(--primary-foreground));
+}
+
+/* Links con hover dorado elegante */
+a {
+  color: hsl(var(--muted-foreground));
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: hsl(var(--primary));
+}
+
+/* Mejoras para inputs */
+input, textarea, select {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsla(var(--primary) / 0.1);
+}
+
+/* Badge/indicadores con bordes suaves */
+.badge, [class*="badge"] {
+  transition: all 0.2s ease;
+}
+
+/* Toast/notificaciones con animación suave */
+.toast {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* Tablas con hover suave */
+table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+/* Loading states más elegantes */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsla(var(--muted-foreground) / 0.5) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mejoras para botones */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0);
 }
