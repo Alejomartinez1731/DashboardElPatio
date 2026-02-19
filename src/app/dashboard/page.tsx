@@ -659,7 +659,6 @@ export default function DashboardPage() {
           const isNumber = !isNaN(numValue) && cellStr !== '' && cellValue !== null;
 
           // Determinar si es una columna de precio (basado en la cabecera)
-          const cabecera = datosTabla[0]?.[cellIdx] || '';
           const cabeceraLower = String(cabecera).toLowerCase();
           const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo') || cabeceraLower.match(/^\d{2}\/\d{2}\/\d{4}$/);
 
