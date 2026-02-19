@@ -24,7 +24,7 @@ export function QuickActions({
       icon: RefreshCw,
       label: 'Actualizar',
       descripcion: 'Recargar datos',
-      color: 'hover:bg-[#f59e0b]/10 hover:border-[#f59e0b]/50 hover:text-[#f59e0b]',
+      color: 'hover:bg-primary/10 hover:border-primary/50 hover:text-primary',
       onClick: onRefresh,
       disabled: cargando,
     },
@@ -32,7 +32,7 @@ export function QuickActions({
       icon: Download,
       label: 'Exportar',
       descripcion: 'Descargar CSV',
-      color: 'hover:bg-[#10b981]/10 hover:border-[#10b981]/50 hover:text-[#10b981]',
+      color: 'hover:bg-chart-1/10 hover:border-chart-1/50 hover:text-chart-1',
       onClick: onExport,
     },
     {
@@ -40,22 +40,15 @@ export function QuickActions({
       label: 'Filtrar',
       descripcion: filtrosActivos ? 'Filtros activos' : 'Aplicar filtros',
       color: filtrosActivos
-        ? 'bg-[#3b82f6]/10 border-[#3b82f6]/50 text-[#3b82f6]'
-        : 'hover:bg-[#3b82f6]/10 hover:border-[#3b82f6]/50 hover:text-[#3b82f6]',
-      onClick: onFilter,
-    },
-    {
-      icon: Calendar,
-      label: 'Periodo',
-      descripcion: 'Seleccionar rango',
-      color: 'hover:bg-[#8b5cf6]/10 hover:border-[#8b5cf6]/50 hover:text-[#8b5cf6]',
+        ? 'bg-chart-2/10 border-chart-2/50 text-chart-2'
+        : 'hover:bg-chart-2/10 hover:border-chart-2/50 hover:text-chart-2',
       onClick: onFilter,
     },
   ];
 
   return (
     <Card className="p-4 bg-card border-border">
-      <div className={`grid gap-3 ${acciones.filter(a => a.onClick).length === 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-2'}`}>
+      <div className="flex justify-center gap-3 max-w-2xl mx-auto">
         {acciones.filter(a => a.onClick).map((accion) => {
           const Icon = accion.icon;
           return (
