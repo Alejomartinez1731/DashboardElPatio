@@ -323,42 +323,26 @@ export function obtenerTiendasUnicas(compras: Compra[]): string[] {
  * Calcula KPIs desde compras
  */
 export function calcularKPIs(compras: Compra[]): {
-  gastoDelDia: number;
-  gastoDelMes: number;
+  gastoQuincenal: number;
   facturasProcesadas: number;
   alertasDePrecio: number;
-  variacionDia?: number;
-  variacionMes?: number;
 } {
   const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+  hoy.setHours(23, 59, 59, 999);
 
-  const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-  const ayer = new Date(hoy);
-  ayer.setDate(ayer.getDate() - 1);
+  const hace15Dias = new Date(hoy);
+  hace15Dias.setDate(hace15Dias.getDate() - 15);
+  hace15Dias.setHours(0, 0, 0, 0);
 
-  // Gasto del día
-  const gastoDelDia = compras
-    .filter(c => {
-      const fechaCompra = new Date(c.fecha);
-      fechaCompra.setHours(0, 0, 0, 0);
-      return fechaCompra.getTime() === hoy.getTime();
-    })
+  // Gasto quincenal (últimos 15 días)
+  const gastoQuincenal = compras
+    .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
     .reduce((sum, c) => sum + c.total, 0);
 
-  // Gasto del mes
-  const gastoDelMes = compras
-    .filter(c => c.fecha >= inicioMes)
-    .reduce((sum, c) => sum + c.total, 0);
-
-  // Facturas procesadas (fechas + tiendas únicas de hoy)
+  // Facturas procesadas (fechas + tiendas únicas de los últimos 15 días)
   const facturasProcesadas = new Set<string>();
   compras
-    .filter(c => {
-      const fechaCompra = new Date(c.fecha);
-      fechaCompra.setHours(0, 0, 0, 0);
-      return fechaCompra.getTime() === hoy.getTime();
-    })
+    .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
     .forEach(c => {
       const key = `${c.fecha.toDateString()}-${c.tienda}`;
       facturasProcesadas.add(key);
@@ -368,8 +352,7 @@ export function calcularKPIs(compras: Compra[]): {
   const alertas = detectarAlertasPrecio(compras);
 
   return {
-    gastoDelDia,
-    gastoDelMes,
+    gastoQuincenal,
     facturasProcesadas: facturasProcesadas.size,
     alertasDePrecio: alertas.length,
   };

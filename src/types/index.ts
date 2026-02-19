@@ -52,12 +52,9 @@ export interface AlertaPrecio {
 
 // KPIs del Dashboard
 export interface KPIData {
-  gastoDelDia: number;
-  gastoDelMes: number;
+  gastoQuincenal: number;
   facturasProcesadas: number;
   alertasDePrecio: number;
-  variacionDia?: number;  // Variación vs día anterior
-  variacionMes?: number;  // Variación vs mes anterior
 }
 
 // Datos para gráfico de gasto semanal
