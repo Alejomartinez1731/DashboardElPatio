@@ -350,8 +350,14 @@ export default function DashboardPage() {
     filtros,
     sheetsDataKeys: Object.keys(sheetsData)
   });
+
+  // Usar comprasFiltradas para base_datos cuando hay filtros activos
+  const comprasParaTabla = activeTab === 'base_datos' && (filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null || filtros.fechaInicio !== null || filtros.fechaFin !== null)
+    ? comprasFiltradas
+    : compras;
+
   const comprasComoTabla = activeTab === 'base_datos'
-    ? [...compras].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
+    ? [...comprasParaTabla].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
         const row = [
           c.id.split('-')[1] || '',
           formatearFecha(c.fecha),
@@ -473,13 +479,13 @@ export default function DashboardPage() {
       <QuickActions
         onRefresh={handleRefresh}
         onExport={handleExport}
-        onFilter={activeTab === 'base_datos' ? undefined : handleFilter}
+        onFilter={handleFilter}
         cargando={cargando}
         filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
       />
 
-      {/* Panel de Filtros - Solo mostrar si NO es base de datos */}
-      {activeTab !== 'base_datos' && showFilters && (
+      {/* Panel de Filtros - Mostrar para base_datos también */}
+      {showFilters && (
         <FilterPanel
           filtros={filtros}
           onFiltrosChange={setFiltros}
@@ -531,9 +537,16 @@ export default function DashboardPage() {
               })()}
               <p className="text-sm">{TABS.find(t => t.id === activeTab)?.description}</p>
               {activeTab === 'base_datos' && (
-                <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
-                  {compras.length} filas
-                </span>
+                <>
+                  <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
+                    {comprasParaTabla.length} {comprasParaTabla.length === 1 ? 'fila' : 'filas'}
+                  </span>
+                  {comprasParaTabla.length !== compras.length && (
+                    <span className="ml-2 text-xs bg-[#f59e0b]/20 text-[#f59e0b] px-2 py-1 rounded-full">
+                      de {compras.length} totales
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>
