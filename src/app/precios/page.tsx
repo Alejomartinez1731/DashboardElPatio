@@ -33,6 +33,8 @@ interface PrecioProducto {
   precioMin: number;
   precioMax: number;
   variacion: number;
+  numCompras: number;
+  gastoTotal: number;
   historial: { fecha: Date; precio: number; tienda: string }[];
 }
 
@@ -89,7 +91,7 @@ export default function PreciosPage() {
     fetchDatos();
   }, []);
 
-  // Analizar evolución de precios por producto
+  // Analizar evolución de precios y frecuencia de compras por producto
   const preciosProductos = useMemo(() => {
     const productos: Record<string, { compras: Compra[]; precios: number[] }> = {};
 
@@ -107,6 +109,8 @@ export default function PreciosPage() {
       const precioPromedio = precios.reduce((a, b) => a + b, 0) / precios.length;
       const precioMin = Math.min(...precios);
       const precioMax = Math.max(...precios);
+      const numCompras = data.compras.length;
+      const gastoTotal = data.compras.reduce((sum, c) => sum + c.total, 0);
       const primeraCompra = data.compras.sort((a, b) => a.fecha.getTime() - b.fecha.getTime())[0];
       const ultimaCompra = data.compras.sort((a, b) => b.fecha.getTime() - a.fecha.getTime())[0];
       const variacion = primeraCompra.precioUnitario > 0
@@ -119,15 +123,17 @@ export default function PreciosPage() {
         precioMin,
         precioMax,
         variacion,
+        numCompras,
+        gastoTotal,
         historial: data.compras
           .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
           .map(c => ({ fecha: c.fecha, precio: c.precioUnitario, tienda: normalizarTienda(c.tienda) })),
-      } as PrecioProducto;
-    }).sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion));
+      } as PrecioProducto & { numCompras: number; gastoTotal: number };
+    }).sort((a, b) => (b as any).numCompras - (a as any).numCompras); // Ordenar por número de compras
   }, [compras]);
 
-  // Productos con mayor variación (top 10)
-  const topVariaciones = preciosProductos.slice(0, 10);
+  // Top 10 productos más comprados
+  const topProductos = preciosProductos.slice(0, 10);
 
   // Datos para gráfico de evolución de precios (top 5 productos)
   const datosGraficoEvolucion = useMemo(() => {
@@ -201,16 +207,17 @@ export default function PreciosPage() {
           </p>
         </Card>
         <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Subidas de Precio</p>
-          <p className="text-2xl font-bold text-[#ef4444]">
-            {preciosProductos.filter(p => p.variacion > 5).length}
+          <p className="text-[#64748b] text-sm mb-1">Total Compras</p>
+          <p className="text-2xl font-bold text-[#f59e0b]">
+            {compras.length}
           </p>
         </Card>
         <Card className="p-4 bg-[#111827] border-[#1e293b]">
-          <p className="text-[#64748b] text-sm mb-1">Bajadas de Precio</p>
-          <p className="text-2xl font-bold text-[#10b981]">
-            {preciosProductos.filter(p => p.variacion < -5).length}
+          <p className="text-[#64748b] text-sm mb-1">Producto Más Comprado</p>
+          <p className="text-lg font-bold text-[#3b82f6] truncate">
+            {topProductos[0]?.producto || '-'}
           </p>
+          <p className="text-xs text-[#64748b]">{topProductos[0]?.numCompras || 0} veces</p>
         </Card>
       </div>
 
@@ -229,7 +236,7 @@ export default function PreciosPage() {
                 labelStyle={{ color: '#f1f5f9' }}
               />
               <Legend />
-              {topVariaciones.slice(0, 5).map((p, i) => (
+              {topProductos.slice(0, 5).map((p, i) => (
                 <Line
                   key={p.producto}
                   type="monotone"
@@ -266,24 +273,25 @@ export default function PreciosPage() {
       <Card className="overflow-hidden bg-[#111827] border-[#1e293b]">
         <div className="p-6 border-b border-[#1e293b]">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />
-            <h3 className="text-lg font-semibold text-white">Productos con Mayor Variación de Precio</h3>
+            <TrendingUp className="w-5 h-5 text-[#10b981]" />
+            <h3 className="text-lg font-semibold text-white">Productos Más Comprados</h3>
           </div>
-          <p className="text-sm text-[#64748b] mt-1">Comparación entre primera y última compra</p>
+          <p className="text-sm text-[#64748b] mt-1">Ranking por frecuencia de compra</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#0d1117]">
               <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-[#94a3b8]">#</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-[#94a3b8]">Producto</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Precio Mín</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Veces Comprado</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Gasto Total</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Precio Prom</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Precio Máx</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Variación</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-[#94a3b8]">Última Compra</th>
               </tr>
             </thead>
             <tbody>
-              {topVariaciones.map((p) => {
+              {topProductos.map((p) => {
                 const esSubida = p.variacion > 0;
                 const esSignificativa = Math.abs(p.variacion) > 5;
                 return (
