@@ -44,9 +44,21 @@ export default function RegistroPage() {
               const obj: any = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
+              // Debug primera fila
+              if (i === 1) {
+                console.log('🔍 Fila 1 - obj creado:', obj);
+                console.log('🔍 Fila 1 - obj.totalunitario:', obj.totalunitario);
+                console.log('🔍 Fila 1 - obj.total:', obj.total);
+              }
+
               // Buscar precio unitario en diferentes posibles nombres de columna
               // La tabla de registro_diario usa 'totalunitario'
               const precioUnitarioRaw = obj.totalunitario || obj['total unitario'] || obj['precio unitario'] || obj['precio_unitario'] || obj['preciounitario'] || obj.precio || obj['precio unit.'] || '0';
+
+              if (i === 1) {
+                console.log('🔍 Fila 1 - precioUnitarioRaw:', precioUnitarioRaw);
+                console.log('🔍 Fila 1 - parseFloat(precioUnitarioRaw):', parseFloat(precioUnitarioRaw));
+              }
 
               const compra: Compra = {
                 id: `compra-${i}`,
@@ -57,6 +69,10 @@ export default function RegistroPage() {
                 precioUnitario: parseFloat(precioUnitarioRaw) || 0,
                 total: parseFloat(obj.total || '0') || 0,
               };
+
+              if (i === 1) {
+                console.log('🔍 Fila 1 - compra creada:', compra);
+              }
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
                 comprasProcesadas.push(compra);
