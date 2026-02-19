@@ -31,11 +31,11 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${mono.variable} antialiased font-sans`}
       >
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex min-h-screen bg-[#0a0f1a]">
           <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden ml-64">
+          <div className="flex-1 ml-64">
             <Header />
-            <main className="flex-1 overflow-auto bg-[#0a0f1a] p-6 md:p-8">
+            <main className="p-6">
               {children}
             </main>
           </div>

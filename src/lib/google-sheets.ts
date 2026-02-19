@@ -7,6 +7,7 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY;
 
 // Mapeo de nombres de hojas según los requisitos
 const SHEET_NAMES: Record<SheetName, string> = {
+  'base_datos': 'Base de datos',
   'historico': 'Historico',
   'historico_precios': 'Histórico de Precios',
   'costosos': 'Producto más costoso',
@@ -46,7 +47,7 @@ export async function getSheetData(sheetName: SheetName, range?: string): Promis
  * Obtiene todas las hojas de datos en paralelo
  */
 export async function getAllSheetsData(): Promise<Record<SheetName, SheetData>> {
-  const sheetNames: SheetName[] = ['historico', 'historico_precios', 'costosos', 'gasto_tienda', 'precio_producto', 'registro_diario'];
+  const sheetNames: SheetName[] = ['base_datos', 'historico', 'historico_precios', 'costosos', 'gasto_tienda', 'precio_producto', 'registro_diario'];
 
   const results = await Promise.allSettled(
     sheetNames.map(async (name): Promise<{ name: SheetName; data: SheetData; success: boolean }> => {

@@ -6,12 +6,16 @@ import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
 
 export function Header() {
-  const [fechaActual, setFechaActual] = useState(new Date());
+  const [fechaActual, setFechaActual] = useState<Date | null>(null);
   const [cargando, setCargando] = useState(false);
   const [notificaciones, setNotificaciones] = useState(3);
+  const [mounted, setMounted] = useState(false);
 
-  // Actualizar reloj cada segundo
+  // Evitar error de hidratación - solo ejecutar en el cliente
   useEffect(() => {
+    setMounted(true);
+    setFechaActual(new Date());
+
     const interval = setInterval(() => {
       setFechaActual(new Date());
     }, 1000);
@@ -52,12 +56,14 @@ export function Header() {
         </div>
 
         {/* Fecha y hora */}
-        <div className="hidden sm:block text-right px-3 py-1.5 bg-[#0d1117] border border-[#1e293b] rounded-lg hover:border-[#f59e0b]/30 transition-colors">
-          <p className="text-xs text-[#64748b]">Última actualización</p>
-          <p className="text-xs text-[#f59e0b] font-mono font-medium">
-            {formatearFechaHora(fechaActual)}
-          </p>
-        </div>
+        {mounted && (
+          <div className="hidden sm:block text-right px-3 py-1.5 bg-[#0d1117] border border-[#1e293b] rounded-lg hover:border-[#f59e0b]/30 transition-colors">
+            <p className="text-xs text-[#64748b]">Última actualización</p>
+            <p className="text-xs text-[#f59e0b] font-mono font-medium">
+              {fechaActual ? formatearFechaHora(fechaActual) : '--:--'}
+            </p>
+          </div>
+        )}
 
         {/* Separador */}
         <div className="hidden lg:block w-px h-8 bg-[#1e293b]"></div>

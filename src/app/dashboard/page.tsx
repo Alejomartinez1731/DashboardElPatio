@@ -9,7 +9,7 @@ import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 
-type TabId = 'historico' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
+type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
 
 interface Tab {
   id: TabId;
@@ -23,7 +23,7 @@ const TABS: Tab[] = [
   { id: 'historico_precios', label: 'Histórico de Precios', sheetName: 'historico_precios', icon: TrendingUp, description: 'Evolución de precios por producto' },
   { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos', icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda', icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
-  { id: 'historico', label: 'Base de Datos', sheetName: 'historico', icon: Table, description: 'Tabla completa de historial de compras' },
+  { id: 'base_datos', label: 'Base de Datos', sheetName: 'base_datos', icon: Table, description: 'Tabla completa de historial de compras' },
 ];
 
 interface Filtros {
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [compras, setCompras] = useState<Compra[]>([]);
   const [comprasFiltradas, setComprasFiltradas] = useState<Compra[]>([]);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('historico');
+  const [activeTab, setActiveTab] = useState<TabId>('base_datos');
   const [sheetsData, setSheetsData] = useState<Record<string, string[][]>>({});
 
   // Filtros
@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
   // Ordenamiento
   const [sortField, setSortField] = useState<SortField>('fecha');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = más reciente primero
   const [showFilters, setShowFilters] = useState(true);
 
   useEffect(() => {
@@ -78,22 +78,34 @@ export default function DashboardPage() {
         // Guardar datos crudos
         const allData: Record<string, string[][]> = {};
         TABS.forEach(tab => {
-          const sheetData = result.data[tab.sheetName];
+          // Mapeo especial porque n8n usa 'base_de_datos' pero nosotros usamos 'base_datos'
+          const dataKey = tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName;
+          const sheetData = result.data[dataKey];
+          console.log(`📊 Procesando tab: ${tab.sheetName}, buscando clave: ${dataKey}, datos encontrados:`, sheetData ? 'SÍ' : 'NO');
           if (sheetData && sheetData.values && Array.isArray(sheetData.values)) {
             allData[tab.sheetName] = sheetData.values;
+            console.log(`📊 Guardados ${sheetData.values.length} filas para ${tab.sheetName}`);
           } else {
             allData[tab.sheetName] = [];
+            console.log(`📊 Guardados [] para ${tab.sheetName}`);
           }
         });
+        console.log('📊 sheetsData final:', allData);
         setSheetsData(allData);
 
+        // Debug: Ver todas las claves disponibles en result.data
+        const keys = Object.keys(result.data);
+        console.log('📊 Todas las claves disponibles en result.data:', keys);
+        console.log('📊 Claves individuales:', keys.map(k => `"${k}"`).join(', '));
+
         // Procesar compras
-        const hojaHistorico = result.data.historico;
-        console.log('📊 Datos de historico recibidos:', hojaHistorico);
+        const hojaHistorico = result.data.base_de_datos;
+        console.log('📊 Datos de base_de_datos recibidos:', hojaHistorico);
+        console.log('📊 Estructura de base_datos:', JSON.stringify(hojaHistorico, null, 2).substring(0, 500));
 
         if (hojaHistorico && hojaHistorico.values) {
           const values = hojaHistorico.values as any[][];
-          console.log('📊 Valores de historico:', values.length, 'filas');
+          console.log('📊 Valores de Base de datos:', values.length, 'filas');
           console.log('📊 Primera fila (cabeceras):', values[0]);
           console.log('📊 Segunda fila (ejemplo):', values[1]);
 
@@ -316,6 +328,8 @@ export default function DashboardPage() {
   const activeSheetName = TABS.find(t => t.id === activeTab)?.sheetName || 'historico';
   const activeData = sheetsData[activeSheetName] || [];
   const numRows = activeData.length;
+
+  console.log('📊 Renderizando tabla:', { activeTab, activeSheetName, numRows, 'activeData.length': activeData.length });
   const numFilasFiltradas = comprasFiltradas.length;
 
   console.log('📊 Estado del dashboard:', {
@@ -327,8 +341,8 @@ export default function DashboardPage() {
     filtros,
     sheetsDataKeys: Object.keys(sheetsData)
   });
-  const comprasComoTabla = activeTab === 'historico'
-    ? compras.map(c => {
+  const comprasComoTabla = activeTab === 'base_datos'
+    ? [...compras].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
         const row = [
           c.id.split('-')[1] || '',
           formatearFecha(c.fecha),
@@ -349,7 +363,7 @@ export default function DashboardPage() {
   const cabecerasHistorico = ['ID', 'FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
 
   // Para pestañas que no son histórico, arreglar cabeceras si es necesario
-  let datosTabla = activeTab === 'historico'
+  let datosTabla = activeTab === 'base_datos'
     ? [cabecerasHistorico, ...comprasComoTabla]
     : activeData;
 
@@ -411,7 +425,7 @@ export default function DashboardPage() {
     console.log('📊 Cabeceras finales para', activeTab, ':', datosTabla[0]);
   }
 
-  if (activeTab === 'historico') {
+  if (activeTab === 'base_datos') {
     console.log('📊 Estado de Histórico:');
     console.log('  - comprasFiltradas.length:', comprasFiltradas.length);
     console.log('  - compras.length:', compras.length);
@@ -451,13 +465,13 @@ export default function DashboardPage() {
       <QuickActions
         onRefresh={handleRefresh}
         onExport={handleExport}
-        onFilter={activeTab === 'historico' ? undefined : handleFilter}
+        onFilter={activeTab === 'base_datos' ? undefined : handleFilter}
         cargando={cargando}
         filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
       />
 
-      {/* Panel de Filtros - Solo mostrar si NO es histórico */}
-      {activeTab !== 'historico' && showFilters && (
+      {/* Panel de Filtros - Solo mostrar si NO es base de datos */}
+      {activeTab !== 'base_datos' && showFilters && (
         <FilterPanel
           filtros={filtros}
           onFiltrosChange={setFiltros}
@@ -508,7 +522,7 @@ export default function DashboardPage() {
                 return <Icon className="w-5 h-5" />;
               })()}
               <p className="text-sm">{TABS.find(t => t.id === activeTab)?.description}</p>
-              {activeTab === 'historico' && (
+              {activeTab === 'base_datos' && (
                 <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
                   {compras.length} filas
                 </span>
@@ -529,14 +543,14 @@ export default function DashboardPage() {
                     {datosTabla[0]?.map((header: string, idx: number) => (
                       <th
                         key={idx}
-                        onClick={() => activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && handleSort(header.toLowerCase() as SortField)}
+                        onClick={() => activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && handleSort(header.toLowerCase() as SortField)}
                         className={`px-4 py-3 text-left font-semibold text-white whitespace-nowrap border-b-2 border-[#f59e0b] cursor-pointer select-none ${
-                          activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) ? 'hover:bg-[#f59e0b]/10' : ''
+                          activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) ? 'hover:bg-[#f59e0b]/10' : ''
                         }`}
                       >
                         <div className="flex items-center gap-1">
                           {header}
-                          {activeTab === 'historico' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && (
+                          {activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && (
                             sortField === header.toLowerCase() && (
                               sortOrder === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
                             )
