@@ -151,12 +151,17 @@ export default function DashboardPage() {
             console.log('✅ Compras procesadas:', comprasProcesadas.length);
             console.log('✅ Primera compra:', comprasProcesadas[0]);
 
-            // Obtener datos de historico_precios para calcular KPIs
+            // Obtener datos de historico_precios y registro_diario para calcular KPIs
             const hojaHistoricoPrecios = result.data.historico_precios;
             const historicoPreciosValues = (hojaHistoricoPrecios?.values) || [];
 
+            const hojaRegistroDiario = result.data.registro_diario;
+            const registroDiarioValues = (hojaRegistroDiario?.values) || [];
+
+            console.log('📊 registro_diario filas:', registroDiarioValues.length);
+
             setCompras(comprasProcesadas);
-            const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues);
+            const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
             setKpiData(kpis);
             setComprasFiltradas(comprasProcesadas);
           }

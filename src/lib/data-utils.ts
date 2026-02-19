@@ -323,8 +323,13 @@ export function obtenerTiendasUnicas(compras: Compra[]): string[] {
  * Calcula KPIs desde compras
  * @param compras - Lista de compras procesadas
  * @param historicoPreciosValues - Datos crudos de historico_precios (array de arrays)
+ * @param registroDiarioValues - Datos crudos de registro_diario (array de arrays)
  */
-export function calcularKPIs(compras: Compra[], historicoPreciosValues: string[][] = []): {
+export function calcularKPIs(
+  compras: Compra[],
+  historicoPreciosValues: string[][] = [],
+  registroDiarioValues: string[][] = []
+): {
   gastoQuincenal: number;
   facturasProcesadas: number;
   alertasDePrecio: number;
@@ -363,34 +368,32 @@ export function calcularKPIs(compras: Compra[], historicoPreciosValues: string[]
     }
   }
 
-  // Ver todas las compras y sus fechas para debugging
-  console.log('🧾 TODAS las compras:', compras.map(c => ({
-    fecha: c.fecha.toISOString(),
-    fechaStr: c.fecha.toDateString(),
-    tienda: c.tienda,
-    producto: c.producto,
-    dentroRango: c.fecha >= hace15Dias && c.fecha <= hoy
-  })));
-
-  // Facturas procesadas (fechas + tiendas únicas de los últimos 15 días)
+  // Facturas procesadas desde registro_diario (más actualizado)
   const facturasProcesadas = new Set<string>();
-  const comprasUltimos15Dias = compras.filter(c => c.fecha >= hace15Dias && c.fecha <= hoy);
 
-  console.log('🧾 Facturas - Compras últimos 15 días:', comprasUltimos15Dias.length);
-  console.log('🧾 Facturas - Compras:', comprasUltimos15Dias.map(c => ({
-    fecha: c.fecha.toISOString(),
-    tienda: c.tienda,
-    producto: c.producto,
-    total: c.total
-  })));
+  if (registroDiarioValues.length > 1) {
+    const cabeceras = registroDiarioValues[0].map((h: string) => h.toLowerCase().trim());
+    const idxFecha = cabeceras.indexOf('fecha');
+    const idxTienda = cabeceras.indexOf('tienda');
 
-  comprasUltimos15Dias.forEach(c => {
-    const key = `${c.fecha.toDateString()}-${c.tienda}`;
-    facturasProcesadas.add(key);
-  });
+    if (idxFecha !== -1 && idxTienda !== -1) {
+      for (let i = 1; i < registroDiarioValues.length; i++) {
+        const fila = registroDiarioValues[i];
+        const fechaStr = fila[idxFecha];
+        const tiendaStr = fila[idxTienda];
 
+        if (fechaStr && tiendaStr) {
+          const fechaCompra = normalizarFecha(fechaStr);
+          // Contar todas las facturas de registro_diario (sin filtro de fecha)
+          const key = `${fechaCompra.toDateString()}-${tiendaStr}`;
+          facturasProcesadas.add(key);
+        }
+      }
+    }
+  }
+
+  console.log('🧾 Facturas desde registro_diario:', facturasProcesadas.size);
   console.log('🧾 Facturas únicas:', Array.from(facturasProcesadas));
-  console.log('🧾 Total facturas:', facturasProcesadas.size);
 
   // Alertas de precio
   const alertas = detectarAlertasPrecio(compras);
