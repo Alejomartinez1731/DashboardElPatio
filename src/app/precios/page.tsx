@@ -135,27 +135,70 @@ export default function PreciosPage() {
   // Top 10 productos más comprados
   const topProductos = preciosProductos.slice(0, 10);
 
-  // Datos para gráfico de evolución de precios (top 5 productos)
+  // Datos para gráfico de evolución del gasto quincenal
   const datosGraficoEvolucion = useMemo(() => {
-    const top5 = preciosProductos.slice(0, 5);
-    if (top5.length === 0) return [];
+    if (compras.length === 0) return [];
 
-    // Agrupar por fecha
-    const fechasUnicas = new Set<Date>();
-    top5.forEach(p => p.historial.forEach(h => fechasUnicas.add(h.fecha)));
-    const fechasOrdenadas = Array.from(fechasUnicas).sort((a, b) => a.getTime() - b.getTime());
+    // Agrupar compras por periodos quincenales (cada 15 días)
+    const gastoPorPeriodo: Record<string, number> = {};
 
-    return fechasOrdenadas.map(fecha => {
-      const data: any = { fecha: formatearFecha(fecha) };
-      top5.forEach(p => {
-        const historialEnFecha = p.historial.filter(h => h.fecha.getTime() === fecha.getTime());
-        if (historialEnFecha.length > 0) {
-          data[p.producto] = historialEnFecha[0].precio;
+    // Encontrar la fecha más antigua y más reciente
+    const fechas = compras.map(c => c.fecha.getTime());
+    const fechaMin = new Date(Math.min(...fechas));
+    const fechaMax = new Date(Math.max(...fechas));
+
+    // Crear periodos quincenales desde la fecha más antigua hasta hoy
+    let fechaActual = new Date(fechaMin);
+    fechaActual.setDate(1); // Empezar el primer día del mes
+    fechaActual.setHours(0, 0, 0, 0);
+
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+
+    while (fechaActual <= hoy) {
+      const año = fechaActual.getFullYear();
+      const mes = fechaActual.getMonth();
+      const dia = fechaActual.getDate();
+
+      // Determinar si es primera o segunda quincena
+      const quincena = dia <= 15 ? '1ª Quincena' : '2ª Quincena';
+      const clave = `${año}-${mes + 1}-${quincena}`;
+
+      // Calcular rango de fechas para este periodo
+      const inicioPeriodo = new Date(año, mes, dia <= 15 ? 1 : 16);
+      const finPeriodo = new Date(año, mes, dia <= 15 ? 15 : (new Date(año, mes + 1, 0).getDate()));
+
+      // Sumar gastos de este periodo
+      let gastoPeriodo = 0;
+      compras.forEach(c => {
+        if (c.fecha >= inicioPeriodo && c.fecha <= finPeriodo) {
+          gastoPeriodo += c.total;
         }
       });
-      return data;
-    });
-  }, [preciosProductos]);
+
+      gastoPorPeriodo[clave] = gastoPeriodo;
+
+      // Avanzar al siguiente periodo quincenal
+      if (dia <= 15) {
+        fechaActual.setDate(16);
+      } else {
+        fechaActual.setMonth(mes + 1);
+        fechaActual.setDate(1);
+      }
+    }
+
+    // Convertir a array para el gráfico
+    return Object.entries(gastoPorPeriodo)
+      .map(([clave, gasto]) => {
+        const [año, mes, quincena] = clave.split('-');
+        const nombreMes = new Date(parseInt(año), parseInt(mes) - 1).toLocaleDateString('es-ES', { month: 'short' });
+        return {
+          periodo: `${nombreMes} ${quincena}`,
+          gasto: gasto,
+        };
+      })
+      .filter(d => d.gasto > 0); // Solo mostrar periodos con gastos
+  }, [compras]);
 
   // Distribución por rango de precios
   const distribucionPrecios = useMemo(() => {
@@ -223,31 +266,28 @@ export default function PreciosPage() {
 
       {/* Gráficos principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Evolución de precios - Top 5 */}
+        {/* Evolución del gasto quincenal */}
         <Card className="p-6 bg-[#111827] border-[#1e293b]">
-          <h3 className="text-lg font-semibold text-white mb-4">Evolución de Precios (Top 5 productos con más variación)</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Evolución del Gasto Quincenal</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={datosGraficoEvolucion}>
+            <AreaChart data={datosGraficoEvolucion}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="fecha" stroke="#64748b" tick={{ fill: '#64748b' }} />
+              <XAxis dataKey="periodo" stroke="#64748b" tick={{ fill: '#64748b' }} />
               <YAxis stroke="#64748b" tick={{ fill: '#64748b' }} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
+                formatter={(valor: any) => [formatearMoneda(valor), 'Gasto']}
               />
-              <Legend />
-              {topProductos.slice(0, 5).map((p, i) => (
-                <Line
-                  key={p.producto}
-                  type="monotone"
-                  dataKey={p.producto}
-                  stroke={['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'][i]}
-                  strokeWidth={2}
-                  dot={false}
-                  name={p.producto.slice(0, 15) + (p.producto.length > 15 ? '...' : '')}
-                />
-              ))}
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey="gasto"
+                stroke="#f59e0b"
+                fill="#f59e0b"
+                fillOpacity={0.3}
+                strokeWidth={2}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </Card>
 
