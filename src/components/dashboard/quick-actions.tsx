@@ -47,8 +47,8 @@ export function QuickActions({
   ];
 
   return (
-    <Card className="p-4 bg-card border-border">
-      <div className="flex justify-center gap-3 max-w-2xl mx-auto">
+    <Card className="p-6 bg-card border-border">
+      <div className="grid grid-cols-3 gap-6">
         {acciones.filter(a => a.onClick).map((accion) => {
           const Icon = accion.icon;
           return (
