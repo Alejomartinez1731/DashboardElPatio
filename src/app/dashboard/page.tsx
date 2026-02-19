@@ -306,9 +306,9 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-white mb-2">Panel General</h1>
             <p className="text-muted-foreground">Tablas de Google Sheets</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-lg">
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#f59e0b]/10 border border-primary/30 rounded-lg">
             <div className="w-2 h-2 bg-[#f59e0b] rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-[#f59e0b]">Cargando...</span>
+            <span className="text-sm font-medium text-primary">Cargando...</span>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -507,7 +507,7 @@ export default function DashboardPage() {
 
       {/* Tabs Navigation */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="flex overflow-x-auto border-b border-border scrollbar-thin scrollbar-thumb-[#f59e0b]/20 scrollbar-track-transparent">
+        <div className="grid grid-cols-4 border-b border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -515,13 +515,13 @@ export default function DashboardPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap transition-all duration-200 relative ${
-                  isActive ? 'text-[#f59e0b] bg-[#f59e0b]/5' : 'text-muted-foreground hover:text-white hover:bg-muted/50'
+                className={`flex items-center justify-center gap-2 px-4 py-4 transition-all duration-200 relative ${
+                  isActive ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white hover:bg-muted/50'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{tab.label}</span>
-                {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm text-center">{tab.label}</span>
+                {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
               </button>
             );
           })}
@@ -538,11 +538,11 @@ export default function DashboardPage() {
               <p className="text-sm">{TABS.find(t => t.id === activeTab)?.description}</p>
               {activeTab === 'base_datos' && (
                 <>
-                  <span className="ml-2 text-xs bg-[#1e293b] px-2 py-1 rounded-full">
+                  <span className="ml-2 text-xs bg-card px-2 py-1 rounded-full">
                     {comprasParaTabla.length} {comprasParaTabla.length === 1 ? 'fila' : 'filas'}
                   </span>
                   {comprasParaTabla.length !== compras.length && (
-                    <span className="ml-2 text-xs bg-[#f59e0b]/20 text-[#f59e0b] px-2 py-1 rounded-full">
+                    <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
                       de {compras.length} totales
                     </span>
                   )}
@@ -568,8 +568,8 @@ export default function DashboardPage() {
                       <th
                         key={idx}
                         onClick={() => activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && handleSort(header.toLowerCase() as SortField)}
-                        className={`px-4 py-3 text-left font-semibold text-white whitespace-nowrap border-b-2 border-[#f59e0b] cursor-pointer select-none ${
-                          activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) ? 'hover:bg-[#f59e0b]/10' : ''
+                        className={`px-4 py-3 text-left font-semibold text-white whitespace-nowrap border-b-2 border-primary cursor-pointer select-none ${
+                          activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) ? 'hover:bg-primary/10' : ''
                         }`}
                       >
                         <div className="flex items-center gap-1">
