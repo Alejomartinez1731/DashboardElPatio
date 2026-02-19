@@ -233,6 +233,15 @@ export default function ProveedoresPage() {
               <YAxis yAxisId="right" orientation="right" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
+                formatter={(valor: any, nombre: any) => {
+                  if (nombre === 'Gasto Total (€)') {
+                    return [formatearMoneda(Number(valor) || 0), nombre];
+                  }
+                  if (nombre === 'Número de Compras') {
+                    return [Math.round(Number(valor) || 0).toLocaleString('es-ES'), nombre];
+                  }
+                  return [valor, nombre];
+                }}
               />
               <Legend />
               <Bar yAxisId="left" dataKey="gasto" fill="hsl(var(--primary))" name="Gasto Total (€)" />
