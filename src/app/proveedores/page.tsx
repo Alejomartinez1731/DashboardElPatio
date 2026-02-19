@@ -62,10 +62,12 @@ export default function ProveedoresPage() {
               const obj: any = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
+              const tiendaNormalizada = normalizarTienda(obj.tienda || '');
+
               const compra: Compra = {
                 id: `compra-${i}`,
                 fecha: parsearFecha(obj.fecha || ''),
-                tienda: obj.tienda || '',
+                tienda: tiendaNormalizada,
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,
                 precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
