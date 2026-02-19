@@ -359,7 +359,6 @@ export default function DashboardPage() {
   const comprasComoTabla = activeTab === 'base_datos'
     ? [...comprasParaTabla].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
         const row = [
-          c.id.split('-')[1] || '',
           formatearFecha(c.fecha),
           c.tienda,
           c.producto,
@@ -375,7 +374,7 @@ export default function DashboardPage() {
     : [];
 
   // Cabeceras personalizadas para Histórico
-  const cabecerasHistorico = ['ID', 'FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
+  const cabecerasHistorico = ['FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
 
   // Para pestañas que no son histórico, arreglar cabeceras si es necesario
   let datosTabla = activeTab === 'base_datos'
@@ -392,8 +391,9 @@ export default function DashboardPage() {
             const cellStr = String(cell).toLowerCase().trim();
 
             // Reemplazos específicos
-            if (cellStr === 'row_number' || cellStr === 'row number' || cellStr.startsWith('col')) {
-              return 'ID';
+            // Ocultar columnas de row_number/ID retornando string vacío
+            if (cellStr === 'row_number' || cellStr === 'row number' || cellStr === 'id' || (cellStr.startsWith('col') && cellStr.match(/^col-?\d*$/))) {
+              return ''; // Columna oculta
             }
             if (cellStr === 'fecha' || cellStr === 'date') {
               return 'FECHA';
@@ -561,7 +561,10 @@ export default function DashboardPage() {
               <table className="w-full text-sm">
                 <thead className="bg-[#0d1117] sticky top-0">
                   <tr>
-                    {datosTabla[0]?.map((header: string, idx: number) => (
+                    {datosTabla[0]?.map((header: string, idx: number) => {
+                      // Ocultar columnas con cabecera vacía
+                      if (!header || header.trim() === '') return null;
+                      return (
                       <th
                         key={idx}
                         onClick={() => activeTab === 'base_datos' && ['fecha', 'tienda', 'producto', 'cantidad', 'precio', 'total'].includes(header.toLowerCase()) && handleSort(header.toLowerCase() as SortField)}
@@ -578,7 +581,8 @@ export default function DashboardPage() {
                           )}
                         </div>
                       </th>
-                    ))}
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e293b]">
@@ -615,13 +619,17 @@ export default function DashboardPage() {
     return (
       <tr key={rowIdx} className="hover:bg-[#0d1117]/50 transition-colors">
         {row.map((cell: string | number, cellIdx: number) => {
+          // Ocultar celda si la cabecera correspondiente está vacía
+          const cabecera = datosTabla[0]?.[cellIdx] || '';
+          if (!cabecera || cabecera.trim() === '') return null;
+
           // Log del tipo de dato de la celda
           if (rowIdx < 2 && cellIdx < 8) {
             console.log(`🔍 Celda [${rowIdx},${cellIdx}]:`, {
               valor: cell,
               tipo: typeof cell,
               esArray: Array.isArray(cell),
-              cabecera: datosTabla[0]?.[cellIdx]
+              cabecera: cabecera
             });
           }
 
