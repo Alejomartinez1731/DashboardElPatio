@@ -148,7 +148,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     } finally {
       setLoading(false);
     }
-  }, [tabs]);
+  }, []); // ⚠️ REMOVED 'tabs' dependency to prevent infinite loop
 
   /**
    * Función para refrescar datos manualmente
@@ -156,12 +156,12 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
   const refetch = useCallback(async () => {
     console.log('🔄 Refrescando datos...');
     await fetchDatos();
-  }, [fetchDatos]);
+  }, []); // Remove fetchDatos dependency to prevent loop
 
   // Efecto principal: cargar datos al montar
   useEffect(() => {
     fetchDatos();
-  }, [fetchDatos]);
+  }, []); // Run once on mount
 
   return {
     compras,
