@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import type { NextRequest } from 'next/server';
 
 /**
  * Contraseña del dashboard (configurada por variable de entorno)
@@ -17,7 +18,28 @@ const SESSION_COOKIE_NAME = 'dashboard_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
 
 /**
- * Verifica si el usuario está autenticado
+ * Verifica si el usuario está autenticado (para middleware)
+ * Versión síncrona que lee cookies del request
+ */
+export function isAuthenticatedFromRequest(request: NextRequest): boolean {
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+
+  if (!sessionCookie) {
+    return false;
+  }
+
+  try {
+    const sessionData = JSON.parse(sessionCookie.value);
+    const now = Date.now();
+    return sessionData.expiresAt > now;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Verifica si el usuario está autenticado (para server components)
+ * Versión asíncrona que usa cookies()
  */
 export async function isAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -28,14 +50,10 @@ export async function isAuthenticated(): Promise<boolean> {
   }
 
   try {
-    // La cookie contiene un timestamp de expiración
     const sessionData = JSON.parse(sessionCookie.value);
     const now = Date.now();
-
-    // Verificar si la sesión aún es válida
     return sessionData.expiresAt > now;
   } catch {
-    // Si la cookie está corrupta, considerar como no autenticado
     return false;
   }
 }
@@ -63,7 +81,7 @@ export async function createSession(): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: SESSION_DURATION / 1000, // En segundos
+    maxAge: SESSION_DURATION / 1000,
     path: '/',
   });
 }
@@ -90,7 +108,7 @@ export async function getSessionTimeRemaining(): Promise<number> {
   try {
     const sessionData = JSON.parse(sessionCookie.value);
     const remaining = sessionData.expiresAt - Date.now();
-    return Math.max(0, Math.floor(remaining / 1000 / 60)); // Minutos restantes
+    return Math.max(0, Math.floor(remaining / 1000 / 60));
   } catch {
     return 0;
   }

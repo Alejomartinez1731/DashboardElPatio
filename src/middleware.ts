@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isAuthenticated } from '@/lib/auth';
+import { isAuthenticatedFromRequest } from '@/lib/auth';
 
 /**
  * Middleware para proteger las rutas del dashboard
@@ -18,7 +18,7 @@ import { isAuthenticated } from '@/lib/auth';
  * - /facturas
  * - /diagnostico
  */
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rutas públicas que no requieren autenticación
@@ -36,8 +36,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Verificar autenticación
-  const authenticated = await isAuthenticated();
+  // Verificar autenticación (versión síncrona para middleware)
+  const authenticated = isAuthenticatedFromRequest(request);
 
   if (!authenticated) {
     // Redirigir al login si no está autenticado
