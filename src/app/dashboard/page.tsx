@@ -5,10 +5,10 @@ import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { Compra, KPIData, SheetName } from '@/types';
-import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
+import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { parsearFecha, excluirFilaResumenConLog } from '@/lib/parsers';
+import { useSheetData } from '@/hooks/useSheetData';
 
 type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
 
@@ -40,13 +40,27 @@ interface Filtros {
 type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'total';
 
 export default function DashboardPage() {
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [compras, setCompras] = useState<Compra[]>([]);
-  const [comprasFiltradas, setComprasFiltradas] = useState<Compra[]>([]);
-  const [kpiData, setKpiData] = useState<KPIData | null>(null);
+  // Hook personalizado para obtener datos de Sheets
+  const tabsConfig = TABS.map(tab => ({
+    id: tab.id,
+    sheetName: tab.sheetName,
+    dataKey: tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName,
+  }));
+
+  const {
+    compras,
+    comprasFiltradas,
+    sheetsData,
+    kpiData,
+    loading: cargando,
+    error,
+    refetch,
+  } = useSheetData(tabsConfig);
+
   const [activeTab, setActiveTab] = useState<TabId>('historico_precios');
-  const [sheetsData, setSheetsData] = useState<Record<string, string[][]>>({});
+
+  // Local state for filtered data (will override the one from hook when filters are applied)
+  const [localComprasFiltradas, setLocalComprasFiltradas] = useState<Compra[]>([]);
 
   // Filtros
   const [filtros, setFiltros] = useState<Filtros>({
@@ -63,122 +77,6 @@ export default function DashboardPage() {
   const [sortField, setSortField] = useState<SortField>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = más reciente primero
   const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    async function fetchDatos() {
-      try {
-        setCargando(true);
-        setError(null);
-
-        const response = await fetch('/api/sheets');
-        if (!response.ok) throw new Error('Error al obtener datos');
-
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message || 'Error desconocido');
-
-        // Guardar datos crudos
-        const allData: Record<string, string[][]> = {};
-        TABS.forEach(tab => {
-          // Mapeo especial porque n8n usa 'base_de_datos' pero nosotros usamos 'base_datos'
-          const dataKey = tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName;
-          const sheetData = result.data[dataKey];
-          console.log(`📊 Procesando tab: ${tab.sheetName}, buscando clave: ${dataKey}, datos encontrados:`, sheetData ? 'SÍ' : 'NO');
-          if (sheetData && sheetData.values && Array.isArray(sheetData.values)) {
-            allData[tab.sheetName] = sheetData.values;
-            console.log(`📊 Guardados ${sheetData.values.length} filas para ${tab.sheetName}`);
-          } else {
-            allData[tab.sheetName] = [];
-            console.log(`📊 Guardados [] para ${tab.sheetName}`);
-          }
-        });
-        console.log('📊 sheetsData final:', allData);
-        setSheetsData(allData);
-
-        // Debug: Ver todas las claves disponibles en result.data
-        const keys = Object.keys(result.data);
-        console.log('📊 Todas las claves disponibles en result.data:', keys);
-        console.log('📊 Claves individuales:', keys.map(k => `"${k}"`).join(', '));
-
-        // Procesar compras
-        const hojaHistorico = result.data.base_de_datos;
-        console.log('📊 Datos de base_de_datos recibidos:', hojaHistorico);
-        console.log('📊 Estructura de base_datos:', JSON.stringify(hojaHistorico, null, 2).substring(0, 500));
-
-        if (hojaHistorico && hojaHistorico.values) {
-          const values = hojaHistorico.values as any[][];
-          console.log('📊 Valores de Base de datos:', values.length, 'filas');
-          console.log('📊 Primera fila (cabeceras):', values[0]);
-          console.log('📊 Segunda fila (ejemplo):', values[1]);
-
-          if (values.length > 1) {
-            // Normalizar cabeceras: minúsculas, sin espacios, sin tildes
-            const cabeceras = values[0].map((h: string) => {
-              return h.toLowerCase()
-                .trim()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Quitar tildes
-                .replace(/\s+/g, '_'); // Reemplazar espacios con guiones bajos
-            });
-            console.log('📊 Cabeceras procesadas:', cabeceras);
-
-            const comprasProcesadas: Compra[] = [];
-
-            for (let i = 1; i < values.length; i++) {
-              const fila = values[i];
-              const obj: any = {};
-              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
-
-              console.log(`📝 Procesando fila ${i}:`, obj);
-
-              const compra: Compra = {
-                id: `compra-${i}`,
-                fecha: parsearFecha(obj.fecha || ''),
-                tienda: obj.tienda || '',
-                producto: obj.descripcion || '',
-                cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
-                total: parseFloat(obj.total || '0') || 0,
-                telefono: obj.telefono,
-                direccion: obj.direccion,
-              };
-
-              const excluida = excluirFilaResumenConLog(compra.producto);
-              console.log(`📝 Fila ${i}: producto="${compra.producto}", excluida=${excluida}`);
-
-              if (compra.producto && !excluida) {
-                comprasProcesadas.push(compra);
-              }
-            }
-
-            console.log('✅ Compras procesadas:', comprasProcesadas.length);
-            console.log('✅ Primera compra:', comprasProcesadas[0]);
-
-            // Obtener datos de historico_precios y registro_diario para calcular KPIs
-            const hojaHistoricoPrecios = result.data.historico_precios;
-            const historicoPreciosValues = (hojaHistoricoPrecios?.values) || [];
-
-            const hojaRegistroDiario = result.data.registro_diario;
-            const registroDiarioValues = (hojaRegistroDiario?.values) || [];
-
-            console.log('📊 registro_diario filas:', registroDiarioValues.length);
-
-            setCompras(comprasProcesadas);
-            const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
-            setKpiData(kpis);
-            setComprasFiltradas(comprasProcesadas);
-          }
-        } else {
-          console.log('❌ No hay valores en historico');
-        }
-      } catch (err) {
-        console.error('Error cargando datos:', err);
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setCargando(false);
-      }
-    }
-
-    fetchDatos();
-  }, []);
 
   // Aplicar filtros cuando cambian
   useEffect(() => {
@@ -258,11 +156,11 @@ export default function DashboardPage() {
     });
 
     console.log('✅ Filtrado final:', filtradas.length, 'de', compras.length, 'filas');
-    setComprasFiltradas(filtradas);
+    setLocalComprasFiltradas(filtradas);
   }, [compras, filtros, sortField, sortOrder]);
 
   const handleRefresh = () => {
-    window.location.reload();
+    refetch();
   };
 
   const handleExport = () => {
@@ -340,7 +238,11 @@ export default function DashboardPage() {
   const numRows = activeData.length;
 
   console.log('📊 Renderizando tabla:', { activeTab, activeSheetName, numRows, 'activeData.length': activeData.length });
-  const numFilasFiltradas = comprasFiltradas.length;
+
+  // Determinar qué compras filtradas usar (si hay filtros activos, usar local)
+  const hayFiltrosActivos = filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null || filtros.fechaInicio !== null || filtros.fechaFin !== null;
+  const comprasFiltradasFinal = hayFiltrosActivos ? localComprasFiltradas : compras;
+  const numFilasFiltradas = comprasFiltradasFinal.length;
 
   console.log('📊 Estado del dashboard:', {
     activeTab,
@@ -348,14 +250,13 @@ export default function DashboardPage() {
     numRows,
     numFilasFiltradas,
     totalCompras: compras.length,
+    hayFiltrosActivos,
     filtros,
     sheetsDataKeys: Object.keys(sheetsData)
   });
 
   // Usar comprasFiltradas para base_datos cuando hay filtros activos
-  const comprasParaTabla = activeTab === 'base_datos' && (filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null || filtros.fechaInicio !== null || filtros.fechaFin !== null)
-    ? comprasFiltradas
-    : compras;
+  const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradasFinal : compras;
 
   const comprasComoTabla = activeTab === 'base_datos'
     ? [...comprasParaTabla].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
@@ -443,7 +344,7 @@ export default function DashboardPage() {
 
   if (activeTab === 'base_datos') {
     console.log('📊 Estado de Histórico:');
-    console.log('  - comprasFiltradas.length:', comprasFiltradas.length);
+    console.log('  - comprasFiltradasFinal.length:', comprasFiltradasFinal.length);
     console.log('  - compras.length:', compras.length);
     console.log('  - comprasComoTabla.length:', comprasComoTabla.length);
     console.log('  - datosTabla.length:', datosTabla.length);
