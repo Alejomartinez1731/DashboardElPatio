@@ -307,7 +307,7 @@ Por favor lee la tarea 1.4 en el roadmap y ejecuta las instrucciones.
 Marca las tareas completadas:
 
 ### FASE 1: SANEAR
-- [ ] 1.1 Extraer lógica de parseo a lib/parsers.ts
+- [x] 1.1 Extraer lógica de parseo a lib/parsers.ts ✅ COMPLETADO (23/02/2026)
 - [ ] 1.2 Crear hook useSheetData
 - [ ] 1.3 Agregar autenticación básica
 - [ ] 1.4 Implementar fallback cuando n8n falle
@@ -384,4 +384,4 @@ Por favor ayuda a diagnosticar y solucionar.
 
 **Última actualización**: 23/02/2026
 **Versión**: 1.0
-**Estado**: En progreso - Fase 1 no iniciada
+**Estado**: En progreso - Fase 1 (1 de 4 tareas completadas)
