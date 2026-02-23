@@ -1,15 +1,18 @@
 'use client';
 
-import { RefreshCw, Bell } from 'lucide-react';
+import { RefreshCw, Bell, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
+  const router = useRouter();
   const [fechaActual, setFechaActual] = useState<Date | null>(null);
   const [cargando, setCargando] = useState(false);
   const [notificaciones, setNotificaciones] = useState(3);
   const [mounted, setMounted] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
 
   // Evitar error de hidratación - solo ejecutar en el cliente
   useEffect(() => {
@@ -26,6 +29,16 @@ export function Header() {
   const handleRefresh = () => {
     setCargando(true);
     window.location.reload();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+      router.refresh();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   return (
@@ -79,12 +92,39 @@ export function Header() {
           <span className="hidden sm:inline">Actualizar</span>
         </Button>
 
-        {/* Avatar */}
-        <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-amber-400 rounded-lg flex items-center justify-center text-white text-sm font-semibold">
-            EP
-          </div>
-        </button>
+        {/* Avatar con menú de logout */}
+        <div className="relative">
+          <button
+            onClick={() => setShowLogout(!showLogout)}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-amber-400 rounded-lg flex items-center justify-center text-white text-sm font-semibold">
+              EP
+            </div>
+          </button>
+
+          {/* Dropdown de logout */}
+          {showLogout && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowLogout(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                <div className="p-2 border-b border-border">
+                  <p className="text-xs text-muted-foreground px-2 py-1">Administrador</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Cerrar Sesión</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
