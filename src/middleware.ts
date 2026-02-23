@@ -39,6 +39,9 @@ export function middleware(request: NextRequest) {
   // Verificar autenticación (versión síncrona para middleware)
   const authenticated = isAuthenticatedFromRequest(request);
 
+  // Debug: Log autenticación (comentar en producción)
+  // console.log(`🔐 Middleware: ${pathname} | Auth: ${authenticated}`);
+
   if (!authenticated) {
     // Redirigir al login si no está autenticado
     const url = request.nextUrl.clone();

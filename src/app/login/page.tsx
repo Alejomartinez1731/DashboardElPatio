@@ -29,8 +29,9 @@ export default function LoginPage() {
 
       if (response.ok && data.success) {
         // Login exitoso, redirigir al dashboard
-        router.push('/dashboard');
-        router.refresh();
+        // Usar window.location.href para asegurar recarga completa con cookie
+        window.location.href = '/dashboard';
+        return;
       } else {
         setError(data.error || 'Contraseña incorrecta');
       }
