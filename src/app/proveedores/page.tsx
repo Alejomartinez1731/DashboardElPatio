@@ -3,29 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
+import { normalizarTienda, COLORES_TIENDA, normalizarFecha } from '@/lib/data-utils';
 import { Store, MapPin, Phone, ShoppingCart, TrendingUp, Calendar, Award } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useMemo } from 'react';
-
-function parsearFecha(fecha: string | Date): Date {
-  if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
-  if (!fecha || typeof fecha !== 'string') return new Date();
-
-  if (fecha.includes('/')) {
-    const partes = fecha.split('/');
-    if (partes.length === 3) {
-      const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
-      if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
-        return new Date(anio, mes - 1, dia);
-      }
-    }
-  }
-
-  const parsed = new Date(fecha);
-  return isNaN(parsed.getTime()) ? new Date() : parsed;
-}
 
 interface InfoTienda {
   nombre: string;
@@ -66,7 +48,7 @@ export default function ProveedoresPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: parsearFecha(obj.fecha || ''),
+                fecha: normalizarFecha(obj.fecha || ''),
                 tienda: tiendaNormalizada,
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,

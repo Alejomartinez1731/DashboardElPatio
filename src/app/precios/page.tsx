@@ -9,24 +9,6 @@ import { Card } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { useMemo } from 'react';
 
-function parsearFecha(fecha: string | Date): Date {
-  if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
-  if (!fecha || typeof fecha !== 'string') return new Date();
-
-  if (fecha.includes('/')) {
-    const partes = fecha.split('/');
-    if (partes.length === 3) {
-      const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
-      if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
-        return new Date(anio, mes - 1, dia);
-      }
-    }
-  }
-
-  const parsed = new Date(fecha);
-  return isNaN(parsed.getTime()) ? new Date() : parsed;
-}
-
 interface PrecioProducto {
   producto: string;
   precioPromedio: number;
@@ -66,7 +48,7 @@ export default function PreciosPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: parsearFecha(obj.fecha || ''),
+                fecha: normalizarFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,

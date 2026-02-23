@@ -1,23 +1,47 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+const USE_MOCK = process.env.USE_MOCK_DATA === 'true';
 
 export async function GET(request: Request) {
+  // Si USE_MOCK=true, redirigir al endpoint mock
+  if (USE_MOCK) {
+    const { GET } = await import('./mock/route');
+    return GET(request);
+  }
   try {
     console.log('📡 API /api/sheets llamada');
 
     const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-    console.log('📡 Webhook URL:', webhookUrl);
+    console.log('📡 Webhook URL:', webhookUrl ? `${webhookUrl.substring(0, 30)}...` : 'NOT_SET');
 
     if (!webhookUrl) {
-      throw new Error('NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada');
+      return NextResponse.json({
+        success: false,
+        error: 'NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada en Vercel',
+        hint: 'Ve a Settings → Environment Variables en Vercel y agrega la variable',
+      }, { status: 500 });
     }
 
-    const response = await fetch(webhookUrl);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+    const response = await fetch(webhookUrl, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Vercel-Edge-Function',
+      },
+    });
+    clearTimeout(timeoutId);
+
     console.log('📡 Respuesta n8n status:', response.status);
 
     if (!response.ok) {
-      throw new Error(`n8n respondió con status ${response.status}`);
+      const errorText = await response.text().catch(() => 'No error body');
+      throw new Error(`n8n respondió con status ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();

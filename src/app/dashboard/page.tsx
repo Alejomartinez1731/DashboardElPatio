@@ -8,6 +8,7 @@ import { Compra, KPIData, SheetName } from '@/types';
 import { calcularKPIs, normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
+import { parsearFecha, excluirFilaResumenConLog } from '@/lib/parsers';
 
 type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
 
@@ -140,7 +141,7 @@ export default function DashboardPage() {
                 direccion: obj.direccion,
               };
 
-              const excluida = excluirFilaResumen(compra.producto);
+              const excluida = excluirFilaResumenConLog(compra.producto);
               console.log(`📝 Fila ${i}: producto="${compra.producto}", excluida=${excluida}`);
 
               if (compra.producto && !excluida) {
@@ -721,45 +722,4 @@ export default function DashboardPage() {
       </div>
     </div>
   );
-}
-
-function parsearFecha(fecha: string | Date): Date {
-  if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
-  if (!fecha || typeof fecha !== 'string') {
-    console.log('⚠️ Fecha inválida (vacía o no string):', fecha);
-    return new Date();
-  }
-
-  console.log('📅 Parseando fecha:', fecha);
-
-  if (fecha.includes('/')) {
-    const partes = fecha.split('/');
-    console.log('📅 Partes de fecha:', partes);
-    if (partes.length === 3) {
-      const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
-      console.log('📅 Día:', dia, 'Mes:', mes, 'Año:', anio);
-      if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
-        const date = new Date(anio, mes - 1, dia);
-        console.log('✅ Fecha parseada:', date);
-        return date;
-      }
-    }
-  }
-
-  const parsed = new Date(fecha);
-  console.log('📅 Fecha parseada con Date():', parsed);
-  return isNaN(parsed.getTime()) ? new Date() : parsed;
-}
-
-function excluirFilaResumen(descripcion: string): boolean {
-  if (!descripcion) return true;
-  const descripcionLower = descripcion.toLowerCase().trim();
-
-  // Excluir si está vacía después de trim
-  if (descripcionLower === '') return true;
-
-  // Excluir palabras clave de resumen
-  const exclusiones = ['suma total', 'total general', 'total', 'subtotal', 'sub-total', 'iva', 'vat', 'tax', 'base imponible', 'base', 'recargo', 'equivalencia', 'devolución', 'devolucion', 'devoluc', '-'];
-
-  return exclusiones.some(exclusion => descripcionLower.includes(exclusion));
 }

@@ -3,28 +3,10 @@
 import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { normalizarTienda, COLORES_TIENDA, agruparPorFactura } from '@/lib/data-utils';
+import { normalizarTienda, COLORES_TIENDA, agruparPorFactura, normalizarFecha } from '@/lib/data-utils';
 import { Receipt, Calendar, Store, ShoppingCart, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useState as useReactState } from 'react';
-
-function parsearFecha(fecha: string | Date): Date {
-  if (fecha instanceof Date) return isNaN(fecha.getTime()) ? new Date() : fecha;
-  if (!fecha || typeof fecha !== 'string') return new Date();
-
-  if (fecha.includes('/')) {
-    const partes = fecha.split('/');
-    if (partes.length === 3) {
-      const [dia, mes, anio] = partes.map(p => parseInt(p.trim(), 10));
-      if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio)) {
-        return new Date(anio, mes - 1, dia);
-      }
-    }
-  }
-
-  const parsed = new Date(fecha);
-  return isNaN(parsed.getTime()) ? new Date() : parsed;
-}
 
 interface FacturaConDetalle {
   id: string;
@@ -60,7 +42,7 @@ export default function FacturasPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: parsearFecha(obj.fecha || ''),
+                fecha: normalizarFecha(obj.fecha || ''),
                 tienda: obj.tienda || '',
                 producto: obj.descripcion || '',
                 cantidad: parseFloat(obj.cantidad || '0') || 0,
