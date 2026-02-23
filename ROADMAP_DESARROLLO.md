@@ -383,5 +383,7 @@ Por favor ayuda a diagnosticar y solucionar.
 ---
 
 **Última actualización**: 23/02/2026
-**Versión**: 1.0
-**Estado**: ✅ FASE 1 COMPLETADA (4/4 tareas) - Listo para Fase 2
+**Versión**: 1.1
+**Estado**: ✅ FASE 1 COMPLETADA (4/4 tareas + fixes adicionales)
+
+**Commits de hoy**: 17 commits que mejoraron estabilidad, seguridad y UX
