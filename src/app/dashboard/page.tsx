@@ -238,7 +238,10 @@ export default function DashboardPage() {
   const activeData = sheetsData[activeSheetName] || [];
   const numRows = activeData.length;
 
-  console.log('📊 Renderizando tabla:', { activeTab, activeSheetName, numRows, 'activeData.length': activeData.length });
+  // Para base_datos, calcular el número real de filas desde compras
+  const numFilasBaseDatos = activeTab === 'base_datos' ? comprasComoTabla.length : numRows;
+
+  console.log('📊 Renderizando tabla:', { activeTab, activeSheetName, numRows, 'activeData.length': activeData.length, 'numFilasBaseDatos' });
 
   // Determinar qué compras filtradas usar (si hay filtros activos, usar local)
   const hayFiltrosActivos = filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null || filtros.fechaInicio !== null || filtros.fechaFin !== null;
@@ -454,7 +457,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {numRows === 0 ? (
+          {(numRows === 0 && activeTab !== 'base_datos') || (activeTab === 'base_datos' && numFilasBaseDatos === 0) ? (
             <div className="text-center py-16">
               <Table className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <p className="text-muted-foreground">No hay datos en esta tabla</p>
