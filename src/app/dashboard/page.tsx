@@ -9,6 +9,7 @@ import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { useSheetData } from '@/hooks/useSheetData';
+import { parsearFecha } from '@/lib/parsers';
 
 type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
 
