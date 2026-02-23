@@ -308,7 +308,7 @@ Marca las tareas completadas:
 
 ### FASE 1: SANEAR
 - [x] 1.1 Extraer lógica de parseo a lib/parsers.ts ✅ COMPLETADO (23/02/2026)
-- [ ] 1.2 Crear hook useSheetData
+- [x] 1.2 Crear hook useSheetData ✅ COMPLETADO (23/02/2026)
 - [ ] 1.3 Agregar autenticación básica
 - [ ] 1.4 Implementar fallback cuando n8n falle
 
@@ -384,4 +384,4 @@ Por favor ayuda a diagnosticar y solucionar.
 
 **Última actualización**: 23/02/2026
 **Versión**: 1.0
-**Estado**: En progreso - Fase 1 (1 de 4 tareas completadas)
+**Estado**: En progreso - Fase 1 (2 de 4 tareas completadas)
