@@ -6,6 +6,7 @@ import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA, normalizarFecha } from '@/lib/data-utils';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { useMemo } from 'react';
 
@@ -256,6 +257,9 @@ export default function PreciosPage() {
           <p className="text-xs text-muted-foreground">{topProductos[0]?.numCompras || 0} veces</p>
         </Card>
       </div>
+
+      {/* Comparativa Mensual */}
+      <MonthlyComparison compras={compras} />
 
       {/* Gráficos principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

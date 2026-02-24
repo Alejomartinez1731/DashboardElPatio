@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
-import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
 import { CategoryKPIs } from '@/components/dashboard/category-kpis';
 import { CategoryDistribution } from '@/components/dashboard/category-distribution';
@@ -409,9 +408,6 @@ export default function DashboardPage() {
         <KPICardEnhanced titulo="Facturas Procesadas" valor={kpiData?.facturasProcesadas || 0} icono="shopping" tipo="numero" />
         <KPICardEnhanced titulo="Alertas de Precio" valor={kpiData?.alertasDePrecio || 0} icono="trending-up" tipo="numero" />
       </div>
-
-      {/* Comparativa vs Mes Anterior */}
-      <MonthlyComparison compras={compras} />
 
       {/* Presupuesto Mensual */}
       <BudgetProgress compras={compras} presupuestoInicial={3000} />
