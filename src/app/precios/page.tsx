@@ -7,6 +7,9 @@ import { normalizarTienda, COLORES_TIENDA, normalizarFecha } from '@/lib/data-ut
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
+import { BudgetProgress } from '@/components/dashboard/budget-progress';
+import { CategoryKPIs } from '@/components/dashboard/category-kpis';
+import { CategoryDistribution } from '@/components/dashboard/category-distribution';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { useMemo } from 'react';
 
@@ -260,6 +263,15 @@ export default function PreciosPage() {
 
       {/* Comparativa Mensual */}
       <MonthlyComparison compras={compras} />
+
+      {/* Presupuesto Mensual */}
+      <BudgetProgress compras={compras} presupuestoInicial={3000} />
+
+      {/* Categorización de Productos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <CategoryKPIs compras={compras} />
+        <CategoryDistribution compras={compras} />
+      </div>
 
       {/* Gráficos principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react';
 import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
-import { BudgetProgress } from '@/components/dashboard/budget-progress';
-import { CategoryKPIs } from '@/components/dashboard/category-kpis';
-import { CategoryDistribution } from '@/components/dashboard/category-distribution';
 import { exportToExcel, crearHojaExcel } from '@/lib/export-excel';
 import { categorizarProducto } from '@/lib/categorias';
 import { Compra, KPIData, SheetName, CATEGORIAS_INFO } from '@/types';
@@ -407,15 +404,6 @@ export default function DashboardPage() {
         <KPICardEnhanced titulo="Gasto Quincenal" valor={kpiData?.gastoQuincenal || 0} icono="euro" tipo="moneda" />
         <KPICardEnhanced titulo="Facturas Procesadas" valor={kpiData?.facturasProcesadas || 0} icono="shopping" tipo="numero" />
         <KPICardEnhanced titulo="Alertas de Precio" valor={kpiData?.alertasDePrecio || 0} icono="trending-up" tipo="numero" />
-      </div>
-
-      {/* Presupuesto Mensual */}
-      <BudgetProgress compras={compras} presupuestoInicial={3000} />
-
-      {/* Categorización de Productos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CategoryKPIs compras={compras} />
-        <CategoryDistribution compras={compras} />
       </div>
 
       {/* Quick Actions */}
