@@ -6,8 +6,11 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
+import { CategoryKPIs } from '@/components/dashboard/category-kpis';
+import { CategoryDistribution } from '@/components/dashboard/category-distribution';
 import { exportToExcel, crearHojaExcel } from '@/lib/export-excel';
-import { Compra, KPIData, SheetName } from '@/types';
+import { categorizarProducto } from '@/lib/categorias';
+import { Compra, KPIData, SheetName, CATEGORIAS_INFO } from '@/types';
 import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
@@ -282,17 +285,20 @@ export default function DashboardPage() {
 
   const comprasComoTabla = activeTab === 'base_datos'
     ? [...comprasParaTabla].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
+        const categoria = categorizarProducto(c.producto);
+        const categoriaInfo = CATEGORIAS_INFO[categoria];
         const row = [
           formatearFecha(c.fecha),
           c.tienda,
           c.producto,
+          `${categoriaInfo.icono} ${categoriaInfo.nombre}`,
           c.precioUnitario.toFixed(2).replace('.00', ''),
           c.cantidad.toString(),
           c.total.toFixed(2).replace('.00', ''),
           c.telefono || '',
           c.direccion || ''
         ];
-        console.log('📝 Row de compra:', row, 'Tipos:', row.map(r => typeof r));
+        console.log('Row de compra:', row, 'Tipos:', row.map(r => typeof r));
         return row;
       })
     : [];
@@ -303,7 +309,7 @@ export default function DashboardPage() {
   console.log('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos });
 
   // Cabeceras personalizadas para Histórico
-  const cabecerasHistorico = ['FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
+  const cabecerasHistorico = ['FECHA', 'TIENDA', 'PRODUCTO', 'CATEGORÍA', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
 
   // Para pestañas que no son histórico, arreglar cabeceras si es necesario
   let datosTabla = activeTab === 'base_datos'
@@ -409,6 +415,12 @@ export default function DashboardPage() {
 
       {/* Presupuesto Mensual */}
       <BudgetProgress compras={compras} presupuestoInicial={3000} />
+
+      {/* Categorización de Productos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <CategoryKPIs compras={compras} />
+        <CategoryDistribution compras={compras} />
+      </div>
 
       {/* Quick Actions */}
       <QuickActions

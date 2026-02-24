@@ -125,3 +125,22 @@ export interface FiltrosCompra {
   busqueda?: string;
   rangoPredefinido?: 'hoy' | 'semana' | 'mes' | 'trimestre' | 'todo';
 }
+
+// Tipos de categorías de productos
+export type CategoriaProducto = 'carnes' | 'lacteos' | 'verdura' | 'panaderia' | 'bebidas' | 'limpieza' | 'otros';
+
+export interface CategoriaInfo {
+  nombre: string;
+  color: string;
+  icono: string;
+}
+
+export const CATEGORIAS_INFO: Record<CategoriaProducto, CategoriaInfo> = {
+  carnes: { nombre: 'Carnes', color: '#ef4444', icono: '🥩' },
+  lacteos: { nombre: 'Lácteos', color: '#3b82f6', icono: '🥛' },
+  verdura: { nombre: 'Verduras y Frutas', color: '#22c55e', icono: '🥬' },
+  panaderia: { nombre: 'Panadería', color: '#f59e0b', icono: '🍞' },
+  bebidas: { nombre: 'Bebidas', color: '#8b5cf6', icono: '🥤' },
+  limpieza: { nombre: 'Limpieza', color: '#06b6d4', icono: '🧹' },
+  otros: { nombre: 'Otros', color: '#64748b', icono: '📦' },
+};
