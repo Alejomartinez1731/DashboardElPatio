@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
+import { BudgetProgress } from '@/components/dashboard/budget-progress';
 import { exportToExcel, crearHojaExcel } from '@/lib/export-excel';
 import { categorizarProducto } from '@/lib/categorias';
 import { Compra, KPIData, SheetName, CATEGORIAS_INFO } from '@/types';
@@ -405,6 +406,9 @@ export default function DashboardPage() {
         <KPICardEnhanced titulo="Facturas Procesadas" valor={kpiData?.facturasProcesadas || 0} icono="shopping" tipo="numero" />
         <KPICardEnhanced titulo="Alertas de Precio" valor={kpiData?.alertasDePrecio || 0} icono="trending-up" tipo="numero" />
       </div>
+
+      {/* Presupuesto Mensual */}
+      <BudgetProgress compras={compras} presupuestoInicial={3000} />
 
       {/* Quick Actions */}
       <QuickActions
