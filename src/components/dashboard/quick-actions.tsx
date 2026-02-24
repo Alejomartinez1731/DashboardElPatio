@@ -31,7 +31,7 @@ export function QuickActions({
     {
       icon: Download,
       label: 'Exportar',
-      descripcion: 'Descargar CSV',
+      descripcion: 'Descargar Excel',
       color: 'hover:bg-chart-1/10 hover:border-chart-1/50 hover:text-chart-1',
       onClick: onExport,
     },

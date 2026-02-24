@@ -6,6 +6,7 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
+import { exportToExcel, crearHojaExcel } from '@/lib/export-excel';
 import { Compra, KPIData, SheetName } from '@/types';
 import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
@@ -167,20 +168,40 @@ export default function DashboardPage() {
   };
 
   const handleExport = () => {
-    const currentSheetName = TABS.find(t => t.id === activeTab)?.sheetName;
-    const currentData = sheetsData[currentSheetName || ''];
-    if (!currentData || currentData.length === 0) {
+    // Crear hojas para exportar: todas las pestañas disponibles
+    const hojasParaExportar: { nombre: string; datos: string[][] }[] = [];
+
+    TABS.forEach(tab => {
+      const sheetName = tab.sheetName;
+      const data = sheetsData[sheetName];
+
+      if (data && data.length > 0) {
+        // Identificar columnas de moneda (PRECIO, TOTAL, SUMA, etc.)
+        const cabeceras = data[0] || [];
+        const columnasMoneda = cabeceras
+          .map((cab, idx) => {
+            const cabLower = String(cab).toLowerCase();
+            if (cabLower.includes('precio') || cabLower.includes('total') || cabLower.includes('suma') || cabLower.includes('monto')) {
+              return idx;
+            }
+            return -1;
+          })
+          .filter(idx => idx >= 0);
+
+        hojasParaExportar.push({
+          nombre: tab.label,
+          datos: data,
+        });
+      }
+    });
+
+    if (hojasParaExportar.length === 0) {
       alert('No hay datos para exportar');
       return;
     }
-    const csv = currentData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${currentSheetName}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    // Exportar a Excel
+    exportToExcel(hojasParaExportar, `dashboard_el_patio_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const handleFilter = () => {
