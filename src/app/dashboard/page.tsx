@@ -12,6 +12,7 @@ import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { useSheetData } from '@/hooks/useSheetData';
+import { useDashboardStore } from '@/store/useDashboardStore';
 import { parsearFecha } from '@/lib/parsers';
 
 type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda';
@@ -61,26 +62,22 @@ export default function DashboardPage() {
     refetch,
   } = useSheetData(tabsConfig);
 
-  const [activeTab, setActiveTab] = useState<TabId>('historico_precios');
+  // Zustand store
+  const {
+    activeTab,
+    setActiveTab,
+    filtros,
+    setFiltros,
+    showFilters,
+    setShowFilters,
+  } = useDashboardStore();
 
-  // Local state for filtered data (will override the one from hook when filters are applied)
-  const [localComprasFiltradas, setLocalComprasFiltradas] = useState<Compra[]>([]);
-
-  // Filtros
-  const [filtros, setFiltros] = useState<Filtros>({
-    fechaInicio: null,
-    fechaFin: null,
-    rangoFecha: 'todo',
-    tiendas: [],
-    busqueda: '',
-    precioMin: null,
-    precioMax: null,
-  });
-
-  // Ordenamiento
+  // Ordenamiento local (no en el store por ahora)
   const [sortField, setSortField] = useState<SortField>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = más reciente primero
-  const [showFilters, setShowFilters] = useState(false);
+
+  // Local state para filtered data (will override the one from hook when filters are applied)
+  const [localComprasFiltradas, setLocalComprasFiltradas] = useState<Compra[]>([]);
 
   // Aplicar filtros cuando cambian
   useEffect(() => {
@@ -207,6 +204,12 @@ export default function DashboardPage() {
   const handleFilter = () => {
     setShowFilters(!showFilters);
   };
+
+  // Actualizar el store cuando cambian las compras
+  useEffect(() => {
+    useDashboardStore.getState().setCompras(compras);
+    useDashboardStore.getState().setComprasFiltradas(comprasFiltradas);
+  }, [compras, comprasFiltradas]);
 
   // Obtener tiendas únicas
   const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda)))).sort();
@@ -425,15 +428,8 @@ export default function DashboardPage() {
           filtros={filtros}
           onFiltrosChange={setFiltros}
           onReset={() => {
-            setFiltros({
-              fechaInicio: null,
-              fechaFin: null,
-              rangoFecha: 'todo',
-              tiendas: [],
-              busqueda: '',
-              precioMin: null,
-              precioMax: null,
-            });
+            const { resetFiltros } = useDashboardStore.getState();
+            resetFiltros();
           }}
           tiendasUnicas={tiendasUnicas}
           compras={compras}
