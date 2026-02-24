@@ -316,7 +316,7 @@ Marca las tareas completadas:
 - [x] 2.1 Comparativa vs mes anterior ✅ COMPLETADO (24/02/2026)
 - [x] 2.2 Presupuesto mensual con alertas ✅ COMPLETADO (24/02/2026)
 - [x] 2.3 Exportación real a Excel ✅ COMPLETADO (24/02/2026)
-- [ ] 2.4 Categorización de productos
+- [x] 2.4 Categorización de productos ✅ COMPLETADO (24/02/2026)
 
 ### FASE 3: OPTIMIZACIÓN
 - [ ] 3.1 Implementar Zustand para state management
