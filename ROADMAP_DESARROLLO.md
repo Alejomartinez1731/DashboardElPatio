@@ -313,7 +313,7 @@ Marca las tareas completadas:
 - [x] 1.4 Implementar fallback cuando n8n falle ✅ COMPLETADO (23/02/2026) - **MOCK DATA IMPLEMENTADO**
 
 ### FASE 2: FEATURES DE ALTO VALOR
-- [ ] 2.1 Comparativa vs mes anterior
+- [x] 2.1 Comparativa vs mes anterior ✅ COMPLETADO (24/02/2026)
 - [ ] 2.2 Presupuesto mensual con alertas
 - [ ] 2.3 Exportación real a Excel
 - [ ] 2.4 Categorización de productos

@@ -406,3 +406,97 @@ export function calcularKPIs(
     alertasDePrecio: alertas.length,
   };
 }
+
+/**
+ * Calcula comparativa de gastos entre mes actual y mes anterior
+ */
+export interface ComparativaMensual {
+  gastoActual: number;
+  gastoMesAnterior: number;
+  variacionPorcentaje: number;
+  variacionImporte: number;
+  tendencia: 'subida' | 'bajada' | 'neutral';
+  mesActualNombre: string;
+  mesAnteriorNombre: string;
+  breakdownPorTienda: Record<string, { actual: number; anterior: number; variacion: number }>;
+}
+
+export function calcularComparativaMensual(compras: Compra[]): ComparativaMensual | null {
+  const hoy = new Date();
+  const mesActual = hoy.getMonth();
+  const anioActual = hoy.getFullYear();
+
+  // Calcular mes anterior (maneja cambio de año)
+  const fechaMesAnterior = new Date(hoy);
+  fechaMesAnterior.setMonth(mesActual - 1);
+  const mesAnterior = fechaMesAnterior.getMonth();
+  const anioAnterior = fechaMesAnterior.getFullYear();
+
+  // Nombres de los meses
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const mesActualNombre = meses[mesActual];
+  const mesAnteriorNombre = meses[mesAnterior];
+
+  // Filtrar compras del mes actual
+  const comprasMesActual = compras.filter(c => {
+    return c.fecha.getMonth() === mesActual && c.fecha.getFullYear() === anioActual;
+  });
+
+  // Filtrar compras del mes anterior
+  const comprasMesAnterior = compras.filter(c => {
+    return c.fecha.getMonth() === mesAnterior && c.fecha.getFullYear() === anioAnterior;
+  });
+
+  const gastoActual = comprasMesActual.reduce((sum, c) => sum + c.total, 0);
+  const gastoMesAnterior = comprasMesAnterior.reduce((sum, c) => sum + c.total, 0);
+
+  // Si no hay datos del mes anterior, retornar null
+  if (gastoMesAnterior === 0) {
+    return null;
+  }
+
+  const variacionImporte = gastoActual - gastoMesAnterior;
+  const variacionPorcentaje = (variacionImporte / gastoMesAnterior) * 100;
+
+  let tendencia: 'subida' | 'bajada' | 'neutral' = 'neutral';
+  if (variacionPorcentaje > 1) tendencia = 'subida';
+  else if (variacionPorcentaje < -1) tendencia = 'bajada';
+
+  // Breakdown por tienda
+  const breakdownPorTienda: Record<string, { actual: number; anterior: number; variacion: number }> = {};
+
+  const tiendasActuales = new Set(comprasMesActual.map(c => c.tienda));
+  const tiendasAnteriores = new Set(comprasMesAnterior.map(c => c.tienda));
+  const todasLasTiendas = new Set([...tiendasActuales, ...tiendasAnteriores]);
+
+  todasLasTiendas.forEach(tienda => {
+    const gastoTiendaActual = comprasMesActual
+      .filter(c => c.tienda === tienda)
+      .reduce((sum, c) => sum + c.total, 0);
+
+    const gastoTiendaAnterior = comprasMesAnterior
+      .filter(c => c.tienda === tienda)
+      .reduce((sum, c) => sum + c.total, 0);
+
+    const variacionTienda = gastoTiendaAnterior > 0
+      ? ((gastoTiendaActual - gastoTiendaAnterior) / gastoTiendaAnterior) * 100
+      : 0;
+
+    breakdownPorTienda[tienda] = {
+      actual: gastoTiendaActual,
+      anterior: gastoTiendaAnterior,
+      variacion: variacionTienda,
+    };
+  });
+
+  return {
+    gastoActual,
+    gastoMesAnterior,
+    variacionPorcentaje,
+    variacionImporte,
+    tendencia,
+    mesActualNombre,
+    mesAnteriorNombre,
+    breakdownPorTienda,
+  };
+}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
+import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
 import { Compra, KPIData, SheetName } from '@/types';
 import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
@@ -81,7 +82,7 @@ export default function DashboardPage() {
 
   // Aplicar filtros cuando cambian
   useEffect(() => {
-    console.log('🔍 Aplicando filtros:', filtros);
+    console.log('Aplicando filtros:', filtros);
     let filtradas = [...compras];
 
     // Filtro por rango de fechas
@@ -89,19 +90,19 @@ export default function DashboardPage() {
       const inicio = new Date(filtros.fechaInicio);
       inicio.setHours(0, 0, 0, 0);
       filtradas = filtradas.filter(c => c.fecha >= inicio);
-      console.log('📅 Filtro fecha inicio:', inicio, '→', filtradas.length, 'filas');
+      console.log('Filtro fecha inicio:', inicio, '->', filtradas.length, 'filas');
     }
     if (filtros.fechaFin) {
       const fin = new Date(filtros.fechaFin);
       fin.setHours(23, 59, 59, 999);
       filtradas = filtradas.filter(c => c.fecha <= fin);
-      console.log('📅 Filtro fecha fin:', fin, '→', filtradas.length, 'filas');
+      console.log('📅 Filtro fecha fin:', fin, '->', filtradas.length, 'filas');
     }
 
     // Filtro por tiendas
     if (filtros.tiendas.length > 0) {
       filtradas = filtradas.filter(c => filtros.tiendas.includes(normalizarTienda(c.tienda)));
-      console.log('🏪 Filtro tiendas:', filtros.tiendas, '→', filtradas.length, 'filas');
+      console.log('🏪 Filtro tiendas:', filtros.tiendas, '->', filtradas.length, 'filas');
     }
 
     // Filtro por búsqueda de producto
@@ -110,17 +111,17 @@ export default function DashboardPage() {
       filtradas = filtradas.filter(c =>
         c.producto.toLowerCase().includes(busquedaLower)
       );
-      console.log('🔎 Filtro búsqueda:', filtros.busqueda, '→', filtradas.length, 'filas');
+      console.log('🔎 Filtro búsqueda:', filtros.busqueda, '->', filtradas.length, 'filas');
     }
 
     // Filtro por rango de precios
     if (filtros.precioMin !== null) {
       filtradas = filtradas.filter(c => c.precioUnitario >= filtros.precioMin!);
-      console.log('💰 Filtro precio min:', filtros.precioMin, '→', filtradas.length, 'filas');
+      console.log('💰 Filtro precio min:', filtros.precioMin, '->', filtradas.length, 'filas');
     }
     if (filtros.precioMax !== null) {
       filtradas = filtradas.filter(c => c.precioUnitario <= filtros.precioMax!);
-      console.log('💰 Filtro precio max:', filtros.precioMax, '→', filtradas.length, 'filas');
+      console.log('💰 Filtro precio max:', filtros.precioMax, '->', filtradas.length, 'filas');
     }
 
     // Aplicar ordenamiento
@@ -156,7 +157,7 @@ export default function DashboardPage() {
       return aVal < bVal ? 1 : (aVal > bVal ? -1 : 0);
     });
 
-    console.log('✅ Filtrado final:', filtradas.length, 'de', compras.length, 'filas');
+    console.log('Filtrado final:', filtradas.length, 'de', compras.length, 'filas');
     setLocalComprasFiltradas(filtradas);
   }, [compras, filtros, sortField, sortOrder]);
 
@@ -238,17 +239,12 @@ export default function DashboardPage() {
   const activeData = sheetsData[activeSheetName] || [];
   const numRows = activeData.length;
 
-  // Para base_datos, calcular el número real de filas desde compras
-  const numFilasBaseDatos = activeTab === 'base_datos' ? comprasComoTabla.length : numRows;
-
-  console.log('📊 Renderizando tabla:', { activeTab, activeSheetName, numRows, 'activeData.length': activeData.length, 'numFilasBaseDatos' });
-
   // Determinar qué compras filtradas usar (si hay filtros activos, usar local)
   const hayFiltrosActivos = filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null || filtros.fechaInicio !== null || filtros.fechaFin !== null;
   const comprasFiltradasFinal = hayFiltrosActivos ? localComprasFiltradas : compras;
   const numFilasFiltradas = comprasFiltradasFinal.length;
 
-  console.log('📊 Estado del dashboard:', {
+  console.log('Estado del dashboard:', {
     activeTab,
     activeSheetName,
     numRows,
@@ -278,6 +274,11 @@ export default function DashboardPage() {
         return row;
       })
     : [];
+
+  // Para base_datos, calcular el número real de filas desde compras
+  const numFilasBaseDatos = activeTab === 'base_datos' ? comprasComoTabla.length : numRows;
+
+  console.log('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos });
 
   // Cabeceras personalizadas para Histórico
   const cabecerasHistorico = ['FECHA', 'TIENDA', 'PRODUCTO', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
@@ -380,6 +381,9 @@ export default function DashboardPage() {
         <KPICardEnhanced titulo="Facturas Procesadas" valor={kpiData?.facturasProcesadas || 0} icono="shopping" tipo="numero" />
         <KPICardEnhanced titulo="Alertas de Precio" valor={kpiData?.alertasDePrecio || 0} icono="trending-up" tipo="numero" />
       </div>
+
+      {/* Comparativa vs Mes Anterior */}
+      <MonthlyComparison compras={compras} />
 
       {/* Quick Actions */}
       <QuickActions
@@ -519,7 +523,7 @@ export default function DashboardPage() {
     }, 0);
 
     if (celdasVaciasConsecutivas > 3 && rowIdx < 2) {
-      console.warn(`⚠️ Fila ${rowIdx} tiene ${celdasVaciasConsecutivas} celdas vacías consecutivas - puede ser un problema de estructura de datos`);
+      console.warn(`Fila ${rowIdx} tiene ${celdasVaciasConsecutivas} celdas vacías consecutivas - puede ser un problema de estructura de datos`);
     }
 
     return (
@@ -544,7 +548,7 @@ export default function DashboardPage() {
           if (Array.isArray(cell)) {
             cellValue = cell.join(' ').trim();
             if (rowIdx < 2) {
-              console.log(`⚠️ Celda [${rowIdx},${cellIdx}] es array:`, cell, `→ unido: "${cellValue}"`);
+              console.log(`Celda [${rowIdx},${cellIdx}] es array:`, cell, `-> unido: "${cellValue}"`);
             }
           }
 
@@ -581,7 +585,7 @@ export default function DashboardPage() {
 
           // Log cuando detectamos una fecha
           if (esFecha && rowIdx < 2) {
-            console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" → detectada como fecha (cabecera: "${cabecera}", columnaFecha: ${esColumnaFecha}, porContenido: ${esFechaPorContenido})`);
+            console.log(`📅 Celda [${rowIdx},${cellIdx}]: "${cellStr}" -> detectada como fecha (cabecera: "${cabecera}", columnaFecha: ${esColumnaFecha}, porContenido: ${esFechaPorContenido})`);
           }
 
           let displayValue: string | number = cellValue;
@@ -593,7 +597,7 @@ export default function DashboardPage() {
             displayValue = formatearFecha(fecha);
             className = 'text-white';
             if (rowIdx < 2) {
-              console.log(`📅 Fecha formateada: "${cellStr}" → "${displayValue}"`);
+              console.log(`📅 Fecha formateada: "${cellStr}" -> "${displayValue}"`);
             }
           } else if (isNumber) {
             // Formatear número
