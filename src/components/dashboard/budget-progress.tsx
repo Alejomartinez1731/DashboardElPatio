@@ -273,7 +273,7 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
       {usandoMesActual && proyeccionSuperaPresupuesto && (
         <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
           <p className="text-xs text-yellow-400">
-            ⚠️ Si continúas a este ritmo, superarás el presupuesto en{' '}
+            Si continúas a este ritmo, superarás el presupuesto en{' '}
             <span className="font-bold">{formatearMoneda(proyeccionFinMes - presupuesto)}</span>
           </p>
         </div>
@@ -282,9 +282,9 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
       {/* Estado actual */}
       <div className={`mt-4 p-3 rounded-lg border ${colores.bg} ${colores.border}`}>
         <p className={`text-xs ${colores.text} font-medium`}>
-          {porcentajeUsado < 80 && '✨ Vas bien por debajo del presupuesto'}
-          {porcentajeUsado >= 80 && porcentajeUsado < 95 && '⚡ Estás llegando al límite del presupuesto'}
-          {porcentajeUsado >= 95 && '🚨 Has alcanzado o superado el presupuesto mensual'}
+          {porcentajeUsado < 80 && 'Vas bien por debajo del presupuesto'}
+          {porcentajeUsado >= 80 && porcentajeUsado < 95 && 'Estas llegando al limite del presupuesto'}
+          {porcentajeUsado >= 95 && 'Has alcanzado o superado el presupuesto mensual'}
         </p>
       </div>
     </Card>
