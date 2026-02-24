@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TrendingUp, AlertTriangle, Wallet, Edit2, Check, Calendar } from 'lucide-react';
@@ -30,29 +30,55 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
   const [editando, setEditando] = useState(false);
   const [nuevoPresupuesto, setNuevoPresupuesto] = useState(presupuesto.toString());
 
-  // Calcular gasto del mes actual
-  const { gastoActual, porcentajeUsado, proyeccionFinMes, diasRestantes, gastoPromedioDiario } = useMemo(() => {
+  // Encontrar el mes más reciente con datos y calcular métricas
+  const { gastoActual, porcentajeUsado, proyeccionFinMes, diasRestantes, gastoPromedioDiario, mesInfo, usandoMesActual } = useMemo(() => {
     const hoy = new Date();
     const mesActual = hoy.getMonth();
     const anioActual = hoy.getFullYear();
 
-    // Filtrar compras del mes actual
-    const comprasMesActual = compras.filter(c => {
+    // Buscar el mes más reciente con compras
+    let comprasAAnalizar: Compra[] = [];
+    let mesAnalizado = mesActual;
+    let anioAnalizado = anioActual;
+    let esMesActual = true;
+
+    // Primero intentar con el mes actual
+    comprasAAnalizar = compras.filter(c => {
       return c.fecha.getMonth() === mesActual && c.fecha.getFullYear() === anioActual;
     });
 
-    const gasto = comprasMesActual.reduce((sum, c) => sum + c.total, 0);
+    // Si no hay compras en el mes actual, buscar el mes más reciente con datos
+    if (comprasAAnalizar.length === 0 && compras.length > 0) {
+      esMesActual = false;
 
-    // Calcular días del mes actual
-    const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
-    const diaActual = hoy.getDate();
-    const diasRestantesCalc = diasEnMes - diaActual;
+      // Encontrar la fecha más reciente
+      const fechasOrdenadas = [...compras].map(c => c.fecha.getTime()).sort((a, b) => b - a);
+      const fechaMasReciente = new Date(fechasOrdenadas[0]);
+      mesAnalizado = fechaMasReciente.getMonth();
+      anioAnalizado = fechaMasReciente.getFullYear();
+
+      comprasAAnalizar = compras.filter(c => {
+        return c.fecha.getMonth() === mesAnalizado && c.fecha.getFullYear() === anioAnalizado;
+      });
+    }
+
+    const gasto = comprasAAnalizar.reduce((sum, c) => sum + c.total, 0);
+
+    // Calcular días del mes
+    const diasEnMes = new Date(anioAnalizado, mesAnalizado + 1, 0).getDate();
+    const diaActual = esMesActual ? hoy.getDate() : diasEnMes; // Si no es el mes actual, usar día fin del mes
+    const diasRestantesCalc = esMesActual ? diasEnMes - diaActual : 0;
 
     // Calcular gasto promedio diario
-    const gastoPromedio = diaActual > 0 ? gasto / diaActual : 0;
+    const diaBase = Math.max(diaActual, 1); // Evitar división por 0
+    const gastoPromedio = gasto / diaBase;
 
-    // Proyección de fin de mes
-    const proyeccion = gasto + (gastoPromedio * diasRestantesCalc);
+    // Proyección de fin de mes (solo si estamos en el mes actual)
+    const proyeccion = esMesActual ? gasto + (gastoPromedio * diasRestantesCalc) : gasto;
+
+    // Nombre del mes
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const nombreMes = meses[mesAnalizado];
 
     return {
       gastoActual: gasto,
@@ -60,6 +86,8 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
       proyeccionFinMes: proyeccion,
       diasRestantes: diasRestantesCalc,
       gastoPromedioDiario: gastoPromedio,
+      mesInfo: { nombre: nombreMes, anio: anioAnalizado },
+      usandoMesActual: esMesActual,
     };
   }, [compras, presupuesto]);
 
@@ -79,7 +107,9 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
     const valor = parseFloat(nuevoPresupuesto);
     if (!isNaN(valor) && valor > 0) {
       setPresupuesto(valor);
-      localStorage.setItem(LOCAL_STORAGE_KEY, valor.toString());
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(LOCAL_STORAGE_KEY, valor.toString());
+      }
       setEditando(false);
     }
   };
@@ -97,6 +127,21 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
     }
   };
 
+  // Si no hay compras en absoluto
+  if (compras.length === 0) {
+    return (
+      <Card className="p-6 bg-gradient-to-br from-background to-card border-border">
+        <div className="flex items-center gap-3">
+          <Wallet className="w-12 h-12 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Presupuesto Mensual</p>
+            <p className="text-xs text-muted-foreground mt-1">No hay datos de compras para calcular el presupuesto</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className={`p-6 bg-gradient-to-br from-background to-card border-border transition-all duration-300 ${
       estaSobrePasado ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'hover:border-primary/50'
@@ -110,6 +155,9 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               Presupuesto Mensual
+              {!usandoMesActual && (
+                <span className="ml-2 text-yellow-400">({mesInfo.nombre} {mesInfo.anio})</span>
+              )}
             </p>
             {editando ? (
               <div className="flex items-center gap-2">
@@ -204,25 +252,25 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            Días restantes
+            {usandoMesActual ? 'Días restantes' : 'Días del mes'}
           </p>
-          <p className="text-lg font-bold text-white font-mono">{diasRestantes}</p>
+          <p className="text-lg font-bold text-white font-mono">{usandoMesActual ? diasRestantes : new Date(mesInfo.anio, mesInfo.nombre === 'Enero' ? 1 : 2, 0).getDate()}</p>
         </div>
 
         {/* Proyección fin de mes */}
-        <div className={`space-y-1 ${proyeccionSuperaPresupuesto ? 'text-red-400' : ''}`}>
+        <div className={`space-y-1 ${proyeccionSuperaPresupuesto && usandoMesActual ? 'text-red-400' : ''}`}>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            Proyección
+            {usandoMesActual ? 'Proyección' : 'Total mes'}
           </p>
-          <p className={`text-lg font-bold font-mono ${proyeccionSuperaPresupuesto ? 'text-red-400' : 'text-white'}`}>
+          <p className={`text-lg font-bold font-mono ${proyeccionSuperaPresupuesto && usandoMesActual ? 'text-red-400' : 'text-white'}`}>
             {formatearMoneda(proyeccionFinMes)}
           </p>
         </div>
       </div>
 
       {/* Alerta de proyección */}
-      {proyeccionSuperaPresupuesto && (
+      {usandoMesActual && proyeccionSuperaPresupuesto && (
         <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
           <p className="text-xs text-yellow-400">
             ⚠️ Si continúas a este ritmo, superarás el presupuesto en{' '}
