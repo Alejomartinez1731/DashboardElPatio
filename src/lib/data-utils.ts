@@ -115,7 +115,11 @@ export function excluirFilaResumen(descripcion: string): boolean {
 
   const descLower = descripcion.toLowerCase().trim();
 
-  return exclusiones.some(exclusion => descLower.includes(exclusion) || descLower === exclusion);
+  // Verificar coincidencia exacta de palabra (no subcadena)
+  const palabras = descLower.split(/\s+/);
+  return palabras.some(palabra =>
+    exclusiones.some(exclusion => exclusion === palabra)
+  );
 }
 
 /**
@@ -425,6 +429,7 @@ export interface ComparativaMensual {
 
 export function calcularComparativaMensual(compras: Compra[]): ComparativaMensual | null {
   if (compras.length === 0) {
+    console.log('calcularComparativaMensual: No hay compras');
     return null;
   }
 
@@ -451,8 +456,12 @@ export function calcularComparativaMensual(compras: Compra[]): ComparativaMensua
     return new Date(anioB, mesB, 1).getTime() - new Date(anioA, mesA, 1).getTime();
   });
 
+  console.log('Meses con datos:', mesesOrdenados);
+  console.log('Gastos por mes:', Object.fromEntries(Object.entries(gastosPorMes).map(([k, v]) => [k, v.gasto])));
+
   // Necesitamos al menos 2 meses con datos para comparar
   if (mesesOrdenados.length < 2) {
+    console.log('No hay suficientes meses con datos');
     return null;
   }
 

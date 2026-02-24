@@ -55,8 +55,11 @@ export function excluirFilaResumenConLog(descripcion: string): boolean {
     '-', ''
   ];
 
-  const excluida = exclusiones.some(exclusion =>
-    descripcionLower.includes(exclusion) || descripcionLower === exclusion
+  // Verificar coincidencia exacta (como palabra completa, no como subcadena)
+  // Dividimos la descripcion en palabras y verificamos si alguna coincide exactamente
+  const palabras = descripcionLower.split(/\s+/);
+  const excluida = palabras.some(palabra =>
+    exclusiones.some(exclusion => exclusion === palabra)
   );
 
   if (excluida) {
