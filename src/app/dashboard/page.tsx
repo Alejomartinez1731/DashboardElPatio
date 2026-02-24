@@ -5,6 +5,7 @@ import { KPICardEnhanced } from '@/components/dashboard/kpi-card-enhanced';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
+import { BudgetProgress } from '@/components/dashboard/budget-progress';
 import { Compra, KPIData, SheetName } from '@/types';
 import { normalizarTienda } from '@/lib/data-utils';
 import { Table, TrendingUp, PieChart, ShoppingBag, Download, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
@@ -384,6 +385,9 @@ export default function DashboardPage() {
 
       {/* Comparativa vs Mes Anterior */}
       <MonthlyComparison compras={compras} />
+
+      {/* Presupuesto Mensual */}
+      <BudgetProgress compras={compras} presupuestoInicial={3000} />
 
       {/* Quick Actions */}
       <QuickActions

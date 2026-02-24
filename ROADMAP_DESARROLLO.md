@@ -314,7 +314,7 @@ Marca las tareas completadas:
 
 ### FASE 2: FEATURES DE ALTO VALOR
 - [x] 2.1 Comparativa vs mes anterior ✅ COMPLETADO (24/02/2026)
-- [ ] 2.2 Presupuesto mensual con alertas
+- [x] 2.2 Presupuesto mensual con alertas ✅ COMPLETADO (24/02/2026)
 - [ ] 2.3 Exportación real a Excel
 - [ ] 2.4 Categorización de productos
 
