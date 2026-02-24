@@ -408,7 +408,7 @@ export function calcularKPIs(
 }
 
 /**
- * Calcula comparativa de gastos entre mes actual y mes anterior
+ * Calcula comparativa de gastos entre los dos meses más recientes con datos
  */
 export interface ComparativaMensual {
   gastoActual: number;
@@ -418,37 +418,56 @@ export interface ComparativaMensual {
   tendencia: 'subida' | 'bajada' | 'neutral';
   mesActualNombre: string;
   mesAnteriorNombre: string;
+  mesActualAnio: number;
+  mesAnteriorAnio: number;
   breakdownPorTienda: Record<string, { actual: number; anterior: number; variacion: number }>;
 }
 
 export function calcularComparativaMensual(compras: Compra[]): ComparativaMensual | null {
-  const hoy = new Date();
-  const mesActual = hoy.getMonth();
-  const anioActual = hoy.getFullYear();
+  if (compras.length === 0) {
+    return null;
+  }
 
-  // Calcular mes anterior (maneja cambio de año)
-  const fechaMesAnterior = new Date(hoy);
-  fechaMesAnterior.setMonth(mesActual - 1);
-  const mesAnterior = fechaMesAnterior.getMonth();
-  const anioAnterior = fechaMesAnterior.getFullYear();
+  // Agrupar compras por mes-año
+  const gastosPorMes: Record<string, { compras: Compra[]; gasto: number; fecha: Date }> = {};
 
-  // Nombres de los meses
-  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  const mesActualNombre = meses[mesActual];
-  const mesAnteriorNombre = meses[mesAnterior];
-
-  // Filtrar compras del mes actual
-  const comprasMesActual = compras.filter(c => {
-    return c.fecha.getMonth() === mesActual && c.fecha.getFullYear() === anioActual;
+  compras.forEach(compra => {
+    const key = `${compra.fecha.getFullYear()}-${compra.fecha.getMonth()}`;
+    if (!gastosPorMes[key]) {
+      gastosPorMes[key] = {
+        compras: [],
+        gasto: 0,
+        fecha: compra.fecha,
+      };
+    }
+    gastosPorMes[key].compras.push(compra);
+    gastosPorMes[key].gasto += compra.total;
   });
 
-  // Filtrar compras del mes anterior
-  const comprasMesAnterior = compras.filter(c => {
-    return c.fecha.getMonth() === mesAnterior && c.fecha.getFullYear() === anioAnterior;
+  // Obtener las claves de meses ordenadas por fecha (más reciente primero)
+  const mesesOrdenados = Object.keys(gastosPorMes).sort((a, b) => {
+    const [anioA, mesA] = a.split('-').map(Number);
+    const [anioB, mesB] = b.split('-').map(Number);
+    return new Date(anioB, mesB, 1).getTime() - new Date(anioA, mesA, 1).getTime();
   });
 
-  const gastoActual = comprasMesActual.reduce((sum, c) => sum + c.total, 0);
-  const gastoMesAnterior = comprasMesAnterior.reduce((sum, c) => sum + c.total, 0);
+  // Necesitamos al menos 2 meses con datos para comparar
+  if (mesesOrdenados.length < 2) {
+    return null;
+  }
+
+  // Usar los dos meses más recientes
+  const mesActualKey = mesesOrdenados[0];
+  const mesAnteriorKey = mesesOrdenados[1];
+
+  const [anioActual, mesActual] = mesActualKey.split('-').map(Number);
+  const [anioAnterior, mesAnterior] = mesAnteriorKey.split('-').map(Number);
+
+  const comprasMesActual = gastosPorMes[mesActualKey].compras;
+  const comprasMesAnterior = gastosPorMes[mesAnteriorKey].compras;
+
+  const gastoActual = gastosPorMes[mesActualKey].gasto;
+  const gastoMesAnterior = gastosPorMes[mesAnteriorKey].gasto;
 
   // Si no hay datos del mes anterior, retornar null
   if (gastoMesAnterior === 0) {
@@ -461,6 +480,11 @@ export function calcularComparativaMensual(compras: Compra[]): ComparativaMensua
   let tendencia: 'subida' | 'bajada' | 'neutral' = 'neutral';
   if (variacionPorcentaje > 1) tendencia = 'subida';
   else if (variacionPorcentaje < -1) tendencia = 'bajada';
+
+  // Nombres de los meses
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const mesActualNombre = meses[mesActual];
+  const mesAnteriorNombre = meses[mesAnterior];
 
   // Breakdown por tienda
   const breakdownPorTienda: Record<string, { actual: number; anterior: number; variacion: number }> = {};
@@ -497,6 +521,8 @@ export function calcularComparativaMensual(compras: Compra[]): ComparativaMensua
     tendencia,
     mesActualNombre,
     mesAnteriorNombre,
+    mesActualAnio: anioActual,
+    mesAnteriorAnio: anioAnterior,
     breakdownPorTienda,
   };
 }

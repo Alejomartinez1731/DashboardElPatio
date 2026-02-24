@@ -23,7 +23,7 @@ export function MonthlyComparison({ compras }: MonthlyComparisonProps) {
     );
   }
 
-  const { gastoActual, gastoMesAnterior, variacionPorcentaje, variacionImporte, tendencia, mesActualNombre, mesAnteriorNombre, breakdownPorTienda } = comparativa;
+  const { gastoActual, gastoMesAnterior, variacionPorcentaje, variacionImporte, tendencia, mesActualNombre, mesAnteriorNombre, mesActualAnio, mesAnteriorAnio, breakdownPorTienda } = comparativa;
 
   const TrendIcon = tendencia === 'subida' ? TrendingUp : tendencia === 'bajada' ? TrendingDown : Minus;
   const trendColor = colorVariacion(variacionPorcentaje);
@@ -44,7 +44,7 @@ export function MonthlyComparison({ compras }: MonthlyComparisonProps) {
               Comparativa Mensual
             </p>
             <p className="text-2xl font-bold text-white">
-              {mesActualNombre} vs {mesAnteriorNombre}
+              {mesActualNombre} {mesActualAnio} vs {mesAnteriorNombre} {mesAnteriorAnio}
             </p>
           </div>
           <div
@@ -60,11 +60,11 @@ export function MonthlyComparison({ compras }: MonthlyComparisonProps) {
         {/* Valores de gasto */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-1">{mesActualNombre}</p>
+            <p className="text-xs text-muted-foreground mb-1">{mesActualNombre} {mesActualAnio}</p>
             <p className="text-xl font-bold text-white font-mono">{formatearMoneda(gastoActual)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1">{mesAnteriorNombre}</p>
+            <p className="text-xs text-muted-foreground mb-1">{mesAnteriorNombre} {mesAnteriorAnio}</p>
             <p className="text-xl font-bold text-white font-mono">{formatearMoneda(gastoMesAnterior)}</p>
           </div>
         </div>
