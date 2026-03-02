@@ -5,7 +5,14 @@ export const runtime = 'nodejs';
 
 // Configuración de n8n
 const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-const N8N_RECORDATORIOS_WEBHOOK = process.env.N8N_RECORDATORIOS_WEBHOOK_URL; // Nuevo webhook para escritura (DEBE terminar en _URL)
+const N8N_RECORDATORIOS_WEBHOOK = process.env.N8N_RECORDATORIOS_WEBHOOK_URL || process.env.NEXT_PUBLIC_N8N_RECORDATORIOS_WEBHOOK_URL;
+
+// Debug: mostrar variables al iniciar
+console.log('🔧 Variables de entorno n8n:');
+console.log('  - N8N_WEBHOOK_URL:', N8N_WEBHOOK_URL ? '✓ configurado' : '✗ NO configurado');
+console.log('  - N8N_RECORDATORIOS_WEBHOOK_URL:', process.env.N8N_RECORDATORIOS_WEBHOOK_URL || 'undefined');
+console.log('  - NEXT_PUBLIC_N8N_RECORDATORIOS_WEBHOOK_URL:', process.env.NEXT_PUBLIC_N8N_RECORDATORIOS_WEBHOOK_URL || 'undefined');
+console.log('  - N8N_RECORDATORIOS_WEBHOOK final:', N8N_RECORDATORIOS_WEBHOOK || 'undefined');
 
 // Spreadhseet ID para lectura directa
 const SPREADSHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_SPREADSHEET_ID;
