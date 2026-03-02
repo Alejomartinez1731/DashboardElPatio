@@ -348,15 +348,16 @@ export async function GET(request: NextRequest) {
         const frecuenciaAuto = calcularFrecuenciaAutomatica(producto, registroDiario, historico);
 
         if (frecuenciaAuto === null) {
-          // No hay suficientes datos, usar umbral por defecto
-          diasConfigurados = 15;
+          // No hay suficientes datos, usar umbral por defecto (mínimo 10 días)
+          diasConfigurados = 10;
           tipo = 'automatico';
-          notas = 'Calculado por defecto (sin historial suficiente)';
+          notas = 'Calculado por defecto (sin historial suficiente, mínimo 10 días)';
         } else {
-          // Usar frecuencia promedio * 1.5 como umbral
-          diasConfigurados = Math.round(frecuenciaAuto * 1.5);
+          // Usar frecuencia promedio * 1.5 como umbral, con MÍNIMO de 10 días
+          const umbralCalculado = Math.round(frecuenciaAuto * 1.5);
+          diasConfigurados = Math.max(umbralCalculado, 10);
           tipo = 'automatico';
-          notas = `Calculado automáticamente (frecuencia: ${frecuenciaAuto} días)`;
+          notas = `Calculado automáticamente (frecuencia: ${frecuenciaAuto} días, mínimo 10)`;
         }
       }
 
