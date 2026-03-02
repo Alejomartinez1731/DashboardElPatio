@@ -402,7 +402,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {recordatorios.map((rec, idx) => {
             const estilo = getEstiloRecordatorio(rec.estado);
             const Icono = estilo.icono;
@@ -412,9 +412,9 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
             return (
               <Card
                 key={rec.producto}
-                className={`p-4 ${estilo.borde} ${estilo.fondo} border border-border/50 hover:border-border transition-all duration-200`}
+                className={`p-3 ${estilo.borde} ${estilo.fondo} border border-border/50 hover:border-border transition-all duration-200`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   {/* Checkbox para añadir a lista de compra */}
                   {(() => {
                     console.log(`✅ Creando elemento checkbox para: ${rec.producto}`);
@@ -448,7 +448,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                             console.log('🖱️ MouseDown en checkbox:', rec.producto);
                           }}
                           onMouseEnter={() => console.log('📍 Mouse ENTER checkbox:', rec.producto)}
-                          className={`mt-1 flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
+                          className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
                             estaEnLista(rec.producto)
                               ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/30'
                               : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10 active:scale-95'
@@ -456,71 +456,46 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                           title={estaEnLista(rec.producto) ? 'Quitar de la lista' : 'Añadir a la lista'}
                           style={{ touchAction: 'manipulation' }}
                         >
-                          {estaEnLista(rec.producto) && <Check className="w-5 h-5" strokeWidth={3} />}
+                          {estaEnLista(rec.producto) && <Check className="w-4 h-4" strokeWidth={3} />}
                         </button>
                       </div>
                     );
                   })()}
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <h4 className="font-semibold text-white text-base">{rec.producto}</h4>
-                      <Badge className={`text-xs px-2.5 py-1 ${estilo.badge}`}>
-                        <Icono className={`w-3.5 h-3.5 mr-1 ${estilo.iconoColor}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h4 className="font-semibold text-white text-sm truncate">{rec.producto}</h4>
+                      <Badge className={`text-xs px-2 py-0.5 ${estilo.badge}`}>
+                        <Icono className={`w-3 h-3 mr-1 ${estilo.iconoColor}`} />
                         {getTextoEstado(rec)}
                       </Badge>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs px-2 py-1 ${
-                          rec.tipo === 'manual'
-                            ? 'border-blue-500/50 text-blue-400 bg-blue-500/10'
-                            : 'border-purple-500/50 text-purple-400 bg-purple-500/10'
-                        }`}
-                      >
-                        {rec.tipo === 'manual' ? (
-                          <>
-                            <Settings className="w-3 h-3 mr-1" />
-                            Manual
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="w-3 h-3 mr-1" />
-                            Auto
-                          </>
-                        )}
-                      </Badge>
+                      {rec.tipo === 'manual' && (
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 border-blue-500/50 text-blue-400 bg-blue-500/10">
+                          <Settings className="w-3 h-3 mr-1" />
+                          M
+                        </Badge>
+                      )}
                     </div>
 
-                    <div className="text-sm space-y-1.5">
-                      <p className="text-white/90 font-medium">
-                        Hace {rec.diasTranscurridos ?? '?'} dias <span className="text-muted-foreground font-normal">(limite: {rec.diasConfigurados} dias)</span>
-                      </p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                      <span>
+                        Hace <span className="text-white font-medium">{rec.diasTranscurridos ?? '?'}</span> días
+                        <span className="text-muted-foreground/70">(límite: {rec.diasConfigurados})</span>
+                      </span>
 
                       {rec.ultimaCompra && rec.tiendaUltimaCompra && (
-                        <p className="text-muted-foreground">
-                          Ultima compra: {formatearFecha(new Date(rec.ultimaCompra))} en {rec.tiendaUltimaCompra}
-                          {rec.precioUltimaCompra && ` a ${formatearMoneda(rec.precioUltimaCompra)}`}
-                        </p>
+                        <span>• Última: {rec.tiendaUltimaCompra}</span>
                       )}
 
                       {rec.notas && (
-                        <p className={`text-xs mt-2 px-2 py-1 rounded inline-block ${
-                          rec.tipo === 'manual'
-                            ? 'italic text-primary/80 bg-primary/5'
-                            : 'text-purple-300/80 bg-purple-500/10'
-                        }`}>
-                          {rec.tipo === 'manual' ? (
-                            <>📝 {rec.notas}</>
-                          ) : (
-                            <>⚡ {rec.notas}</>
-                          )}
-                        </p>
+                        <span className="text-primary/80 truncate max-w-[200px]" title={rec.notas}>
+                          • {rec.notas}
+                        </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 flex-shrink-0">
-                    {rec.tipo === 'manual' && (
+                  {rec.tipo === 'manual' && (
                     <Button
                       onClick={() => handleEliminar(rec.producto)}
                       variant="ghost"
@@ -531,7 +506,6 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
-                  </div>
                 </div>
               </Card>
             );
