@@ -287,6 +287,8 @@ function calcularEstado(diasTranscurridos: number | null, diasConfigurados: numb
 export async function GET(request: NextRequest) {
   try {
     console.log('📡 GET /api/recordatorios');
+    console.log('📊 SPREADSHEET_ID:', SPREADSHEET_ID?.substring(0, 20) + '...');
+    console.log('🔑 API_KEY configurada:', !!API_KEY);
 
     // Obtener datos de las hojas
     const [recordatoriosRaw, registroDiario, historico] = await Promise.all([
@@ -295,18 +297,30 @@ export async function GET(request: NextRequest) {
       getSheetData(HOJA_HISTORICO_PRECIOS),
     ]);
 
+    console.log('📊 Datos recibidos:');
+    console.log('  - recordatoriosRaw:', recordatoriosRaw.length, 'filas');
+    console.log('  - registroDiario:', registroDiario.length, 'filas');
+    console.log('  - historico:', historico.length, 'filas');
+
+    if (recordatoriosRaw.length > 0) {
+      console.log('  - Primera fila recordatorios:', recordatoriosRaw[0]);
+    }
+
     // Procesar recordatorios
     const recordatorios: any[] = [];
 
     if (recordatoriosRaw.length > 1) {
       for (let i = 1; i < recordatoriosRaw.length; i++) {
         const fila = recordatoriosRaw[i];
+        console.log(`📝 Procesando fila ${i}:`, fila);
         if (fila.length < 2) continue;
 
         const producto = String(fila[0] || '').trim();
         const dias = parseInt(String(fila[1] || '0')) || 0;
         const activo = String(fila[2] || 'TRUE').toUpperCase() === 'TRUE';
         const notas = String(fila[3] || '');
+
+        console.log(`   -> producto="${producto}", dias=${dias}, activo=${activo}`);
 
         if (!producto || !activo || dias <= 0) continue;
 
@@ -359,6 +373,13 @@ export async function GET(request: NextRequest) {
         return (a.diasTranscurridos || 0) - (b.diasTranscurridos || 0);
       }
       return 0;
+    });
+
+    console.log('✅ Recordatorios procesados:', recordatorios.length);
+    console.log('📤 Respuesta JSON:', {
+      success: true,
+      data: recordatorios,
+      count: recordatorios.length
     });
 
     return NextResponse.json({
