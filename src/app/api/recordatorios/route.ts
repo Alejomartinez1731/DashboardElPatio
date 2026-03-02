@@ -421,7 +421,12 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json();
     const { producto } = body;
 
+    console.log('🗑️ DELETE /api/recordatorios');
+    console.log('  Body recibido:', body);
+    console.log('  Producto a eliminar:', producto);
+
     if (!producto || typeof producto !== 'string') {
+      console.error('❌ Producto no especificado o invalido');
       return NextResponse.json(
         { success: false, error: 'Producto no especificado' },
         { status: 400 }
@@ -430,25 +435,33 @@ export async function DELETE(request: NextRequest) {
 
     // Intentar eliminar vía n8n
     if (N8N_RECORDATORIOS_WEBHOOK) {
+      const payload = {
+        action: 'delete',
+        sheet: HOJA_RECORDATORIOS,
+        producto: producto.trim(),
+      };
+
+      console.log('📤 Enviando a n8n DELETE:', payload);
+
       const response = await fetch(N8N_RECORDATORIOS_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'delete',
-          sheet: HOJA_RECORDATORIOS,
-          producto,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('📡 Respuesta n8n status:', response.status);
+
       if (!response.ok) {
-        console.error('❌ n8n delete falló:', await response.text());
+        const text = await response.text();
+        console.error('❌ n8n delete falló (status ' + response.status + '):', text);
         return NextResponse.json(
-          { success: false, error: 'Error al eliminar en n8n. Verifica que el webhook esté configurado correctamente.' },
-          { status: 500 }
+          { success: false, error: 'Error al eliminar en n8n. Status: ' + response.status },
+          { status: response.status }
         );
       }
 
       const result = await response.json();
+      console.log('✅ n8n delete resultado:', result);
 
       if (!result.success) {
         return NextResponse.json(
@@ -457,6 +470,7 @@ export async function DELETE(request: NextRequest) {
         );
       }
     } else {
+      console.error('❌ N8N_RECORDATORIOS_WEBHOOK no configurado');
       return NextResponse.json(
         {
           success: false,
@@ -472,6 +486,7 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('❌ Error en DELETE /api/recordatorios:', error);
+    console.error('  Error stack:', error.stack);
     return NextResponse.json(
       {
         success: false,
