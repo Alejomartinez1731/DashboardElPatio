@@ -41,56 +41,192 @@ ANTES de probar el sistema, debes crear manualmente la hoja "Recordatorios" en e
 
 ---
 
-## PASO 2: Configurar Google Sheets API Key
+## PASO 2: Configurar el Webhook en n8n (OBLIGATORIO para guardar/eliminar)
 
-El sistema necesita acceso de lectura/escritura a Google Sheets.
+El sistema necesita **n8n** para guardar y eliminar recordatorios en Google Sheets.
 
-**Opción A: Usar API Key existente (si ya funciona para lectura)**
+### 2.1. Crear un nuevo workflow en n8n
 
-El proyecto ya tiene configurada una API Key en `.env.local`:
+1. Entra a tu panel de n8n
+2. Crea un nuevo workflow llamado "Dashboard - Recordatorios"
+3. Añade un nodo **Webhook** con la siguiente configuración:
+   - **Method**: POST
+   - **Path**: `recordatorios` (o el que quieras)
+   - **Response Mode**: "When Last Node Finishes"
+
+4. Copia la URL del webhook (será algo como):
+   ```
+   https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/recordatorios
+   ```
+
+### 2.2. Configurar el workflow para manejar acciones
+
+Añade un nodo **Switch** después del Webhook:
+
+```javascript
+// Expresión para el Switch
+{{ $json.action }}
 ```
-NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY=tu_api_key_aqui
+
+Crear 3 rutas:
+1. **append** - Para añadir recordatorios
+2. **delete** - Para eliminar recordatorios
+3. **default** - Para errores
+
+### 2.3. Ruta "append" (Añadir recordatorio)
+
+Añade estos nodos después de la ruta "append":
+
+**Nodo: Google Sheets → Append**
+```
+Operation: Append
+Sheet ID: 1UCAY6IsniDZTXHZWRDOVVcaihFsAtvOiE-e7N6p1G9g
+Sheet Name: Recordatorios
+Range: A:D
+Values: {{ $json.row }}
+  - A: {{ $json.row[0] }} (Producto)
+  - B: {{ $json.row[1] }} (Dias)
+  - C: {{ $json.row[2] }} (Activo)
+  - D: {{ $json.row[3] }} (Notas)
 ```
 
-Si esta API Key tiene permisos de escritura, el sistema funcionará.
+**Nodo: Respond to Webhook**
+```json
+{
+  "success": true,
+  "message": "Recordatorio guardado"
+}
+```
 
-**Opción B: Configurar API Key con permisos de escritura**
+### 2.4. Ruta "delete" (Eliminar recordatorio)
 
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
-2. Selecciona tu proyecto
-3. Busca "Google Sheets API" y asegúrate de que esté habilitada
-4. Ve a "Credentials" → "Create Credentials" → "API Key"
-5. Copia la API Key y pégala en `.env.local`
+Añade estos nodos después de la ruta "delete":
+
+**Nodo: Google Sheets → Get Values** (para leer la hoja)
+```
+Operation: Get Values
+Sheet ID: 1UCAY6IsniDZTXHZWRDOVVcaihFsAtvOiE-e7N6p1G9g
+Sheet Name: Recordatorios
+Range: A:D
+```
+
+**Nodo: Code** (para encontrar y eliminar la fila)
+```javascript
+// Leer datos
+const data = $input.all();
+const rows = data[0].json.values || [];
+const producto = $json.producto;
+
+// Encontrar la fila
+let rowIndex = -1;
+for (let i = 1; i < rows.length; i++) {
+  const rowProducto = String(rows[i][0] || '').trim().toLowerCase();
+  if (rowProducto === producto.toLowerCase()) {
+    rowIndex = i;
+    break;
+  }
+}
+
+if (rowIndex === -1) {
+  return [{ json: { success: false, error: 'Producto no encontrado' } }];
+}
+
+// Crear array sin la fila a eliminar
+const newRows = rows.filter((_, idx) => idx !== rowIndex);
+
+// Convertir a formato para Google Sheets
+const values = newRows;
+
+return [{ json: { values, rowIndex } }];
+```
+
+**Nodo: Google Sheets → Update Values** (escribir de nuevo)
+```
+Operation: Update Values
+Sheet ID: 1UCAY6IsniDZTXHZWRDOVVcaihFsAtvOiE-e7N6p1G9g
+Sheet Name: Recordatorios
+Range: A1
+Values: {{ $json.values }}
+```
+
+**Nodo: Respond to Webhook**
+```json
+{
+  "success": true,
+  "message": "Recordatorio eliminado"
+}
+```
+
+### 2.5. Añadir la variable de entorno
+
+En `.env.local`, añade la URL del webhook:
+
+```bash
+# Webhook de n8n para recordatorios (ESCRITURA)
+N8N_RECORDATORIOS_WEBHOOK_URL=https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/recordatorios
+```
 
 ---
 
-## PASO 3: Verificar Permisos de la Hoja
+## PASO 3: Actualizar el workflow existente de n8n (para lectura)
 
-Para que la API funcione, la hoja debe estar compartida correctamente:
+El workflow actual de n8n ("dashboard-data") debe incluir la hoja "Recordatorios" en la respuesta.
+
+### 3.1. Añadir nodo para leer Recordatorios
+
+En tu workflow de n8n, añade un nodo **Google Sheets → Get Values**:
+
+```
+Operation: Get Values
+Sheet ID: 1UCAY6IsniDZTXHZWRDOVVcaihFsAtvOiE-e7N6p1G9g
+Sheet Name: Recordatorios
+Range: A:D
+```
+
+### 3.2. Añadir a la respuesta final
+
+En el nodo final que retorna los datos, añade:
+
+```javascript
+return {
+  success: true,
+  data: {
+    // ... datos existentes ...
+    recordatorios: valoresRecordatorios,
+  },
+  timestamp: new Date().toISOString(),
+};
+```
+
+---
+
+## PASO 4: Verificar Permisos de la Hoja
+
+Para que n8n funcione, la hoja debe estar compartida correctamente:
 
 1. Abre el spreadsheet
 2. Click en "Compartir" (Share)
-3. Asegúrate de que "Anyone with the link" tenga permiso de **Editor** o **Viewer**
-4. Si usas una cuenta de servicio, añádela como editor
+3. Asegúrate de que la cuenta de servicio de n8n tenga acceso como **Editor**
+4. Si usas OAuth, asegúrate de que el token tenga permisos de `spreadsheetsReadWrite`
 
 ---
 
-## PASO 4: Probar el Sistema
+## PASO 5: Probar el Sistema
 
-### 4.1. Iniciar el servidor de desarrollo
+### 5.1. Iniciar el servidor de desarrollo
 
 ```bash
 cd "C:\Users\Alejandro Martínez\Documents\elpatio-dashboard"
 npm run dev
 ```
 
-### 4.2. Abrir el dashboard
+### 5.2. Abrir el dashboard
 
 1. Ve a `http://localhost:3000`
 2. Loguéate con la contraseña: `Elpatio1`
 3. Verás la nueva sección "Recordatorios de Reposición" debajo de "Presupuesto Mensual"
 
-### 4.3. Probar funcionalidades
+### 5.3. Probar funcionalidades
 
 **Añadir un recordatorio:**
 1. Click en "[+ Añadir]"
@@ -103,7 +239,7 @@ npm run dev
 - El sistema buscará en "Registro Diario" y "Histórico de Precios"
 - Mostrará la última fecha de compra encontrada
 - Calculará los días transcurridos
-- Asignará un estado (vencido, próximo, ok, sin datos)
+- Asignará un estado (vencido, próximo, ok, sin_datos)
 
 **Eliminar un recordatorio:**
 1. Click en el icono de papelera del recordatorio
@@ -161,7 +297,7 @@ Retorna todos los recordatorios con su estado calculado.
 ```
 
 ### POST /api/recordatorios
-Crea un nuevo recordatorio.
+Crea un nuevo recordatorio vía n8n.
 
 **Body:**
 ```json
@@ -172,8 +308,17 @@ Crea un nuevo recordatorio.
 }
 ```
 
+**Envía a n8n:**
+```json
+{
+  "action": "append",
+  "sheet": "Recordatorios",
+  "row": ["POLLO GRANDE", "3", "TRUE", "Comprar en BonArea"]
+}
+```
+
 ### DELETE /api/recordatorios
-Elimina un recordatorio.
+Elimina un recordatorio vía n8n.
 
 **Body:**
 ```json
@@ -182,26 +327,43 @@ Elimina un recordatorio.
 }
 ```
 
+**Envía a n8n:**
+```json
+{
+  "action": "delete",
+  "sheet": "Recordatorios",
+  "producto": "POLLO GRANDE"
+}
+```
+
 ---
 
 ## Troubleshooting
+
+### Error: "No hay webhook de n8n configurado para guardar recordatorios"
+
+**Solución:**
+1. Configura `N8N_RECORDATORIOS_WEBHOOK_URL` en `.env.local`
+2. Verifica que el workflow de n8n esté activo
+3. Prueba el webhook directamente con Postman o curl
 
 ### Error: "Hoja 'Recordatorios' no encontrada"
 
 **Solución:** Crea la hoja manualmente en Google Sheets (ver PASO 1).
 
-### Error: "No hay credenciales de Google Sheets configuradas"
-
-**Solución:** Configura `NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY` en `.env.local`.
-
 ### Los recordatorios no se guardan
 
 **Posibles causas:**
-1. API Key sin permisos de escritura
-2. Hoja no compartida correctamente
+1. El webhook de n8n no está activo
+2. La hoja no está compartida con la cuenta de servicio de n8n
 3. Error en el nombre de la hoja (debe ser exactamente "Recordatorios")
+4. El workflow de n8n no responde correctamente
 
-**Solución:** Verifica los permisos en Google Cloud Console y los permisos de compartición de la hoja.
+**Solución:**
+1. Verifica que el webhook de n8n esté activo (test node)
+2. Verifica los permisos de compartición de la hoja
+3. Revisa los logs de n8n para ver errores
+4. Prueba el workflow manualmente desde n8n
 
 ### Los estados se calculan mal
 
@@ -219,6 +381,9 @@ Elimina un recordatorio.
 
 ## Testing Checklist
 
+- [ ] La hoja "Recordatorios" existe en Google Sheets
+- [ ] El webhook de n8n está activo y responde
+- [ ] N8N_RECORDATORIOS_WEBHOOK_URL está configurado en .env.local
 - [ ] La sección de recordatorios aparece en el Panel General
 - [ ] Se pueden añadir nuevos recordatorios
 - [ ] Se pueden eliminar recordatorios
@@ -231,26 +396,32 @@ Elimina un recordatorio.
 
 ---
 
-## Próximos Pasos (Futuras Mejoras)
-
-1. **KPI en la barra principal**: Añadir contador de reposiciones pendientes
-2. **Notificaciones**: Alertas push o email cuando haya productos vencidos
-3. **Historial de compras**: Mostrar historial completo de compras de un producto
-4. **Sugerencias**: Sugerir productos basados en el historial
-5. **Categorías**: Agrupar recordatorios por categoría de producto
-
----
-
 ## Notas Técnicas
 
 - **Framework**: Next.js 16.1.6 (App Router) + React 19
 - **UI**: Shadcn/ui + Tailwind CSS 4 + Lucide Icons
-- **API**: Google Sheets API v4 (paquete `googleapis`)
+- **Backend**: n8n webhooks para escritura en Google Sheets
 - **Estado**: React hooks (useState, useEffect, useCallback)
 - **Tipado**: TypeScript 5
 
 ---
 
-## Contacto
+## Diagrama de Flujo
 
-Si encuentras algún problema o necesitas ayuda, revisa el archivo `TROUBLESHOOTING_LOGIN.md` o contacta al desarrollador.
+```
+Dashboard → POST /api/recordatorios
+                ↓
+        n8n webhook (recordatorios)
+                ↓
+        Switch (action: append/delete)
+                ↓
+    ┌───────────┴───────────┐
+    ↓                       ↓
+Append                  Delete
+    ↓                       ↓
+Google Sheets           Google Sheets
+    ↓                       ↓
+Write row               Delete row
+    ↓                       ↓
+Respond {success:true}  Respond {success:true}
+```

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// Configuración de Google Sheets
+// Configuración de n8n
+const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
+const N8N_RECORDATORIOS_WEBHOOK = process.env.N8N_RECORDATORIOS_WEBHOOK_URL; // Nuevo webhook para escritura
+
+// Spreadhseet ID para lectura directa
 const SPREADSHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_SPREADSHEET_ID;
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY;
 
@@ -17,12 +20,42 @@ const HOJA_HISTORICO_PRECIOS = 'Histórico de Precios';
  * Obtiene los datos de una hoja específica de Google Sheets
  */
 async function getSheetData(sheetName: string): Promise<string[][]> {
+  // Prioridad 1: Usar n8n si está configurado
+  if (N8N_WEBHOOK_URL) {
+    try {
+      const response = await fetch(N8N_WEBHOOK_URL, {
+        headers: { 'Accept': 'application/json' },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Mapear nombres de n8n
+        const hojaMap: Record<string, string> = {
+          [HOJA_RECORDATORIOS]: 'recordatorios',
+          [HOJA_REGISTRO_DIARIO]: 'registro_diario',
+          [HOJA_HISTORICO_PRECIOS]: 'historico_precios',
+        };
+
+        const key = hojaMap[sheetName] || sheetName.toLowerCase().replace(/ /g, '_');
+        const sheetData = data.data?.[key];
+
+        if (sheetData?.values && Array.isArray(sheetData.values)) {
+          return sheetData.values;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ n8n falló para lectura, intentando API directa');
+    }
+  }
+
+  // Prioridad 2: Usar Google Sheets API directo
   if (!SPREADSHEET_ID || !API_KEY) {
     console.warn('⚠️ No hay credenciales de Google Sheets configuradas');
     return [];
   }
 
   try {
+    const { google } = await import('googleapis');
     const sheets = google.sheets({ version: 'v4', auth: API_KEY });
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -41,70 +74,67 @@ async function getSheetData(sheetName: string): Promise<string[][]> {
 }
 
 /**
- * Escribe una fila en una hoja de Google Sheets
+ * Escribe una fila usando n8n
  */
-async function appendRow(sheetName: string, values: string[]): Promise<boolean> {
-  if (!SPREADSHEET_ID || !API_KEY) {
-    console.warn('⚠️ No hay credenciales de Google Sheets configuradas');
+async function appendRowN8N(producto: string, dias: number, notas: string): Promise<boolean> {
+  if (!N8N_RECORDATORIOS_WEBHOOK) {
+    console.warn('⚠️ N8N_RECORDATORIOS_WEBHOOK_URL no configurado');
     return false;
   }
 
   try {
-    const sheets = google.sheets({ version: 'v4', auth: API_KEY });
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: sheetName,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [values],
-      },
+    const response = await fetch(N8N_RECORDATORIOS_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'append',
+        sheet: HOJA_RECORDATORIOS,
+        row: [producto, dias.toString(), 'TRUE', notas],
+      }),
     });
-    return true;
+
+    if (!response.ok) {
+      console.error('❌ n8n append falló:', await response.text());
+      return false;
+    }
+
+    const result = await response.json();
+    return result.success === true;
   } catch (error: any) {
-    console.error('❌ Error escribiendo en Google Sheets:', error.message);
+    console.error('❌ Error appendRowN8N:', error.message);
     return false;
   }
 }
 
 /**
- * Elimina una fila de una hoja de Google Sheets
+ * Elimina una fila usando n8n
  */
-async function deleteRow(sheetName: string, rowIndex: number): Promise<boolean> {
-  if (!SPREADSHEET_ID || !API_KEY) {
-    console.warn('⚠️ No hay credenciales de Google Sheets configuradas');
+async function deleteRowN8N(producto: string): Promise<boolean> {
+  if (!N8N_RECORDATORIOS_WEBHOOK) {
+    console.warn('⚠️ N8N_RECORDATORIOS_WEBHOOK_URL no configurado');
     return false;
   }
 
   try {
-    const sheets = google.sheets({ version: 'v4', auth: API_KEY });
-
-    // Primero obtener todas las filas
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: sheetName,
+    const response = await fetch(N8N_RECORDATORIOS_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete',
+        sheet: HOJA_RECORDATORIOS,
+        producto,
+      }),
     });
 
-    const values = response.data.values || [];
-    if (rowIndex >= values.length) {
+    if (!response.ok) {
+      console.error('❌ n8n delete falló:', await response.text());
       return false;
     }
 
-    // Crear nuevo array sin la fila a eliminar
-    const newValues = values.filter((_, idx) => idx !== rowIndex);
-
-    // Escribir todo el contenido de nuevo
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
-      range: sheetName,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: newValues,
-      },
-    });
-
-    return true;
+    const result = await response.json();
+    return result.success === true;
   } catch (error: any) {
-    console.error('❌ Error eliminando fila de Google Sheets:', error.message);
+    console.error('❌ Error deleteRowN8N:', error.message);
     return false;
   }
 }
@@ -350,17 +380,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Añadir nuevo recordatorio
-    const exito = await appendRow(HOJA_RECORDATORIOS, [
-      producto.trim(),
-      diasNum.toString(),
-      'TRUE',
-      String(notas).trim(),
-    ]);
+    // Intentar guardar vía n8n
+    if (N8N_RECORDATORIOS_WEBHOOK) {
+      const exito = await appendRowN8N(producto.trim(), diasNum, String(notas).trim());
 
-    if (!exito) {
+      if (!exito) {
+        return NextResponse.json(
+          { success: false, error: 'Error al guardar en n8n. Verifica que el webhook esté configurado correctamente.' },
+          { status: 500 }
+        );
+      }
+    } else {
       return NextResponse.json(
-        { success: false, error: 'Error al guardar en Google Sheets' },
+        {
+          success: false,
+          error: 'No hay webhook de n8n configurado para guardar recordatorios. Configura N8N_RECORDATORIOS_WEBHOOK_URL en .env.local',
+        },
         { status: 500 }
       );
     }
@@ -401,7 +436,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Buscar y eliminar el recordatorio
+    // Verificar que existe
     const recordatoriosRaw = await getSheetData(HOJA_RECORDATORIOS);
     const productoLower = producto.trim().toLowerCase();
     let found = false;
@@ -413,13 +448,6 @@ export async function DELETE(request: NextRequest) {
           const productoExistente = String(fila[0] || '').trim().toLowerCase();
 
           if (productoExistente === productoLower) {
-            const exito = await deleteRow(HOJA_RECORDATORIOS, i);
-            if (!exito) {
-              return NextResponse.json(
-                { success: false, error: 'Error al eliminar de Google Sheets' },
-                { status: 500 }
-              );
-            }
             found = true;
             break;
           }
@@ -431,6 +459,26 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: `No se encontró recordatorio para "${producto}"` },
         { status: 404 }
+      );
+    }
+
+    // Intentar eliminar vía n8n
+    if (N8N_RECORDATORIOS_WEBHOOK) {
+      const exito = await deleteRowN8N(producto.trim());
+
+      if (!exito) {
+        return NextResponse.json(
+          { success: false, error: 'Error al eliminar en n8n. Verifica que el webhook esté configurado correctamente.' },
+          { status: 500 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No hay webhook de n8n configurado para eliminar recordatorios. Configura N8N_RECORDATORIOS_WEBHOOK_URL en .env.local',
+        },
+        { status: 500 }
       );
     }
 
