@@ -41,30 +41,49 @@ export const useListaCompra = create<ListaCompraStore>()(
       productos: [],
 
       agregarProducto: (producto) => {
+        console.log('➕ agregarProducto:', producto);
         set((state) => {
           // Verificar si ya existe
           const existe = state.productos.some((p) => p.producto === producto.producto);
-          if (existe) return state;
+          console.log('   ¿Ya existe?', existe);
+          if (existe) {
+            console.log('   ⚠️ Producto ya existe, no se añade');
+            return state;
+          }
 
+          const nuevos = [...state.productos, producto];
+          console.log('   ✅ Producto añadido. Total:', nuevos.length);
           return {
-            productos: [...state.productos, producto],
+            productos: nuevos,
           };
         });
       },
 
       eliminarProducto: (productoNombre) => {
-        set((state) => ({
-          productos: state.productos.filter((p) => p.producto !== productoNombre),
-        }));
+        console.log('➖ eliminarProducto:', productoNombre);
+        set((state) => {
+          const nuevos = state.productos.filter((p) => p.producto !== productoNombre);
+          console.log('   ✅ Producto eliminado. Antes:', state.productos.length, 'Ahora:', nuevos.length);
+          return {
+            productos: nuevos,
+          };
+        });
       },
 
       toggleProducto: (producto) => {
+        console.log('🔄 toggleProducto llamado:', producto);
         const { estaEnLista, agregarProducto, eliminarProducto } = get();
-        if (estaEnLista(producto.producto)) {
+        const esta = estaEnLista(producto.producto);
+        console.log('   ¿Está en lista?', esta);
+
+        if (esta) {
+          console.log('   ➖ Eliminando...', producto.producto);
           eliminarProducto(producto.producto);
         } else {
+          console.log('   ➕ Añadiendo...', producto.producto);
           agregarProducto(producto);
         }
+        console.log('   ✅ Toggle completado');
       },
 
       estaEnLista: (productoNombre) => {

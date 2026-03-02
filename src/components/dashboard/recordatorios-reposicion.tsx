@@ -30,9 +30,14 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
   // Store de lista de compra - suscribirse a cambios
   const { toggleProducto, productos } = useListaCompra();
 
+  // Debug: log estado cada vez que cambia
+  console.log('🔄 Render Recordatorios - Productos en lista:', productos.length);
+
   // Funciones locales que dependen de productos
   const estaEnLista = (productoNombre: string) => {
-    return productos.some(p => p.producto === productoNombre);
+    const resultado = productos.some(p => p.producto === productoNombre);
+    console.log(`   ¿"${productoNombre}" en lista?`, resultado);
+    return resultado;
   };
 
   const contador = () => productos.length;
@@ -403,15 +408,27 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 <div className="flex items-start gap-3">
                   {/* Checkbox para añadir a lista de compra */}
                   <button
-                    onClick={() => toggleProducto({
-                      producto: rec.producto,
-                      notas: rec.notas || '',
-                      ultimaCompra: rec.ultimaCompra || undefined,
-                      tienda: rec.tiendaUltimaCompra || undefined,
-                      precio: rec.precioUltimaCompra || undefined,
-                      agregadoEn: new Date().toISOString(),
-                    })}
-                    className={`mt-1 flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('🛒 Click en checkbox:', rec.producto);
+                      console.log('   Estado actual:', estaEnLista(rec.producto) ? 'EN LISTA' : 'NO EN LISTA');
+                      console.log('   Productos en lista:', productos.length);
+
+                      const productoData = {
+                        producto: rec.producto,
+                        notas: rec.notas || '',
+                        ultimaCompra: rec.ultimaCompra || undefined,
+                        tienda: rec.tiendaUltimaCompra || undefined,
+                        precio: rec.precioUltimaCompra || undefined,
+                        agregadoEn: new Date().toISOString(),
+                      };
+
+                      console.log('   Datos a enviar:', productoData);
+                      toggleProducto(productoData);
+                      console.log('   ✅ Toggle ejecutado');
+                    }}
+                    className={`mt-1 flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all cursor-pointer ${
                       estaEnLista(rec.producto)
                         ? 'bg-purple-500 border-purple-500 text-white'
                         : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10'
