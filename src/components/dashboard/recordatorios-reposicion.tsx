@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Plus, Trash2, Check, X, AlertTriangle, Clock, CheckCircle, HelpCircle, Zap, Settings } from 'lucide-react';
+import { Bell, Plus, Trash2, Check, X, AlertTriangle, Clock, CheckCircle, HelpCircle, Zap, Settings, ShoppingCart, Link as LinkIcon } from 'lucide-react';
 import { Recordatorio } from '@/types';
 import { formatearFecha, formatearMoneda } from '@/lib/formatters';
+import { useListaCompra } from '@/store/useListaCompra';
+import Link from 'next/link';
 
 interface RecordatoriosReposicionProps {
   className?: string;
@@ -24,6 +26,9 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
   const [notasInput, setNotasInput] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
+
+  // Store de lista de compra
+  const { toggleProducto, estaEnLista, contador } = useListaCompra();
 
   const fetchRecordatorios = useCallback(async () => {
     try {
@@ -233,15 +238,33 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
           </div>
         </div>
 
-        <Button
-          onClick={() => setMostrarFormulario(!mostrarFormulario)}
-          size="sm"
-          variant="outline"
-          className="border-primary/50 hover:bg-primary/20 hover:border-primary"
-        >
-          <Settings className="w-4 h-4 mr-2" />
-          Recordatorio Manual
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/dashboard/lista-compra">
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-purple-500/50 hover:bg-purple-500/20 hover:border-purple-500 relative"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Lista de Compra
+              {contador() > 0 && (
+                <Badge className="ml-1 px-1.5 py-0 text-xs bg-purple-500 text-white border-0">
+                  {contador()}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
+          <Button
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+            size="sm"
+            variant="outline"
+            className="border-primary/50 hover:bg-primary/20 hover:border-primary"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Manual
+          </Button>
+        </div>
       </div>
 
       {/* Mensaje de exito/error */}
@@ -370,7 +393,27 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 key={rec.producto}
                 className={`p-4 ${estilo.borde} ${estilo.fondo} border border-border/50 hover:border-border transition-all duration-200`}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  {/* Checkbox para añadir a lista de compra */}
+                  <button
+                    onClick={() => toggleProducto({
+                      producto: rec.producto,
+                      notas: rec.notas || '',
+                      ultimaCompra: rec.ultimaCompra || undefined,
+                      tienda: rec.tiendaUltimaCompra || undefined,
+                      precio: rec.precioUltimaCompra || undefined,
+                      agregadoEn: new Date().toISOString(),
+                    })}
+                    className={`mt-1 flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                      estaEnLista(rec.producto)
+                        ? 'bg-purple-500 border-purple-500 text-white'
+                        : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10'
+                    }`}
+                    title={estaEnLista(rec.producto) ? 'Quitar de la lista' : 'Añadir a la lista'}
+                  >
+                    {estaEnLista(rec.producto) && <Check className="w-4 h-4" />}
+                  </button>
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <h4 className="font-semibold text-white text-base">{rec.producto}</h4>
@@ -428,7 +471,8 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                     </div>
                   </div>
 
-                  {rec.tipo === 'manual' && (
+                  <div className="flex flex-col gap-2 flex-shrink-0">
+                    {rec.tipo === 'manual' && (
                     <Button
                       onClick={() => handleEliminar(rec.producto)}
                       variant="ghost"
@@ -439,6 +483,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
+                  </div>
                 </div>
               </Card>
             );
