@@ -26,17 +26,17 @@ export function Sidebar() {
     <aside className="w-64 bg-muted backdrop-blur-xl border-r border-border flex flex-col fixed h-screen left-0 top-0 z-50">
       {/* Logo */}
       <div className="p-6 border-b border-border bg-gradient-to-b from-[#f59e0b]/5 to-transparent">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#f59e0b]/10 overflow-hidden p-2">
             <img
               src="/el-patio-vila-seca-restaurante.jpg"
               alt="El Patio & Grill Logo"
               className="w-full h-full object-contain"
             />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-white">El Patio & Grill</h1>
-            <p className="text-xs text-[#f59e0b] uppercase tracking-wider font-semibold">Dashboard</p>
+          <div className="text-center">
+            <h1 className="text-xl font-bold text-white">El Patio & Grill</h1>
+            <p className="text-sm text-[#f59e0b] uppercase tracking-wider font-semibold">Dashboard</p>
           </div>
         </div>
       </div>
