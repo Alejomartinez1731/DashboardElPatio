@@ -43,14 +43,18 @@ async function getAllSheetsData(): Promise<Record<string, string[][]>> {
       throw new Error(`n8n falló con status ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('✅ n8n respondió, claves:', Object.keys(data.data || {}));
-    console.log('📦 Estructura de data.data:', JSON.stringify(data.data, null, 2).substring(0, 500));
+    const result = await response.json();
+    console.log('✅ n8n respondió');
+    console.log('📦 Claves en result:', Object.keys(result));
+    console.log('📦 Claves en result.data:', Object.keys(result.data || {}));
+
+    // n8n devuelve: { success: true, data: { recordatorios: { values: [...] } } }
+    const data = result.data || {};
 
     return {
-      recordatorios: data.data?.recordatorios?.values || [],
-      registro_diario: data.data?.registro_diario?.values || [],
-      historico_precios: data.data?.historico_precios?.values || [],
+      recordatorios: data.recordatorios?.values || [],
+      registro_diario: data.registro_diario?.values || [],
+      historico_precios: data.historico_precios?.values || [],
     };
   } catch (error: any) {
     console.error('❌ Error obteniendo datos de n8n:', error.message);
@@ -256,7 +260,7 @@ export async function GET(request: NextRequest) {
 
     // Debug info
     const debugInfo = {
-      n8nKeys: Object.keys(sheetsData),
+      sheetsDataKeys: Object.keys(sheetsData),
       recordatoriosRaw: recordatoriosRaw.length,
       primeraFila: recordatoriosRaw[0] || null,
     };
