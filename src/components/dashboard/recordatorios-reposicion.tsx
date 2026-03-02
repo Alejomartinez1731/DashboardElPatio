@@ -124,30 +124,34 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       case 'vencido':
         return {
           borde: 'border-l-4 border-l-red-500',
-          fondo: 'bg-red-500/5',
-          badge: 'bg-red-500/20 text-red-400 border-red-500/30',
+          fondo: 'bg-gradient-to-r from-red-500/15 to-red-500/5',
+          badge: 'bg-red-500 text-white font-bold border-red-500 shadow-lg shadow-red-500/20',
           icono: AlertTriangle,
+          iconoColor: 'text-red-400',
         };
       case 'proximo':
         return {
           borde: 'border-l-4 border-l-amber-500',
-          fondo: 'bg-amber-500/5',
-          badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+          fondo: 'bg-gradient-to-r from-amber-500/15 to-amber-500/5',
+          badge: 'bg-amber-500 text-white font-semibold border-amber-500 shadow-md shadow-amber-500/20',
           icono: Clock,
+          iconoColor: 'text-amber-400',
         };
       case 'ok':
         return {
           borde: 'border-l-4 border-l-green-500',
-          fondo: 'bg-transparent',
-          badge: 'bg-green-500/20 text-green-400 border-green-500/30',
+          fondo: 'bg-gradient-to-r from-green-500/10 to-transparent',
+          badge: 'bg-green-500/20 text-green-300 border-green-500/30',
           icono: CheckCircle,
+          iconoColor: 'text-green-400',
         };
       default:
         return {
           borde: 'border-l-4 border-l-slate-500',
-          fondo: 'bg-slate-500/5',
-          badge: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+          fondo: 'bg-gradient-to-r from-slate-500/10 to-slate-500/5',
+          badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
           icono: HelpCircle,
+          iconoColor: 'text-slate-400',
         };
     }
   };
@@ -200,16 +204,30 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center ${vencidosCount > 0 ? 'animate-pulse' : ''}`}>
-            <Bell className={`w-6 h-6 ${vencidosCount > 0 ? 'text-red-400' : 'text-amber-400'}`} strokeWidth={2} />
+          <div className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${
+            vencidosCount > 0
+              ? 'bg-red-500/20 border-red-500/50 animate-pulse shadow-lg shadow-red-500/20'
+              : 'bg-amber-500/20 border-amber-500/30'
+          }`}>
+            <Bell className={`w-7 h-7 ${vencidosCount > 0 ? 'text-red-400' : 'text-amber-400'}`} strokeWidth={2.5} />
+            {vencidosCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {vencidosCount}
+              </span>
+            )}
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
               Recordatorios de Reposicion
             </p>
-            {vencidosCount > 0 && (
-              <p className="text-sm font-semibold text-red-400">
+            {vencidosCount > 0 ? (
+              <p className="text-sm font-bold text-red-400 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" />
                 {vencidosCount} producto{vencidosCount !== 1 ? 's' : ''} pendiente{vencidosCount !== 1 ? 's' : ''}
+              </p>
+            ) : (
+              <p className="text-sm text-amber-400/80 font-medium">
+                Todos al dia
               </p>
             )}
           </div>
@@ -349,29 +367,29 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-white">{rec.producto}</h4>
-                      <Badge className={`text-xs ${estilo.badge}`}>
-                        <Icono className="w-3 h-3 mr-1" />
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <h4 className="font-semibold text-white text-base">{rec.producto}</h4>
+                      <Badge className={`text-xs px-2.5 py-1 ${estilo.badge}`}>
+                        <Icono className={`w-3.5 h-3.5 mr-1 ${estilo.iconoColor}`} />
                         {getTextoEstado(rec)}
                       </Badge>
                     </div>
 
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>
-                        Hace {rec.diasTranscurridos ?? '?'} dias (limite: {rec.diasConfigurados} dias)
+                    <div className="text-sm space-y-1.5">
+                      <p className="text-white/90 font-medium">
+                        Hace {rec.diasTranscurridos ?? '?'} dias <span className="text-muted-foreground font-normal">(limite: {rec.diasConfigurados} dias)</span>
                       </p>
 
                       {rec.ultimaCompra && rec.tiendaUltimaCompra && (
-                        <p>
+                        <p className="text-muted-foreground">
                           Ultima compra: {formatearFecha(new Date(rec.ultimaCompra))} en {rec.tiendaUltimaCompra}
                           {rec.precioUltimaCompra && ` a ${formatearMoneda(rec.precioUltimaCompra)}`}
                         </p>
                       )}
 
                       {rec.notas && (
-                        <p className="text-xs italic mt-1">
-                          Notas: {rec.notas}
+                        <p className="text-xs italic text-primary/80 mt-2 bg-primary/5 px-2 py-1 rounded inline-block">
+                          {rec.notas}
                         </p>
                       )}
                     </div>
