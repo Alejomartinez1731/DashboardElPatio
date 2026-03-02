@@ -144,3 +144,24 @@ export const CATEGORIAS_INFO: Record<CategoriaProducto, CategoriaInfo> = {
   limpieza: { nombre: 'Limpieza', color: '#06b6d4', icono: '🧹' },
   otros: { nombre: 'Otros', color: '#64748b', icono: '📦' },
 };
+
+// Recordatorio de reposición
+export type EstadoRecordatorio = 'ok' | 'proximo' | 'vencido' | 'sin_datos';
+
+export interface Recordatorio {
+  producto: string;
+  diasConfigurados: number;
+  ultimaCompra: string | null;     // fecha ISO o null si no encontrado
+  diasTranscurridos: number | null; // null si nunca se compró
+  estado: EstadoRecordatorio;
+  tiendaUltimaCompra: string | null;
+  precioUltimaCompra: number | null;
+  notas: string;
+}
+
+export interface RecordatorioRaw {
+  producto: string;
+  dias: number;
+  activo: boolean;
+  notas: string;
+}

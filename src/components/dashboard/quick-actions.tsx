@@ -69,7 +69,7 @@ export function QuickActions({
                 transition-all duration-200
                 ${!accion.disabled ? 'group-hover:scale-110' : ''}
               `}>
-                <Icon className="w-5 h-5 text-muted-foreground group-hover:text-current transition-colors" />
+                <Icon className={`w-5 h-5 text-muted-foreground group-hover:text-current transition-colors ${cargando && accion.icon === RefreshCw ? 'animate-spin' : ''}`} />
               </div>
               <span className="text-xs font-medium text-muted-foreground group-hover:text-white transition-colors">
                 {accion.label}
