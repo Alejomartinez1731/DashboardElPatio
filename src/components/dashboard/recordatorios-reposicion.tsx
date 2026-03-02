@@ -50,7 +50,12 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       const result = await response.json();
 
       if (result.success) {
-        setRecordatorios(result.data);
+        // Filtrar: SOLO mostrar vencidos, próximos o sin datos
+        // NO mostrar los que están "ok" (verde/al día)
+        const importantes = result.data.filter((r: Recordatorio) =>
+          r.estado === 'vencido' || r.estado === 'proximo' || r.estado === 'sin_datos'
+        );
+        setRecordatorios(importantes);
       } else {
         setError(result.error || 'Error al cargar recordatorios');
       }
@@ -388,10 +393,12 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       {/* Lista de recordatorios */}
       {recordatorios.length === 0 ? (
         <div className="text-center py-8">
-          <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground mb-4">No hay productos en el historial</p>
+          <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+          <p className="text-green-400 font-semibold mb-2">¡Todo al día!</p>
+          <p className="text-muted-foreground mb-4">No hay productos que necesiten atención</p>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            El sistema analizara automaticamente tus compras para calcular la frecuencia de reposicion.
+            Solo se muestran productos vencidos o próximos a su fecha de reposición.
+            Los productos en verde (al día) están ocultos para reducir el ruido visual.
           </p>
         </div>
       ) : (
