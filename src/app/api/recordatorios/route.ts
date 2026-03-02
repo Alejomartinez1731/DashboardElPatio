@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 
 // Configuración de n8n
 const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-const N8N_RECORDATORIOS_WEBHOOK = process.env.N8N_RECORDATORIOS_WEBHOOK_URL; // Nuevo webhook para escritura
+const N8N_RECORDATORIOS_WEBHOOK = process.env.N8N_RECORDATORIOS_WEBHOOK_URL; // Nuevo webhook para escritura (DEBE terminar en _URL)
 
 // Spreadhseet ID para lectura directa
 const SPREADSHEET_ID = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_SPREADSHEET_ID;
@@ -77,28 +77,39 @@ async function getSheetData(sheetName: string): Promise<string[][]> {
  * Escribe una fila usando n8n
  */
 async function appendRowN8N(producto: string, dias: number, notas: string): Promise<boolean> {
+  console.log('📡 appendRowN8N llamado con URL:', N8N_RECORDATORIOS_WEBHOOK);
+
   if (!N8N_RECORDATORIOS_WEBHOOK) {
-    console.warn('⚠️ N8N_RECORDATORIOS_WEBHOOK_URL no configurado');
+    console.error('❌ N8N_RECORDATORIOS_WEBHOOK_URL no está configurado');
+    console.error('Variables disponibles:', Object.keys(process.env).filter(k => k.includes('N8N')));
     return false;
   }
 
   try {
+    const payload = {
+      action: 'append',
+      sheet: HOJA_RECORDATORIOS,
+      row: [producto, dias.toString(), 'TRUE', notas],
+    };
+
+    console.log('📤 Enviando a n8n:', payload);
+
     const response = await fetch(N8N_RECORDATORIOS_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'append',
-        sheet: HOJA_RECORDATORIOS,
-        row: [producto, dias.toString(), 'TRUE', notas],
-      }),
+      body: JSON.stringify(payload),
     });
 
+    console.log('📡 Respuesta n8n status:', response.status);
+
     if (!response.ok) {
-      console.error('❌ n8n append falló:', await response.text());
+      const text = await response.text();
+      console.error('❌ n8n append falló:', text);
       return false;
     }
 
     const result = await response.json();
+    console.log('✅ n8n append éxito:', result);
     return result.success === true;
   } catch (error: any) {
     console.error('❌ Error appendRowN8N:', error.message);

@@ -272,7 +272,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 value={productoInput}
                 onChange={(e) => setProductoInput(e.target.value)}
                 placeholder="Escribe el nombre del producto"
-                className="mt-1.5 bg-background/80 border-border focus:border-primary focus:ring-primary/20"
+                className="mt-1.5 !bg-zinc-800/80 !border-zinc-600 !focus:border-primary !focus:ring-2 !focus:ring-primary/30 text-white placeholder:text-zinc-400"
                 disabled={guardando}
                 autoFocus
               />
@@ -290,7 +290,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 type="number"
                 value={diasInput}
                 onChange={(e) => setDiasInput(e.target.value)}
-                className="mt-1.5 w-24 bg-background/80 border-border focus:border-primary focus:ring-primary/20"
+                className="mt-1.5 w-24 !bg-zinc-800/80 !border-zinc-600 !focus:border-primary !focus:ring-2 !focus:ring-primary/30 text-white"
                 min="1"
                 max="90"
                 disabled={guardando}
@@ -307,7 +307,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 value={notasInput}
                 onChange={(e) => setNotasInput(e.target.value)}
                 placeholder="Ej: Preferiblemente en BonArea"
-                className="mt-1.5 bg-background/80 border-border focus:border-primary focus:ring-primary/20"
+                className="mt-1.5 !bg-zinc-800/80 !border-zinc-600 !focus:border-primary !focus:ring-2 !focus:ring-primary/30 text-white placeholder:text-zinc-400"
                 disabled={guardando}
               />
             </div>
