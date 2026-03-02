@@ -27,8 +27,15 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
 
-  // Store de lista de compra
-  const { toggleProducto, estaEnLista, contador } = useListaCompra();
+  // Store de lista de compra - suscribirse a cambios
+  const { toggleProducto, productos } = useListaCompra();
+
+  // Funciones locales que dependen de productos
+  const estaEnLista = (productoNombre: string) => {
+    return productos.some(p => p.producto === productoNombre);
+  };
+
+  const contador = () => productos.length;
 
   const fetchRecordatorios = useCallback(async () => {
     try {
