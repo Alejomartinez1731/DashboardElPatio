@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Plus, Trash2, Check, X, AlertTriangle, Clock, CheckCircle, HelpCircle } from 'lucide-react';
+import { Bell, Plus, Trash2, Check, X, AlertTriangle, Clock, CheckCircle, HelpCircle, Zap, Settings } from 'lucide-react';
 import { Recordatorio } from '@/types';
 import { formatearFecha, formatearMoneda } from '@/lib/formatters';
 
@@ -239,8 +239,8 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
           variant="outline"
           className="border-primary/50 hover:bg-primary/20 hover:border-primary"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Anadir
+          <Settings className="w-4 h-4 mr-2" />
+          Recordatorio Manual
         </Button>
       </div>
 
@@ -260,7 +260,13 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       {/* Formulario de nuevo recordatorio */}
       {mostrarFormulario && (
         <Card className="p-4 mb-6 bg-card/50 border-border">
-          <h3 className="text-lg font-semibold mb-4">Nuevo Recordatorio de Reposicion</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Nuevo Recordatorio Manual
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configura un recordatorio manual para overridear el cálculo automático.
+          </p>
 
           <div className="space-y-4">
             <div>
@@ -347,11 +353,10 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       {/* Lista de recordatorios */}
       {recordatorios.length === 0 ? (
         <div className="text-center py-8">
-          <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground mb-4">No hay recordatorios configurados</p>
+          <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground mb-4">No hay productos en el historial</p>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Configura productos que compras regularmente para recibir alertas cuando se pase la fecha de
-            reposicion.
+            El sistema analizara automaticamente tus compras para calcular la frecuencia de reposicion.
           </p>
         </div>
       ) : (
@@ -373,6 +378,26 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                         <Icono className={`w-3.5 h-3.5 mr-1 ${estilo.iconoColor}`} />
                         {getTextoEstado(rec)}
                       </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs px-2 py-1 ${
+                          rec.tipo === 'manual'
+                            ? 'border-blue-500/50 text-blue-400 bg-blue-500/10'
+                            : 'border-purple-500/50 text-purple-400 bg-purple-500/10'
+                        }`}
+                      >
+                        {rec.tipo === 'manual' ? (
+                          <>
+                            <Settings className="w-3 h-3 mr-1" />
+                            Manual
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-3 h-3 mr-1" />
+                            Auto
+                          </>
+                        )}
+                      </Badge>
                     </div>
 
                     <div className="text-sm space-y-1.5">
@@ -388,22 +413,32 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                       )}
 
                       {rec.notas && (
-                        <p className="text-xs italic text-primary/80 mt-2 bg-primary/5 px-2 py-1 rounded inline-block">
-                          {rec.notas}
+                        <p className={`text-xs mt-2 px-2 py-1 rounded inline-block ${
+                          rec.tipo === 'manual'
+                            ? 'italic text-primary/80 bg-primary/5'
+                            : 'text-purple-300/80 bg-purple-500/10'
+                        }`}>
+                          {rec.tipo === 'manual' ? (
+                            <>📝 {rec.notas}</>
+                          ) : (
+                            <>⚡ {rec.notas}</>
+                          )}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <Button
-                    onClick={() => handleEliminar(rec.producto)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
-                    title="Eliminar recordatorio"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {rec.tipo === 'manual' && (
+                    <Button
+                      onClick={() => handleEliminar(rec.producto)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                      title="Eliminar recordatorio manual"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </Card>
             );
@@ -412,10 +447,10 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       )}
 
       {/* Footer con info */}
-      <div className="mt-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-        <p className="text-xs text-amber-400/80">
-          Configura productos que compras regularmente para recibir alertas cuando se pase la fecha de
-          reposicion.
+      <div className="mt-4 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+        <p className="text-xs text-purple-400/80">
+          <strong className="text-purple-300">Modo hbrido:</strong> El sistema calcula automaticamente la frecuencia de cada producto.
+          Configura recordatorios manuales para overridear el calculo automatico.
         </p>
       </div>
     </Card>

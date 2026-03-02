@@ -156,6 +156,98 @@ function parsearFecha(fechaStr: string): Date {
 }
 
 /**
+ * Extrae todos los productos únicos del historial de compras
+ */
+function obtenerProductosUnicos(registroDiario: string[][], historico: string[][]): Set<string> {
+  const productos = new Set<string>();
+
+  // Procesar Registro Diario
+  if (registroDiario.length > 1) {
+    const cabeceras = normalizarCabeceras(registroDiario[0]);
+    for (let i = 1; i < registroDiario.length; i++) {
+      const fila = registroDiario[i];
+      if (fila.length < 3) continue;
+      const descripcion = String(fila[cabeceras.descripcion] || fila[2] || '').trim();
+      if (descripcion) productos.add(descripcion);
+    }
+  }
+
+  // Procesar Histórico
+  if (historico.length > 1) {
+    const cabeceras = normalizarCabeceras(historico[0]);
+    for (let i = 1; i < historico.length; i++) {
+      const fila = historico[i];
+      if (fila.length < 3) continue;
+      const descripcion = String(fila[cabeceras.descripcion] || fila[2] || '').trim();
+      if (descripcion) productos.add(descripcion);
+    }
+  }
+
+  return productos;
+}
+
+/**
+ * Calcula la frecuencia de compra promedio de un producto
+ * Basado en el historial de compras
+ */
+function calcularFrecuenciaAutomatica(producto: string, registroDiario: string[][], historico: string[][]): number | null {
+  const productoLower = producto.toLowerCase();
+  const fechas: Date[] = [];
+
+  // Buscar todas las compras en Registro Diario
+  if (registroDiario.length > 1) {
+    const cabeceras = normalizarCabeceras(registroDiario[0]);
+    for (let i = 1; i < registroDiario.length; i++) {
+      const fila = registroDiario[i];
+      if (fila.length < 3) continue;
+      const descripcion = String(fila[cabeceras.descripcion] || fila[2] || '').toLowerCase();
+      if (descripcion.includes(productoLower) || productoLower.includes(descripcion)) {
+        const fecha = parsearFecha(fila[cabeceras.fecha] || fila[0] || '');
+        if (fecha.getTime() > 0) fechas.push(fecha);
+      }
+    }
+  }
+
+  // Buscar en Histórico si hay pocas fechas
+  if (fechas.length < 2 && historico.length > 1) {
+    const cabeceras = normalizarCabeceras(historico[0]);
+    for (let i = 1; i < historico.length; i++) {
+      const fila = historico[i];
+      if (fila.length < 3) continue;
+      const descripcion = String(fila[cabeceras.descripcion] || fila[2] || '').toLowerCase();
+      if (descripcion.includes(productoLower) || productoLower.includes(descripcion)) {
+        const fecha = parsearFecha(fila[cabeceras.fecha] || fila[0] || '');
+        if (fecha.getTime() > 0) fechas.push(fecha);
+      }
+    }
+  }
+
+  // Necesitamos al menos 2 compras para calcular frecuencia
+  if (fechas.length < 2) return null;
+
+  // Ordenar fechas descendente (más reciente primero)
+  fechas.sort((a, b) => b.getTime() - a.getTime());
+
+  // Calcular intervalos entre las últimas compras
+  // Usamos las últimas 10 compras como máximo
+  const intervalos: number[] = [];
+  const maxCompras = Math.min(fechas.length, 10);
+
+  for (let i = 0; i < maxCompras - 1; i++) {
+    const dias = Math.floor((fechas[i].getTime() - fechas[i + 1].getTime()) / (1000 * 60 * 60 * 24));
+    if (dias > 0) intervalos.push(dias);
+  }
+
+  if (intervalos.length === 0) return null;
+
+  // Calcular promedio de intervalos
+  const promedio = intervalos.reduce((sum, val) => sum + val, 0) / intervalos.length;
+
+  // Redondear a 1 decimal
+  return Math.round(promedio * 10) / 10;
+}
+
+/**
  * Calcula el estado de un recordatorio
  */
 function calcularEstado(diasTranscurridos: number | null, diasConfigurados: number): string {
@@ -166,7 +258,7 @@ function calcularEstado(diasTranscurridos: number | null, diasConfigurados: numb
 }
 
 /**
- * GET - Obtiene todos los recordatorios con su estado actualizado
+ * GET - Obtiene todos los recordatorios (manuales + automáticos)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -184,24 +276,19 @@ export async function GET(request: NextRequest) {
     console.log('  - registro_diario:', registroDiario.length, 'filas');
     console.log('  - historico_precios:', historico.length, 'filas');
 
-    if (recordatoriosRaw.length > 0) {
-      console.log('  - Primera fila recordatorios:', recordatoriosRaw[0]);
-    }
+    // PASO 1: Obtener todos los productos únicos del historial
+    const productosUnicos = obtenerProductosUnicos(registroDiario, historico);
+    console.log('📦 Productos únicos encontrados:', productosUnicos.size);
 
-    // Procesar recordatorios - Buscar columnas por nombre en lugar de posición
-    const recordatorios: any[] = [];
+    // PASO 2: Procesar recordatorios manuales
+    const recordatoriosManuales = new Map<string, { dias: number; notas: string }>();
 
     if (recordatoriosRaw.length > 1) {
-      // Obtener índices de columnas desde la primera fila
       const headers = recordatoriosRaw[0].map((h: string) => String(h).trim().toLowerCase());
-
       const idxProducto = headers.findIndex(h => h.includes('producto'));
       const idxDias = headers.findIndex(h => h.includes('días') || h === 'dias');
       const idxActivo = headers.findIndex(h => h.includes('activo'));
       const idxNotas = headers.findIndex(h => h.includes('notas'));
-
-      console.log('📊 Índices de columnas:', { idxProducto, idxDias, idxActivo, idxNotas });
-      console.log('📊 Headers:', headers);
 
       for (let i = 1; i < recordatoriosRaw.length; i++) {
         const fila = recordatoriosRaw[i];
@@ -213,55 +300,95 @@ export async function GET(request: NextRequest) {
         const activo = activoRaw === 'TRUE' || activoRaw === 'SI' || activoRaw === '1';
         const notas = String(fila[idxNotas] || '').trim();
 
-        console.log(`📝 Procesando fila ${i}:`, { producto, dias, activoRaw, activo, notas });
-
-        if (!producto || !activo || dias <= 0) {
-          console.log(`   ⏭️ Fila ${i} ignorada: producto vacío o inactivo`);
-          continue;
+        if (producto && activo && dias > 0) {
+          recordatoriosManuales.set(producto.toLowerCase(), { dias, notas });
         }
-
-        // Buscar última compra
-        const ultimaCompra = buscarUltimaCompra(producto, registroDiario, historico);
-
-        let diasTranscurridos: number | null = null;
-        let ultimaCompraStr: string | null = null;
-        let tiendaUltimaCompra: string | null = null;
-        let precioUltimaCompra: number | null = null;
-
-        if (ultimaCompra && ultimaCompra.fecha.getTime() > 0) {
-          const hoy = new Date();
-          hoy.setHours(0, 0, 0, 0);
-          const fechaCompra = new Date(ultimaCompra.fecha);
-          fechaCompra.setHours(0, 0, 0, 0);
-
-          diasTranscurridos = Math.floor((hoy.getTime() - fechaCompra.getTime()) / (1000 * 60 * 60 * 24));
-          ultimaCompraStr = fechaCompra.toISOString();
-          tiendaUltimaCompra = ultimaCompra.tienda;
-          precioUltimaCompra = ultimaCompra.precio;
-        }
-
-        recordatorios.push({
-          producto,
-          diasConfigurados: dias,
-          ultimaCompra: ultimaCompraStr,
-          diasTranscurridos,
-          estado: calcularEstado(diasTranscurridos, dias),
-          tiendaUltimaCompra,
-          precioUltimaCompra,
-          notas,
-        });
       }
+    }
+
+    console.log('📝 Recordatorios manuales:', recordatoriosManuales.size);
+
+    // PASO 3: Generar recordatorios para todos los productos
+    const recordatorios: any[] = [];
+
+    for (const producto of productosUnicos) {
+      const productoLower = producto.toLowerCase();
+
+      // Buscar última compra
+      const ultimaCompra = buscarUltimaCompra(producto, registroDiario, historico);
+
+      let diasTranscurridos: number | null = null;
+      let ultimaCompraStr: string | null = null;
+      let tiendaUltimaCompra: string | null = null;
+      let precioUltimaCompra: number | null = null;
+      let diasConfigurados: number;
+      let tipo: 'manual' | 'automatico';
+      let notas = '';
+
+      if (ultimaCompra && ultimaCompra.fecha.getTime() > 0) {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const fechaCompra = new Date(ultimaCompra.fecha);
+        fechaCompra.setHours(0, 0, 0, 0);
+
+        diasTranscurridos = Math.floor((hoy.getTime() - fechaCompra.getTime()) / (1000 * 60 * 60 * 24));
+        ultimaCompraStr = fechaCompra.toISOString();
+        tiendaUltimaCompra = ultimaCompra.tienda;
+        precioUltimaCompra = ultimaCompra.precio;
+      }
+
+      // Verificar si existe recordatorio manual
+      if (recordatoriosManuales.has(productoLower)) {
+        const manual = recordatoriosManuales.get(productoLower)!;
+        diasConfigurados = manual.dias;
+        tipo = 'manual';
+        notas = manual.notas;
+      } else {
+        // Calcular frecuencia automática
+        const frecuenciaAuto = calcularFrecuenciaAutomatica(producto, registroDiario, historico);
+
+        if (frecuenciaAuto === null) {
+          // No hay suficientes datos, usar umbral por defecto
+          diasConfigurados = 15;
+          tipo = 'automatico';
+          notas = 'Calculado por defecto (sin historial suficiente)';
+        } else {
+          // Usar frecuencia promedio * 1.5 como umbral
+          diasConfigurados = Math.round(frecuenciaAuto * 1.5);
+          tipo = 'automatico';
+          notas = `Calculado automáticamente (frecuencia: ${frecuenciaAuto} días)`;
+        }
+      }
+
+      const estado = calcularEstado(diasTranscurridos, diasConfigurados);
+
+      recordatorios.push({
+        producto,
+        diasConfigurados,
+        ultimaCompra: ultimaCompraStr,
+        diasTranscurridos,
+        estado,
+        tiendaUltimaCompra,
+        precioUltimaCompra,
+        notas,
+        tipo,
+      });
     }
 
     console.log('✅ Recordatorios procesados:', recordatorios.length);
 
-    // Ordenar por urgencia
+    // PASO 4: Ordenar por urgencia
     recordatorios.sort((a, b) => {
       const orden = { vencido: 0, proximo: 1, sin_datos: 2, ok: 3 };
       const ordenA = orden[a.estado as keyof typeof orden];
       const ordenB = orden[b.estado as keyof typeof orden];
 
       if (ordenA !== ordenB) return ordenA - ordenB;
+
+      // Prioridad: manuales antes que automáticos
+      if (a.tipo !== b.tipo) {
+        return a.tipo === 'manual' ? -1 : 1;
+      }
 
       // Dentro del mismo estado, ordenar por días
       if (a.estado === 'vencido') {
@@ -277,7 +404,15 @@ export async function GET(request: NextRequest) {
     const debugInfo = {
       sheetsDataKeys: Object.keys(sheetsData),
       recordatoriosRaw: recordatoriosRaw.length,
-      primeraFila: recordatoriosRaw[0] || null,
+      productosUnicos: productosUnicos.size,
+      manuales: recordatoriosManuales.size,
+      automaticos: recordatorios.length - recordatoriosManuales.size,
+      porEstado: {
+        vencido: recordatorios.filter(r => r.estado === 'vencido').length,
+        proximo: recordatorios.filter(r => r.estado === 'proximo').length,
+        ok: recordatorios.filter(r => r.estado === 'ok').length,
+        sin_datos: recordatorios.filter(r => r.estado === 'sin_datos').length,
+      },
     };
 
     return NextResponse.json({

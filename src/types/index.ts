@@ -147,6 +147,7 @@ export const CATEGORIAS_INFO: Record<CategoriaProducto, CategoriaInfo> = {
 
 // Recordatorio de reposición
 export type EstadoRecordatorio = 'ok' | 'proximo' | 'vencido' | 'sin_datos';
+export type TipoRecordatorio = 'manual' | 'automatico';
 
 export interface Recordatorio {
   producto: string;
@@ -157,6 +158,7 @@ export interface Recordatorio {
   tiendaUltimaCompra: string | null;
   precioUltimaCompra: number | null;
   notas: string;
+  tipo: TipoRecordatorio;  // 'manual' = configurado por usuario, 'automatico' = calculado por historial
 }
 
 export interface RecordatorioRaw {
