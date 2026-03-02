@@ -169,20 +169,22 @@ export default function DashboardPage() {
 
     TABS.forEach(tab => {
       const sheetName = tab.sheetName;
+      if (!sheetName) return; // Skip tabs sin sheetName (recordatorios)
+
       const data = sheetsData[sheetName];
 
       if (data && data.length > 0) {
         // Identificar columnas de moneda (PRECIO, TOTAL, SUMA, etc.)
         const cabeceras = data[0] || [];
         const columnasMoneda = cabeceras
-          .map((cab, idx) => {
+          .map((cab: string | number, idx: number) => {
             const cabLower = String(cab).toLowerCase();
             if (cabLower.includes('precio') || cabLower.includes('total') || cabLower.includes('suma') || cabLower.includes('monto')) {
               return idx;
             }
             return -1;
           })
-          .filter(idx => idx >= 0);
+          .filter((idx: number) => idx >= 0);
 
         hojasParaExportar.push({
           nombre: tab.label,
