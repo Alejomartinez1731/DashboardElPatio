@@ -30,15 +30,24 @@ async function getSheetData(sheetName: string): Promise<string[][]> {
   // Para Recordatorios, usar SIEMPRE Google Sheets API directo (n8n no la tiene configurada)
   if (sheetName === HOJA_RECORDATORIOS) {
     console.log(`📖 Leyendo "${sheetName}" directamente de Google Sheets API`);
+    console.log(`  - SPREADSHEET_ID: ${SPREADSHEET_ID ? '✓' : '✗'}`);
+    console.log(`  - API_KEY: ${API_KEY ? '✓ (longitud: ' + API_KEY.length + ')' : '✗'}`);
 
     if (!SPREADSHEET_ID) {
       console.error('❌ SPREADSHEET_ID no configurado');
       return [];
     }
 
+    if (!API_KEY) {
+      console.error('❌ API_KEY no configurada');
+      return [];
+    }
+
     try {
       const { google } = await import('googleapis');
       const sheets = google.sheets({ version: 'v4', auth: API_KEY });
+
+      console.log(`  🔑 Llamando a Google Sheets API...`);
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
         range: sheetName,
@@ -46,9 +55,17 @@ async function getSheetData(sheetName: string): Promise<string[][]> {
 
       const values = response.data.values || [];
       console.log(`✅ Hoja "${sheetName}": ${values.length} filas leídas`);
+
+      if (values.length > 0) {
+        console.log(`  📝 Primera fila:`, values[0]);
+      }
+
       return values;
     } catch (error: any) {
       console.error(`❌ Error leyendo hoja "${sheetName}" de Google Sheets:`, error.message);
+      console.error(`  - Código:`, error.code);
+      console.error(`  - Status:`, error.status);
+      console.error(`  - Response:`, error.response?.data);
       return [];
     }
   }
@@ -382,9 +399,18 @@ export async function GET(request: NextRequest) {
       count: recordatorios.length
     });
 
+    // Para depuración: incluir info de lo que se leyó
+    const debugInfo = {
+      recordatoriosRaw: recordatoriosRaw.length,
+      primeraFila: recordatoriosRaw[0] || null,
+      registroDiario: registroDiario.length,
+      historico: historico.length,
+    };
+
     return NextResponse.json({
       success: true,
       data: recordatorios,
+      debug: debugInfo, // Info de depuración
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
