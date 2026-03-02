@@ -45,6 +45,7 @@ async function getAllSheetsData(): Promise<Record<string, string[][]>> {
 
     const data = await response.json();
     console.log('✅ n8n respondió, claves:', Object.keys(data.data || {}));
+    console.log('📦 Estructura de data.data:', JSON.stringify(data.data, null, 2).substring(0, 500));
 
     return {
       recordatorios: data.data?.recordatorios?.values || [],
@@ -253,9 +254,17 @@ export async function GET(request: NextRequest) {
       return 0;
     });
 
+    // Debug info
+    const debugInfo = {
+      n8nKeys: Object.keys(sheetsData),
+      recordatoriosRaw: recordatoriosRaw.length,
+      primeraFila: recordatoriosRaw[0] || null,
+    };
+
     return NextResponse.json({
       success: true,
       data: recordatorios,
+      debug: debugInfo,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
