@@ -351,13 +351,13 @@ export async function GET(request: NextRequest) {
           // No hay suficientes datos, usar umbral por defecto (mínimo 10 días)
           diasConfigurados = 10;
           tipo = 'automatico';
-          notas = 'Calculado por defecto (sin historial suficiente, mínimo 10 días)';
+          notas = '';
         } else {
           // Usar frecuencia promedio * 1.5 como umbral, con MÍNIMO de 10 días
           const umbralCalculado = Math.round(frecuenciaAuto * 1.5);
           diasConfigurados = Math.max(umbralCalculado, 10);
           tipo = 'automatico';
-          notas = `Calculado automáticamente (frecuencia: ${frecuenciaAuto} días, mínimo 10)`;
+          notas = '';
         }
       }
 
