@@ -27,7 +27,33 @@ const HOJA_HISTORICO_PRECIOS = 'Histórico de Precios';
  * Obtiene los datos de una hoja específica de Google Sheets
  */
 async function getSheetData(sheetName: string): Promise<string[][]> {
-  // Prioridad 1: Usar n8n si está configurado
+  // Para Recordatorios, usar SIEMPRE Google Sheets API directo (n8n no la tiene configurada)
+  if (sheetName === HOJA_RECORDATORIOS) {
+    console.log(`📖 Leyendo "${sheetName}" directamente de Google Sheets API`);
+
+    if (!SPREADSHEET_ID) {
+      console.error('❌ SPREADSHEET_ID no configurado');
+      return [];
+    }
+
+    try {
+      const { google } = await import('googleapis');
+      const sheets = google.sheets({ version: 'v4', auth: API_KEY });
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: sheetName,
+      });
+
+      const values = response.data.values || [];
+      console.log(`✅ Hoja "${sheetName}": ${values.length} filas leídas`);
+      return values;
+    } catch (error: any) {
+      console.error(`❌ Error leyendo hoja "${sheetName}" de Google Sheets:`, error.message);
+      return [];
+    }
+  }
+
+  // Para otras hojas, intentar n8n primero
   if (N8N_WEBHOOK_URL) {
     try {
       const response = await fetch(N8N_WEBHOOK_URL, {
@@ -38,7 +64,6 @@ async function getSheetData(sheetName: string): Promise<string[][]> {
         const data = await response.json();
         // Mapear nombres de n8n
         const hojaMap: Record<string, string> = {
-          [HOJA_RECORDATORIOS]: 'recordatorios',
           [HOJA_REGISTRO_DIARIO]: 'registro_diario',
           [HOJA_HISTORICO_PRECIOS]: 'historico_precios',
         };
@@ -55,7 +80,7 @@ async function getSheetData(sheetName: string): Promise<string[][]> {
     }
   }
 
-  // Prioridad 2: Usar Google Sheets API directo
+  // Fallback a Google Sheets API directo
   if (!SPREADSHEET_ID || !API_KEY) {
     console.warn('⚠️ No hay credenciales de Google Sheets configuradas');
     return [];
