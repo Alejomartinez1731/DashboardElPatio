@@ -1,5 +1,6 @@
 import { Table, TrendingUp, PieChart, ShoppingBag, Bell } from 'lucide-react';
 import { SheetName } from '@/types';
+import Link from 'next/link';
 
 type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'recordatorios';
 
@@ -37,20 +38,30 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
           <>
             <Icon className="w-5 h-5 flex-shrink-0" />
             <span className="font-medium text-sm text-center">{tab.label}</span>
-            {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
+            {isActive && !isExternal && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
           </>
         );
 
+        // Para tabs externos (con href), usar Link de Next.js
+        if (isExternal) {
+          return (
+            <Link
+              key={tab.id}
+              href={tab.href!}
+              className={`flex items-center justify-center gap-2 px-4 py-4 transition-all duration-200 relative ${
+                'text-muted-foreground hover:text-white hover:bg-muted/50'
+              }`}
+            >
+              {buttonContent}
+            </Link>
+          );
+        }
+
+        // Para tabs internos, usar button normal
         return (
           <button
             key={tab.id}
-            onClick={() => {
-              if (isExternal) {
-                window.location.href = tab.href!;
-              } else {
-                onTabChange(tab.id);
-              }
-            }}
+            onClick={() => onTabChange(tab.id)}
             className={`flex items-center justify-center gap-2 px-4 py-4 transition-all duration-200 relative ${
               isActive ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white hover:bg-muted/50'
             }`}

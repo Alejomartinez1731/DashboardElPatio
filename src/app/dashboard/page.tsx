@@ -34,11 +34,14 @@ type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'tota
 
 export default function DashboardPage() {
   // Hook personalizado para obtener datos de Sheets
-  const tabsConfig = TABS.map(tab => ({
-    id: tab.id,
-    sheetName: tab.sheetName,
-    dataKey: tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName,
-  }));
+  // Filtramos tabs que tienen sheetName (excluimos recordatorios que es navegable)
+  const tabsConfig = TABS
+    .filter(tab => tab.sheetName)
+    .map(tab => ({
+      id: tab.id,
+      sheetName: tab.sheetName!,
+      dataKey: tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName!,
+    }));
 
   const {
     compras,
