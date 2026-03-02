@@ -188,22 +188,37 @@ export async function GET(request: NextRequest) {
       console.log('  - Primera fila recordatorios:', recordatoriosRaw[0]);
     }
 
-    // Procesar recordatorios
+    // Procesar recordatorios - Buscar columnas por nombre en lugar de posición
     const recordatorios: any[] = [];
 
     if (recordatoriosRaw.length > 1) {
+      // Obtener índices de columnas desde la primera fila
+      const headers = recordatoriosRaw[0].map((h: string) => String(h).trim().toLowerCase());
+
+      const idxProducto = headers.findIndex(h => h.includes('producto'));
+      const idxDias = headers.findIndex(h => h.includes('días') || h === 'dias');
+      const idxActivo = headers.findIndex(h => h.includes('activo'));
+      const idxNotas = headers.findIndex(h => h.includes('notas'));
+
+      console.log('📊 Índices de columnas:', { idxProducto, idxDias, idxActivo, idxNotas });
+      console.log('📊 Headers:', headers);
+
       for (let i = 1; i < recordatoriosRaw.length; i++) {
         const fila = recordatoriosRaw[i];
         if (fila.length < 2) continue;
 
-        const producto = String(fila[0] || '').trim();
-        const dias = parseInt(String(fila[1] || '0')) || 0;
-        const activo = String(fila[2] || 'TRUE').toUpperCase() === 'TRUE';
-        const notas = String(fila[3] || '');
+        const producto = String(fila[idxProducto] || '').trim();
+        const dias = parseInt(String(fila[idxDias] || '0')) || 0;
+        const activoRaw = String(fila[idxActivo] || 'TRUE').trim().toUpperCase();
+        const activo = activoRaw === 'TRUE' || activoRaw === 'SI' || activoRaw === '1';
+        const notas = String(fila[idxNotas] || '').trim();
 
-        console.log(`📝 Procesando fila ${i}:`, { producto, dias, activo, notas });
+        console.log(`📝 Procesando fila ${i}:`, { producto, dias, activoRaw, activo, notas });
 
-        if (!producto || !activo || dias <= 0) continue;
+        if (!producto || !activo || dias <= 0) {
+          console.log(`   ⏭️ Fila ${i} ignorada: producto vacío o inactivo`);
+          continue;
+        }
 
         // Buscar última compra
         const ultimaCompra = buscarUltimaCompra(producto, registroDiario, historico);
