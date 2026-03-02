@@ -396,9 +396,11 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
         </div>
       ) : (
         <div className="space-y-3">
-          {recordatorios.map((rec) => {
+          {recordatorios.map((rec, idx) => {
             const estilo = getEstiloRecordatorio(rec.estado);
             const Icono = estilo.icono;
+
+            console.log(`🎨 Renderizando checkbox #${idx} para:`, rec.producto);
 
             return (
               <Card
@@ -407,45 +409,51 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
               >
                 <div className="flex items-start gap-3">
                   {/* Checkbox para añadir a lista de compra */}
-                  <div className="relative" style={{ zIndex: 10 }}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🛒 Click en checkbox:', rec.producto);
-                        console.log('   Estado actual:', estaEnLista(rec.producto) ? 'EN LISTA' : 'NO EN LISTA');
-                        console.log('   Productos en lista:', productos.length);
+                  {(() => {
+                    console.log(`✅ Creando elemento checkbox para: ${rec.producto}`);
+                    return (
+                      <div className="relative" style={{ zIndex: 10 }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('🛒 Click en checkbox:', rec.producto);
+                            console.log('   Estado actual:', estaEnLista(rec.producto) ? 'EN LISTA' : 'NO EN LISTA');
+                            console.log('   Productos en lista:', productos.length);
 
-                        const productoData = {
-                          producto: rec.producto,
-                          notas: rec.notas || '',
-                          ultimaCompra: rec.ultimaCompra || undefined,
-                          tienda: rec.tiendaUltimaCompra || undefined,
-                          precio: rec.precioUltimaCompra || undefined,
-                          agregadoEn: new Date().toISOString(),
-                        };
+                            const productoData = {
+                              producto: rec.producto,
+                              notas: rec.notas || '',
+                              ultimaCompra: rec.ultimaCompra || undefined,
+                              tienda: rec.tiendaUltimaCompra || undefined,
+                              precio: rec.precioUltimaCompra || undefined,
+                              agregadoEn: new Date().toISOString(),
+                            };
 
-                        console.log('   Datos a enviar:', productoData);
-                        toggleProducto(productoData);
-                        console.log('   ✅ Toggle ejecutado');
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🖱️ MouseDown en checkbox:', rec.producto);
-                      }}
-                      className={`mt-1 flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
-                        estaEnLista(rec.producto)
-                          ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/30'
-                          : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10 active:scale-95'
-                      }`}
-                      title={estaEnLista(rec.producto) ? 'Quitar de la lista' : 'Añadir a la lista'}
-                      style={{ touchAction: 'manipulation' }}
-                    >
-                      {estaEnLista(rec.producto) && <Check className="w-5 h-5" strokeWidth={3} />}
-                    </button>
-                  </div>
+                            console.log('   Datos a enviar:', productoData);
+                            toggleProducto(productoData);
+                            console.log('   ✅ Toggle ejecutado');
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('🖱️ MouseDown en checkbox:', rec.producto);
+                          }}
+                          onMouseEnter={() => console.log('📍 Mouse ENTER checkbox:', rec.producto)}
+                          className={`mt-1 flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
+                            estaEnLista(rec.producto)
+                              ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/30'
+                              : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10 active:scale-95'
+                          }`}
+                          title={estaEnLista(rec.producto) ? 'Quitar de la lista' : 'Añadir a la lista'}
+                          style={{ touchAction: 'manipulation' }}
+                        >
+                          {estaEnLista(rec.producto) && <Check className="w-5 h-5" strokeWidth={3} />}
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
