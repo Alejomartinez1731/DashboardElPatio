@@ -27,8 +27,12 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-border bg-gradient-to-b from-[#f59e0b]/5 to-transparent">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#f59e0b] to-[#fbbf24] rounded-xl flex items-center justify-center shadow-lg shadow-[#f59e0b]/20">
-            <span className="text-lg">🍽️</span>
+          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+            <img
+              src="/el-patio-vilaseca-restaurante.jpg"
+              alt="El Patio & Grill Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">El Patio & Grill</h1>
