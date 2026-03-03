@@ -5,8 +5,8 @@ export const runtime = 'nodejs';
 
 // Configuración
 const USE_MOCK = process.env.USE_MOCK_DATA === 'true';
-const MAX_RETRIES = 3;
-const TIMEOUT_MS = 30000; // 30 segundos
+const MAX_RETRIES = 1;
+const TIMEOUT_MS = 15000; // 15 segundos
 
 type ErrorType = 'timeout' | 'network' | 'parse' | 'validation' | 'unknown';
 
