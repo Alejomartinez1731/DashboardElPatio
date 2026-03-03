@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
@@ -17,20 +17,8 @@ import { normalizarTienda } from '@/lib/data-utils';
 import { Table } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { useSheetData } from '@/hooks/useSheetData';
-import { useDashboardStore } from '@/store/useDashboardStore';
+import { useDashboardStore, type SortField } from '@/store/useDashboardStore';
 import { parsearFecha } from '@/lib/parsers';
-
-interface Filtros {
-  fechaInicio: Date | null;
-  fechaFin: Date | null;
-  rangoFecha: 'todo' | 'hoy' | 'semana' | 'mes' | 'mesPasado' | 'anio';
-  tiendas: string[];
-  busqueda: string;
-  precioMin: number | null;
-  precioMax: number | null;
-}
-
-type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'total';
 
 export default function DashboardPage() {
   // Hook personalizado para obtener datos de Sheets
@@ -57,7 +45,7 @@ export default function DashboardPage() {
     refetch,
   } = useSheetData(tabsConfig);
 
-  // Zustand store
+  // Zustand store - ahora incluye comprasFiltradas y ordenamiento
   const {
     activeTab,
     setActiveTab,
@@ -65,98 +53,21 @@ export default function DashboardPage() {
     setFiltros,
     showFilters,
     setShowFilters,
+    comprasFiltradas, // Viene del store, ya filtrado y ordenado
+    sortField,
+    sortOrder,
+    setSortField,
+    setSortOrder,
+    setCompras, // Para actualizar el store cuando cambian las compras
   } = useDashboardStore();
-
-  // Ordenamiento local (no en el store por ahora)
-  const [sortField, setSortField] = useState<SortField>('fecha');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = más reciente primero
-
-  // Local state para filtered data (will override the one from hook when filters are applied)
-  const [localComprasFiltradas, setLocalComprasFiltradas] = useState<Compra[]>([]);
 
   // Estado de refresco
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Aplicar filtros cuando cambian
+  // Sincronizar compras con el store cuando cambian
   useEffect(() => {
-    console.log('Aplicando filtros:', filtros);
-    let filtradas = [...compras];
-
-    // Filtro por rango de fechas
-    if (filtros.fechaInicio) {
-      const inicio = new Date(filtros.fechaInicio);
-      inicio.setHours(0, 0, 0, 0);
-      filtradas = filtradas.filter(c => c.fecha >= inicio);
-      console.log('Filtro fecha inicio:', inicio, '->', filtradas.length, 'filas');
-    }
-    if (filtros.fechaFin) {
-      const fin = new Date(filtros.fechaFin);
-      fin.setHours(23, 59, 59, 999);
-      filtradas = filtradas.filter(c => c.fecha <= fin);
-      console.log('📅 Filtro fecha fin:', fin, '->', filtradas.length, 'filas');
-    }
-
-    // Filtro por tiendas
-    if (filtros.tiendas.length > 0) {
-      filtradas = filtradas.filter(c => filtros.tiendas.includes(normalizarTienda(c.tienda)));
-      console.log('🏪 Filtro tiendas:', filtros.tiendas, '->', filtradas.length, 'filas');
-    }
-
-    // Filtro por búsqueda de producto
-    if (filtros.busqueda) {
-      const busquedaLower = filtros.busqueda.toLowerCase().trim();
-      filtradas = filtradas.filter(c =>
-        c.producto.toLowerCase().includes(busquedaLower)
-      );
-      console.log('🔎 Filtro búsqueda:', filtros.busqueda, '->', filtradas.length, 'filas');
-    }
-
-    // Filtro por rango de precios
-    if (filtros.precioMin !== null) {
-      filtradas = filtradas.filter(c => c.precioUnitario >= filtros.precioMin!);
-      console.log('💰 Filtro precio min:', filtros.precioMin, '->', filtradas.length, 'filas');
-    }
-    if (filtros.precioMax !== null) {
-      filtradas = filtradas.filter(c => c.precioUnitario <= filtros.precioMax!);
-      console.log('💰 Filtro precio max:', filtros.precioMax, '->', filtradas.length, 'filas');
-    }
-
-    // Aplicar ordenamiento
-    filtradas.sort((a, b) => {
-      let aVal: any, bVal: any;
-      switch (sortField) {
-        case 'fecha':
-          aVal = a.fecha.getTime();
-          bVal = b.fecha.getTime();
-          break;
-        case 'tienda':
-          aVal = normalizarTienda(a.tienda);
-          bVal = normalizarTienda(b.tienda);
-          break;
-        case 'producto':
-          aVal = a.producto.toLowerCase();
-          bVal = b.producto.toLowerCase();
-          break;
-        case 'cantidad':
-          aVal = a.cantidad;
-          bVal = b.cantidad;
-          break;
-        case 'precio':
-          aVal = a.precioUnitario;
-          bVal = b.precioUnitario;
-          break;
-        case 'total':
-          aVal = a.total;
-          bVal = b.total;
-          break;
-      }
-      if (sortOrder === 'asc') return aVal > bVal ? 1 : (aVal < bVal ? -1 : 0);
-      return aVal < bVal ? 1 : (aVal > bVal ? -1 : 0);
-    });
-
-    console.log('Filtrado final:', filtradas.length, 'de', compras.length, 'filas');
-    setLocalComprasFiltradas(filtradas);
-  }, [compras, filtros, sortField, sortOrder]);
+    setCompras(compras);
+  }, [compras, setCompras]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -219,7 +130,7 @@ export default function DashboardPage() {
   // Obtener tiendas únicas
   const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda)))).sort();
 
-  // Función para ordenar
+  // Función para ordenar - usa acciones del store
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -250,10 +161,8 @@ export default function DashboardPage() {
   const activeData = sheetsData[activeSheetName] || [];
   const numRows = activeData.length;
 
-  // Determinar qué compras filtradas usar (si hay filtros activos, usar local)
-  const hayFiltrosActivos = filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null || filtros.fechaInicio !== null || filtros.fechaFin !== null;
-  const comprasFiltradasFinal = hayFiltrosActivos ? localComprasFiltradas : compras;
-  const numFilasFiltradas = comprasFiltradasFinal.length;
+  // Usar comprasFiltradas del store (ya incluye filtros y ordenamiento)
+  const numFilasFiltradas = comprasFiltradas.length;
 
   console.log('Estado del dashboard:', {
     activeTab,
@@ -261,16 +170,17 @@ export default function DashboardPage() {
     numRows,
     numFilasFiltradas,
     totalCompras: compras.length,
-    hayFiltrosActivos,
     filtros,
+    sortField,
+    sortOrder,
     sheetsDataKeys: Object.keys(sheetsData)
   });
 
-  // Usar comprasFiltradas para base_datos cuando hay filtros activos
-  const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradasFinal : compras;
+  // Usar comprasFiltradas para base_datos (ya filtrado y ordenado por el store)
+  const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradas : compras;
 
   const comprasComoTabla = activeTab === 'base_datos'
-    ? [...comprasParaTabla].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).map(c => {
+    ? comprasParaTabla.map(c => {
         const categoria = categorizarProducto(c.producto);
         const categoriaInfo = CATEGORIAS_INFO[categoria];
         const row = [
@@ -363,7 +273,7 @@ export default function DashboardPage() {
 
   if (activeTab === 'base_datos') {
     console.log('📊 Estado de Histórico:');
-    console.log('  - comprasFiltradasFinal.length:', comprasFiltradasFinal.length);
+    console.log('  - comprasFiltradas.length:', comprasFiltradas.length);
     console.log('  - compras.length:', compras.length);
     console.log('  - comprasComoTabla.length:', comprasComoTabla.length);
     console.log('  - datosTabla.length:', datosTabla.length);
