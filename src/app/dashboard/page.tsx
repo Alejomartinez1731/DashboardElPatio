@@ -44,6 +44,9 @@ export default function DashboardPage() {
     loading: cargando,
     error,
     refetch,
+    isUsingMock,
+    dataSource,
+    warning,
   } = useSheetData(tabsConfig);
 
   // Zustand store - ahora incluye comprasFiltradas y ordenamiento
@@ -303,9 +306,18 @@ export default function DashboardPage() {
         title="Panel General"
         description="Tablas de Google Sheets"
         statusBadge={{
-          text: showSkeletons ? 'Cargando...' : 'Conectado a n8n',
-          color: showSkeletons ? 'bg-[#f59e0b]/10 border border-primary/30' : 'bg-[#10b981]/10 border border-[#10b981]/30'
+          text: showSkeletons
+            ? 'Cargando...'
+            : isUsingMock
+              ? 'Datos de prueba'
+              : `Conectado a ${dataSource === 'n8n' ? 'n8n' : 'API'}`,
+          color: showSkeletons
+            ? 'bg-[#f59e0b]/10 border border-primary/30'
+            : isUsingMock
+              ? 'bg-amber-500/10 border border-amber-500/30'
+              : 'bg-[#10b981]/10 border border-[#10b981]/30'
         }}
+        warning={warning}
       />
 
       {/* KPIs */}

@@ -12,6 +12,12 @@ export interface SheetsApiResponse {
   data: Record<string, SheetData>;
   message?: string;
   error?: string;
+  _source?: 'n8n' | 'mock';
+  _isMock?: boolean;
+  _warning?: string;
+  _n8nError?: string;
+  _n8nErrorType?: string;
+  _n8nAttempts?: number;
 }
 
 export interface UseSheetDataResult {
@@ -21,6 +27,9 @@ export interface UseSheetDataResult {
   kpiData: KPIData | null;
   loading: boolean;
   error: string | null;
+  isUsingMock: boolean;
+  dataSource: 'n8n' | 'mock';
+  warning: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -43,6 +52,9 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUsingMock, setIsUsingMock] = useState(false);
+  const [dataSource, setDataSource] = useState<'n8n' | 'mock'>('n8n');
+  const [warning, setWarning] = useState<string | null>(null);
 
   /**
    * Obtiene datos de la API y los procesa
@@ -51,6 +63,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     try {
       setLoading(true);
       setError(null);
+      setWarning(null);
 
       const response = await fetch('/api/sheets');
 
@@ -59,6 +72,16 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       }
 
       const result: SheetsApiResponse = await response.json();
+
+      // Actualizar metadata de fuente de datos
+      setIsUsingMock(result._isMock || false);
+      setDataSource(result._source || 'n8n');
+      setWarning(result._warning || null);
+
+      // Mostrar advertencia si usa mock (no es un error, pero es info importante)
+      if (result._isMock) {
+        console.warn('⚠️ Usando datos MOCK:', result._warning);
+      }
 
       if (!result.success) {
         throw new Error(result.message || result.error || 'Error desconocido al obtener datos');
@@ -148,7 +171,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     } finally {
       setLoading(false);
     }
-  }, [tabs]); // ✅ tabs ahora está memoizado en el padre, es seguro como dependencia
+  }, [tabs]);
 
   /**
    * Función para refrescar datos manualmente
@@ -156,12 +179,12 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
   const refetch = useCallback(async () => {
     console.log('🔄 Refrescando datos...');
     await fetchDatos();
-  }, [fetchDatos]); // ✅ fetchDatos como dependencia
+  }, [fetchDatos]);
 
   // Efecto principal: cargar datos al montar o cuando cambia tabs
   useEffect(() => {
     fetchDatos();
-  }, [fetchDatos]); // ✅ fetchDatos como dependencia
+  }, [fetchDatos]);
 
   return {
     compras,
@@ -170,6 +193,9 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     kpiData,
     loading,
     error,
+    isUsingMock,
+    dataSource,
+    warning,
     refetch,
   };
 }
