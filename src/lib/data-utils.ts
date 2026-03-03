@@ -350,29 +350,13 @@ export function calcularKPIs(
   console.log('📅 Fecha actual (hoy):', hoy.toISOString());
   console.log('📅 Fecha hace 15 días:', hace15Dias.toISOString());
 
-  // Gasto quincenal desde historico_precios (últimos 15 días)
-  let gastoQuincenal = 0;
+  // Gasto quincenal desde compras (base_de_datos) - últimos 15 días
+  const gastoQuincenal = compras
+    .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
+    .reduce((sum, c) => sum + c.total, 0);
 
-  if (historicoPreciosValues.length > 1) {
-    const cabeceras = historicoPreciosValues[0].map((h: string) => h.toLowerCase().trim());
-    const idxFecha = cabeceras.indexOf('fecha');
-    const idxTotal = cabeceras.indexOf('total');
-
-    if (idxFecha !== -1 && idxTotal !== -1) {
-      for (let i = 1; i < historicoPreciosValues.length; i++) {
-        const fila = historicoPreciosValues[i];
-        const fechaStr = fila[idxFecha];
-        const totalStr = fila[idxTotal];
-
-        if (fechaStr && totalStr) {
-          const fechaCompra = normalizarFecha(fechaStr);
-          if (fechaCompra >= hace15Dias && fechaCompra <= hoy) {
-            gastoQuincenal += parseFloat(totalStr) || 0;
-          }
-        }
-      }
-    }
-  }
+  console.log('💰 Gasto quincenal calculado:', gastoQuincenal, '€');
+  console.log('📊 Compras en el periodo:', compras.filter(c => c.fecha >= hace15Dias && c.fecha <= hoy).length);
 
   // Facturas procesadas desde registro_diario (más actualizado)
   const facturasProcesadas = new Set<string>();

@@ -97,9 +97,20 @@ export function RecordatoriosSummary({ className }: RecordatoriosSummaryProps) {
             {recordatorios.map((rec) => (
               <div
                 key={rec.producto}
-                className="flex items-center justify-between text-sm py-2 px-3 rounded-lg bg-muted/30 border border-border/50"
+                className={`flex items-center justify-between text-sm py-2 px-3 rounded-lg border transition-all ${
+                  rec.tipo === 'manual'
+                    ? 'bg-blue-500/10 border-blue-500/30'
+                    : 'bg-muted/30 border-border/50'
+                }`}
               >
-                <span className="text-white/90 font-medium">{rec.producto}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white/90 font-medium">{rec.producto}</span>
+                  {rec.tipo === 'manual' && (
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-blue-400/50 text-blue-300 bg-blue-400/10">
+                      M
+                    </Badge>
+                  )}
+                </div>
                 <Badge
                   variant="outline"
                   className={

@@ -281,7 +281,8 @@ export async function GET(request: NextRequest) {
     console.log('📦 Productos únicos encontrados:', productosUnicos.size);
 
     // PASO 2: Procesar recordatorios manuales
-    const recordatoriosManuales = new Map<string, { dias: number; notas: string }>();
+    // Map: nombre lowercase -> { nombreOriginal, dias, notas }
+    const recordatoriosManuales = new Map<string, { nombreOriginal: string; dias: number; notas: string }>();
 
     if (recordatoriosRaw.length > 1) {
       const headers = recordatoriosRaw[0].map((h: string) => String(h).trim().toLowerCase());
@@ -301,18 +302,32 @@ export async function GET(request: NextRequest) {
         const notas = String(fila[idxNotas] || '').trim();
 
         if (producto && activo && dias > 0) {
-          recordatoriosManuales.set(producto.toLowerCase(), { dias, notas });
+          recordatoriosManuales.set(producto.toLowerCase(), { nombreOriginal: producto, dias, notas });
         }
       }
     }
 
     console.log('📝 Recordatorios manuales:', recordatoriosManuales.size);
 
+    // PASO 2.5: Agregar productos de recordatorios manuales al conjunto
+    // Esto asegura que productos solo configurados manualmente también aparezcan
+    for (const [productoLower, data] of recordatoriosManuales) {
+      productosUnicos.add(data.nombreOriginal);
+    }
+
+    console.log('📦 Productos únicos finales (con manuales):', productosUnicos.size);
+
     // PASO 3: Generar recordatorios para todos los productos
     const recordatorios: any[] = [];
+    const procesados = new Set<string>(); // Evitar duplicados
 
     for (const producto of productosUnicos) {
       const productoLower = producto.toLowerCase();
+
+      // Evitar procesar duplicados (cuando un producto aparece en historial y en manual)
+      if (procesados.has(productoLower)) {
+        continue;
+      }
 
       // Buscar última compra
       const ultimaCompra = buscarUltimaCompra(producto, registroDiario, historico);
@@ -324,6 +339,7 @@ export async function GET(request: NextRequest) {
       let diasConfigurados: number;
       let tipo: 'manual' | 'automatico';
       let notas = '';
+      let productoFinal = producto; // Nombre que se usará en el recordatorio
 
       if (ultimaCompra && ultimaCompra.fecha.getTime() > 0) {
         const hoy = new Date();
@@ -343,6 +359,8 @@ export async function GET(request: NextRequest) {
         diasConfigurados = manual.dias;
         tipo = 'manual';
         notas = manual.notas;
+        // Usar el nombre original del manual para consistencia
+        productoFinal = manual.nombreOriginal;
       } else {
         // Calcular frecuencia automática
         const frecuenciaAuto = calcularFrecuenciaAutomatica(producto, registroDiario, historico);
@@ -363,8 +381,11 @@ export async function GET(request: NextRequest) {
 
       const estado = calcularEstado(diasTranscurridos, diasConfigurados);
 
+      // Marcar como procesado para evitar duplicados
+      procesados.add(productoLower);
+
       recordatorios.push({
-        producto,
+        producto: productoFinal,
         diasConfigurados,
         ultimaCompra: ultimaCompraStr,
         diasTranscurridos,

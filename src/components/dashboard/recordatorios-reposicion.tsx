@@ -141,41 +141,62 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
     }
   };
 
-  const getEstiloRecordatorio = (estado: string) => {
-    switch (estado) {
-      case 'vencido':
-        return {
-          borde: 'border-l-4 border-l-red-500',
-          fondo: 'bg-gradient-to-r from-red-500/15 to-red-500/5',
-          badge: 'bg-red-500 text-white font-bold border-red-500 shadow-lg shadow-red-500/20',
-          icono: AlertTriangle,
-          iconoColor: 'text-red-400',
-        };
-      case 'proximo':
-        return {
-          borde: 'border-l-4 border-l-amber-500',
-          fondo: 'bg-gradient-to-r from-amber-500/15 to-amber-500/5',
-          badge: 'bg-amber-500 text-white font-semibold border-amber-500 shadow-md shadow-amber-500/20',
-          icono: Clock,
-          iconoColor: 'text-amber-400',
-        };
-      case 'ok':
-        return {
-          borde: 'border-l-4 border-l-green-500',
-          fondo: 'bg-gradient-to-r from-green-500/10 to-transparent',
-          badge: 'bg-green-500/20 text-green-300 border-green-500/30',
-          icono: CheckCircle,
-          iconoColor: 'text-green-400',
-        };
-      default:
-        return {
-          borde: 'border-l-4 border-l-slate-500',
-          fondo: 'bg-gradient-to-r from-slate-500/10 to-slate-500/5',
-          badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-          icono: HelpCircle,
-          iconoColor: 'text-slate-400',
-        };
+  const getEstiloRecordatorio = (estado: string, tipo: 'manual' | 'automatico') => {
+    // Base: colores según estado
+    const baseEstilo = (() => {
+      switch (estado) {
+        case 'vencido':
+          return {
+            bordeColor: 'red',
+            badge: 'bg-red-500 text-white font-bold border-red-500 shadow-lg shadow-red-500/20',
+            icono: AlertTriangle,
+            iconoColor: 'text-red-400',
+          };
+        case 'proximo':
+          return {
+            bordeColor: 'amber',
+            badge: 'bg-amber-500 text-white font-semibold border-amber-500 shadow-md shadow-amber-500/20',
+            icono: Clock,
+            iconoColor: 'text-amber-400',
+          };
+        case 'ok':
+          return {
+            bordeColor: 'green',
+            badge: 'bg-green-500/20 text-green-300 border-green-500/30',
+            icono: CheckCircle,
+            iconoColor: 'text-green-400',
+          };
+        default:
+          return {
+            bordeColor: 'slate',
+            badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+            icono: HelpCircle,
+            iconoColor: 'text-slate-400',
+          };
+      }
+    })();
+
+    // Si es manual, usa colores azules/púrpuras con borde doble
+    if (tipo === 'manual') {
+      return {
+        borde: 'border-l-4 border-l-blue-500 border border-blue-500/30 shadow-lg shadow-blue-500/10',
+        fondo: 'bg-gradient-to-r from-blue-500/15 to-purple-500/5',
+        badge: 'bg-blue-500 text-white font-semibold border-blue-500 shadow-md shadow-blue-500/20',
+        icono: Settings,
+        iconoColor: 'text-blue-400',
+        esManual: true,
+      };
     }
+
+    // Si es automático, usa colores del estado
+    return {
+      borde: `border-l-4 border-l-${baseEstilo.bordeColor}-500`,
+      fondo: `bg-gradient-to-r from-${baseEstilo.bordeColor}-500/15 to-${baseEstilo.bordeColor}-500/5`,
+      badge: baseEstilo.badge,
+      icono: baseEstilo.icono,
+      iconoColor: baseEstilo.iconoColor,
+      esManual: false,
+    };
   };
 
   const getTextoEstado = (recordatorio: Recordatorio) => {
@@ -404,7 +425,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
       ) : (
         <div className="space-y-2">
           {recordatorios.map((rec, idx) => {
-            const estilo = getEstiloRecordatorio(rec.estado);
+            const estilo = getEstiloRecordatorio(rec.estado, rec.tipo);
             const Icono = estilo.icono;
 
             console.log(`🎨 Renderizando checkbox #${idx} para:`, rec.producto);
@@ -469,10 +490,9 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                         <Icono className={`w-3 h-3 mr-1 ${estilo.iconoColor}`} />
                         {getTextoEstado(rec)}
                       </Badge>
-                      {rec.tipo === 'manual' && (
-                        <Badge variant="outline" className="text-xs px-2 py-0.5 border-blue-500/50 text-blue-400 bg-blue-500/10">
-                          <Settings className="w-3 h-3 mr-1" />
-                          M
+                      {estilo.esManual && (
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 border-blue-400/50 text-blue-300 bg-blue-400/10">
+                          Manual
                         </Badge>
                       )}
                     </div>
