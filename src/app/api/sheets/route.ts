@@ -202,6 +202,9 @@ export async function GET(request: Request) {
   console.log(`✅ n8n respondió correctamente (${n8nResult.attempts ?? 1} intento${(n8nResult.attempts ?? 1) > 1 ? 's' : ''})`);
 
   const data = n8nResult.data!;
+  console.log('📦 Estructura de datos de n8n:', Object.keys(data || {}));
+  console.log('📦 data.data existe?', !!data.data);
+  console.log('📦 Claves en data.data:', data.data ? Object.keys(data.data) : 'N/A');
 
   // Mapear nombres de n8n a nombres internos del dashboard
   const mappedData = {
@@ -213,6 +216,10 @@ export async function GET(request: Request) {
     precio_producto: data.data?.precio_por_producto || data.data?.precio_producto || {},
     registro_diario: data.data?.registro_diario || {},
   };
+
+  console.log('📊 Datos mapeados:', Object.fromEntries(
+    Object.entries(mappedData).map(([k, v]) => [k, v?.values ? `Array(${v.values.length})` : 'empty'])
+  ));
 
   return NextResponse.json({
     success: true,
