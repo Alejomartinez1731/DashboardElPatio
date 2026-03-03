@@ -40,7 +40,7 @@ export function DataTable({
   const isSortable = activeTab === 'base_datos';
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div className="overflow-x-auto rounded-lg border border-border" data-testid="data-table">
       <table className="w-full text-sm">
         <DataTableHeader
           headers={datosTabla[0] || []}

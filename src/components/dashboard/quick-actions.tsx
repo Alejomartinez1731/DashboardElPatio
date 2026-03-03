@@ -13,6 +13,17 @@ interface QuickActionsProps {
   filtrosActivos?: boolean;
 }
 
+interface Accion {
+  icon: any;
+  label: string;
+  descripcion: string;
+  color: string;
+  onClick?: (() => void) | undefined;
+  disabled: boolean;
+  loading: boolean;
+  testid?: string;
+}
+
 export function QuickActions({
   onRefresh,
   onExport,
@@ -39,6 +50,7 @@ export function QuickActions({
       onClick: onExport,
       disabled: exportando || cargando,
       loading: exportando,
+      testid: 'export-button',
     },
     {
       icon: Filter,
@@ -62,6 +74,7 @@ export function QuickActions({
               key={accion.label}
               onClick={accion.onClick}
               disabled={accion.disabled}
+              data-testid={accion.testid}
               className={`
                 group flex flex-col items-center gap-2 p-4
                 bg-muted border border-border rounded-lg

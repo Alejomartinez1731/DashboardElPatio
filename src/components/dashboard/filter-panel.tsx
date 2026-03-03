@@ -130,7 +130,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
               <Calendar className="w-4 h-4" />
               Rango de Fecha
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2" data-testid="date-filter">
               {[
                 { value: 'todo', label: 'Todo' },
                 { value: 'hoy', label: 'Hoy' },
@@ -197,6 +197,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                 value={filtros.busqueda}
                 onChange={(e) => onFiltrosChange({ ...filtros, busqueda: e.target.value })}
                 placeholder="Escribe para buscar..."
+                data-testid="search-input"
                 className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
               {filtros.busqueda && (

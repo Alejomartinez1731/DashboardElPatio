@@ -298,6 +298,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
             size="sm"
             variant="outline"
             className="border-primary/50 hover:bg-primary/20 hover:border-primary"
+            data-testid="add-reminder-button"
           >
             <Settings className="w-4 h-4 mr-2" />
             Manual
@@ -342,6 +343,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 className="mt-1.5 !bg-zinc-800/80 !border-zinc-600 !focus:border-primary !focus:ring-2 !focus:ring-primary/30 text-white placeholder:text-zinc-400"
                 disabled={guardando}
                 autoFocus
+                data-testid="reminder-product-input"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Escribe el nombre tal como aparece en las facturas
@@ -361,6 +363,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 min="1"
                 max="90"
                 disabled={guardando}
+                data-testid="reminder-days-input"
               />
               <span className="text-sm text-muted-foreground ml-2">dias</span>
             </div>
@@ -376,6 +379,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 placeholder="Ej: Preferiblemente en BonArea"
                 className="mt-1.5 !bg-zinc-800/80 !border-zinc-600 !focus:border-primary !focus:ring-2 !focus:ring-primary/30 text-white placeholder:text-zinc-400"
                 disabled={guardando}
+                data-testid="reminder-notes-input"
               />
             </div>
 
@@ -393,7 +397,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
               >
                 Cancelar
               </Button>
-              <Button onClick={handleGuardar} disabled={guardando} className="bg-amber-500 hover:bg-amber-600">
+              <Button onClick={handleGuardar} disabled={guardando} className="bg-amber-500 hover:bg-amber-600" data-testid="save-reminder-button">
                 {guardando ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
@@ -433,6 +437,9 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
             return (
               <Card
                 key={rec.producto}
+                data-testid="reminder-card"
+                data-type={rec.tipo}
+                data-state={rec.estado}
                 className={`p-3 ${estilo.borde} ${estilo.fondo} border border-border/50 hover:border-border transition-all duration-200`}
               >
                 <div className="flex items-center gap-3">

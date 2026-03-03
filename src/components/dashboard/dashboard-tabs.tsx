@@ -48,6 +48,7 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
             <Link
               key={tab.id}
               href={tab.href!}
+              data-testid={`tab-${tab.id}`}
               className={`flex items-center justify-center gap-2 px-4 py-4 transition-all duration-200 relative ${
                 'text-muted-foreground hover:text-white hover:bg-muted/50'
               }`}
@@ -62,6 +63,7 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
+            data-testid={`tab-${tab.id}`}
             className={`flex items-center justify-center gap-2 px-4 py-4 transition-all duration-200 relative ${
               isActive ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white hover:bg-muted/50'
             }`}

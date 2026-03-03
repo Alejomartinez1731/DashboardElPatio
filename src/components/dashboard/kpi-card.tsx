@@ -21,7 +21,7 @@ export function KPICard({ titulo, valor, tipo = 'moneda', variacion, icono }: KP
   const Icono = variacion === undefined ? Minus : esPositivo ? TrendingUp : TrendingDown;
 
   return (
-    <Card className="p-6 bg-card border-border hover:bg-muted/50 transition-colors duration-200 relative overflow-hidden">
+    <Card className="p-6 bg-card border-border hover:bg-muted/50 transition-colors duration-200 relative overflow-hidden" data-testid="kpi-card">
       {/* Círculo decorativo */}
       <div className="absolute top-0 right-0 w-20 h-20 bg-[#f59e0b]/5 rounded-bl-full"></div>
 
