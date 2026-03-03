@@ -38,7 +38,6 @@ export default function DashboardPage() {
 
   const {
     compras,
-    comprasFiltradas,
     sheetsData,
     kpiData,
     loading: cargando,

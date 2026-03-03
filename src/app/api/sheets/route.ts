@@ -196,11 +196,11 @@ export async function GET(request: Request) {
       _warning: `n8n no disponible (${n8nResult.errorType}: ${n8nResult.error}). Usando datos de prueba.`,
       _n8nError: n8nResult.error,
       _n8nErrorType: n8nResult.errorType,
-      _n8nAttempts: n8nResult.attempts
+      _n8nAttempts: n8nResult.attempts ?? MAX_RETRIES
     });
   }
 
-  console.log(`✅ n8n respondió correctamente (${n8nResult.attempts} intento${n8nResult.attempts > 1 ? 's' : ''})`);
+  console.log(`✅ n8n respondió correctamente (${n8nResult.attempts ?? 1} intento${(n8nResult.attempts ?? 1) > 1 ? 's' : ''})`);
 
   const data = n8nResult.data!;
 
@@ -221,6 +221,6 @@ export async function GET(request: Request) {
     timestamp: new Date().toISOString(),
     _source: 'n8n',
     _isMock: false,
-    _n8nAttempts: n8nResult.attempts
+    _n8nAttempts: n8nResult.attempts ?? 1
   });
 }

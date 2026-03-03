@@ -7,7 +7,7 @@ interface DashboardHeaderProps {
     text: string;
     color: string;
   };
-  warning?: string;
+  warning?: string | null;
 }
 
 export function DashboardHeader({ title, description, statusBadge, warning }: DashboardHeaderProps) {
