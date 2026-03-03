@@ -134,6 +134,8 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
         const registroDiarioValues = (apiResult.data.registro_diario?.values) || [];
 
         // 4. Calcular KPIs
+        // NOTA: Para datasets muy grandes (>1000 compras), considera usar useDataProcessor
+        // que implementa Web Workers para no bloquear el UI
         const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
 
         // 5. Actualizar estado (batched en una sola transición)
