@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, startTransition } from 'react';
 import { Compra, KPIData, SheetName } from '@/types';
 import { parsearFecha, excluirFilaResumenConLog, normalizarCabeceras, filaAObjeto } from '@/lib/parsers';
 import { calcularKPIs } from '@/lib/data-utils';
@@ -147,21 +147,25 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           // 4. Calcular KPIs
           const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
 
-          // 5. Actualizar estado
-          setCompras(comprasProcesadas);
-          setComprasFiltradas(comprasProcesadas);
-          setSheetsData(allData);
-          setKpiData(kpis);
+          // 5. Actualizar estado (batched en una sola transición)
+          startTransition(() => {
+            setCompras(comprasProcesadas);
+            setComprasFiltradas(comprasProcesadas);
+            setSheetsData(allData);
+            setKpiData(kpis);
+          });
         }
       } else {
         console.warn('⚠️ No hay datos en base_de_datos');
-        setCompras([]);
-        setComprasFiltradas([]);
-        setSheetsData(allData);
-        setKpiData({
-          gastoQuincenal: 0,
-          facturasProcesadas: 0,
-          alertasDePrecio: 0,
+        startTransition(() => {
+          setCompras([]);
+          setComprasFiltradas([]);
+          setSheetsData(allData);
+          setKpiData({
+            gastoQuincenal: 0,
+            facturasProcesadas: 0,
+            alertasDePrecio: 0,
+          });
         });
       }
     } catch (err) {
