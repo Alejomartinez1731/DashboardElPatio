@@ -1,5 +1,28 @@
 import type { Compra, AlertaPrecio, SheetCompraRaw, ProductoCostoso, GastoPorTiendaRaw, PrecioProductoRaw, Proveedor, Factura } from '@/types';
 
+// Cache simple para memoización de KPIs
+interface KPICache {
+  comprasHash: string;
+  historicoHash: string;
+  registroHash: string;
+  result: {
+    gastoQuincenal: number;
+    facturasProcesadas: number;
+    alertasDePrecio: number;
+  };
+}
+
+let kpiCache: KPICache | null = null;
+
+/**
+ * Genera un hash simple de un array para detectar cambios
+ */
+function generateHash(data: any[] | undefined): string {
+  if (!data || data.length === 0) return 'empty';
+  // Usar longitud + primer/último elemento como fingerprint rápido
+  return `${data.length}-${JSON.stringify(data[0])}-${JSON.stringify(data[data.length - 1])}`;
+}
+
 // Colores asignados por tienda según los requisitos
 export const COLORES_TIENDA: Record<string, string> = {
   'Mercadona': '#10b981',
@@ -340,6 +363,22 @@ export function calcularKPIs(
   facturasProcesadas: number;
   alertasDePrecio: number;
 } {
+  // Generar hashes de los datos de entrada
+  const comprasHash = generateHash(compras);
+  const historicoHash = generateHash(historicoPreciosValues);
+  const registroHash = generateHash(registroDiarioValues);
+
+  // Verificar si podemos usar el caché
+  if (kpiCache &&
+      kpiCache.comprasHash === comprasHash &&
+      kpiCache.historicoHash === historicoHash &&
+      kpiCache.registroHash === registroHash) {
+    console.log('💾 KPIs cacheados - reutilizando cálculo previo');
+    return kpiCache.result;
+  }
+
+  console.log('🔄 Recalculando KPIs...');
+
   const hoy = new Date();
   hoy.setHours(23, 59, 59, 999);
 
@@ -347,16 +386,10 @@ export function calcularKPIs(
   hace15Dias.setDate(hace15Dias.getDate() - 15);
   hace15Dias.setHours(0, 0, 0, 0);
 
-  console.log('📅 Fecha actual (hoy):', hoy.toISOString());
-  console.log('📅 Fecha hace 15 días:', hace15Dias.toISOString());
-
   // Gasto quincenal desde compras (base_de_datos) - últimos 15 días
   const gastoQuincenal = compras
     .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
     .reduce((sum, c) => sum + c.total, 0);
-
-  console.log('💰 Gasto quincenal calculado:', gastoQuincenal, '€');
-  console.log('📊 Compras en el periodo:', compras.filter(c => c.fecha >= hace15Dias && c.fecha <= hoy).length);
 
   // Facturas procesadas desde registro_diario (más actualizado)
   const facturasProcesadas = new Set<string>();
@@ -388,11 +421,29 @@ export function calcularKPIs(
   // Alertas de precio
   const alertas = detectarAlertasPrecio(compras);
 
-  return {
+  const result = {
     gastoQuincenal,
     facturasProcesadas: facturasProcesadas.size,
     alertasDePrecio: alertas.length,
   };
+
+  // Actualizar caché
+  kpiCache = {
+    comprasHash,
+    historicoHash,
+    registroHash,
+    result
+  };
+
+  return result;
+}
+
+/**
+ * Limpia el caché de KPIs (útil si se modifican datos manualmente)
+ */
+export function limpiarCacheKPIs(): void {
+  kpiCache = null;
+  console.log('🗑️ Caché de KPIs limpiado');
 }
 
 /**
