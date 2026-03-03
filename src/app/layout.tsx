@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { ToastContainer } from "@/components/ui/toast";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -40,6 +41,7 @@ export default function RootLayout({
             </main>
           </div>
         </div>
+        <ToastContainer />
       </body>
     </html>
   );

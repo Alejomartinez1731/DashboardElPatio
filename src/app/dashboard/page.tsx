@@ -19,6 +19,7 @@ import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { useSheetData } from '@/hooks/useSheetData';
 import { useDashboardStore, type SortField } from '@/store/useDashboardStore';
 import { parsearFecha } from '@/lib/parsers';
+import { useToast } from '@/components/ui/toast';
 
 export default function DashboardPage() {
   // Hook personalizado para obtener datos de Sheets
@@ -64,6 +65,12 @@ export default function DashboardPage() {
   // Estado de refresco
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Estado de exportación
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Toast notifications
+  const toast = useToast();
+
   // Sincronizar compras con el store cuando cambian
   useEffect(() => {
     setCompras(compras);
@@ -78,43 +85,51 @@ export default function DashboardPage() {
     }
   };
 
-  const handleExport = () => {
-    // Crear hojas para exportar: todas las pestañas disponibles
-    const hojasParaExportar: { nombre: string; datos: string[][] }[] = [];
+  const handleExport = async () => {
+    // Evitar exportaciones simultáneas
+    if (isExporting) return;
 
-    TABS.forEach(tab => {
-      const sheetName = tab.sheetName;
-      if (!sheetName) return; // Skip tabs sin sheetName (recordatorios)
+    setIsExporting(true);
+    try {
+      // Crear hojas para exportar: todas las pestañas disponibles
+      const hojasParaExportar: { nombre: string; datos: string[][] }[] = [];
 
-      const data = sheetsData[sheetName];
+      TABS.forEach(tab => {
+        const sheetName = tab.sheetName;
+        if (!sheetName) return; // Skip tabs sin sheetName (recordatorios)
 
-      if (data && data.length > 0) {
-        // Identificar columnas de moneda (PRECIO, TOTAL, SUMA, etc.)
-        const cabeceras = data[0] || [];
-        const columnasMoneda = cabeceras
-          .map((cab: string | number, idx: number) => {
-            const cabLower = String(cab).toLowerCase();
-            if (cabLower.includes('precio') || cabLower.includes('total') || cabLower.includes('suma') || cabLower.includes('monto')) {
-              return idx;
-            }
-            return -1;
-          })
-          .filter((idx: number) => idx >= 0);
+        const data = sheetsData[sheetName];
 
-        hojasParaExportar.push({
-          nombre: tab.label,
-          datos: data,
-        });
+        if (data && data.length > 0) {
+          hojasParaExportar.push({
+            nombre: tab.label,
+            datos: data,
+          });
+        }
+      });
+
+      if (hojasParaExportar.length === 0) {
+        toast.warning('No hay datos para exportar');
+        return;
       }
-    });
 
-    if (hojasParaExportar.length === 0) {
-      alert('No hay datos para exportar');
-      return;
+      // Exportar a Excel
+      const resultado = await exportToExcel(
+        hojasParaExportar,
+        `dashboard_el_patio_${new Date().toISOString().split('T')[0]}.xlsx`
+      );
+
+      if (resultado.success) {
+        toast.success(resultado.message);
+      } else {
+        toast.error(resultado.message);
+      }
+    } catch (error) {
+      console.error('Error inesperado al exportar:', error);
+      toast.error('Error inesperado al exportar el archivo');
+    } finally {
+      setIsExporting(false);
     }
-
-    // Exportar a Excel
-    exportToExcel(hojasParaExportar, `dashboard_el_patio_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const handleFilter = () => {
@@ -311,6 +326,7 @@ export default function DashboardPage() {
           onExport={handleExport}
           onFilter={handleFilter}
           cargando={isRefreshing || cargando}
+          exportando={isExporting}
           filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
         />
       )}
