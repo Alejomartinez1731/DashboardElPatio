@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, startTransition } from 'react';
+import { useState, useEffect, useCallback, startTransition, useRef } from 'react';
 import { Compra, KPIData, SheetName } from '@/types';
 import { parsearFecha, excluirFilaResumenConLog, normalizarCabeceras, filaAObjeto } from '@/lib/parsers';
 import { calcularKPIs } from '@/lib/data-utils';
@@ -39,6 +39,10 @@ export interface TabConfig {
   dataKey: string;
 }
 
+// Configuración de procesamiento por chunks
+const CHUNK_SIZE = 100; // Filas a procesar por chunk
+const USE_CHUNKING = true; // Habilitar procesamiento por chunks
+
 /**
  * Hook personalizado para obtener y procesar datos de Google Sheets vía API
  *
@@ -55,6 +59,98 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
   const [isUsingMock, setIsUsingMock] = useState(false);
   const [dataSource, setDataSource] = useState<'n8n' | 'mock'>('n8n');
   const [warning, setWarning] = useState<string | null>(null);
+
+  // Ref para abortar procesamiento si se desmonta el componente
+  const isMountedRef = useRef(true);
+
+  /**
+   * Procesa filas en chunks para no bloquear el UI
+   */
+  const procesarFilasConChunking = useCallback((
+    values: string[][],
+    cabeceras: string[],
+    allData: Record<string, string[][]>,
+    apiResult: SheetsApiResponse,
+    usarChunking: boolean
+  ) => {
+    const comprasProcesadas: Compra[] = [];
+    const inicio = Date.now();
+
+    const procesarChunk = (chunkInicio: number): void => {
+      // Si el componente se desmontó, detener procesamiento
+      if (!isMountedRef.current) {
+        console.log('⏹️ Componente desmontado, deteniendo procesamiento');
+        return;
+      }
+
+      const chunkFin = Math.min(chunkInicio + CHUNK_SIZE, values.length);
+
+      // Procesar este chunk
+      for (let i = chunkInicio; i < chunkFin; i++) {
+        if (i === 0) continue; // Saltar cabecera
+
+        const fila = values[i] as any[];
+        const obj = filaAObjeto(fila, cabeceras);
+
+        // Crear objeto Compra
+        const compra: Compra = {
+          id: `compra-${i}-${Date.now()}`,
+          fecha: parsearFecha(obj.fecha || ''),
+          tienda: obj.tienda || '',
+          producto: obj.descripcion || '',
+          cantidad: parseFloat(obj.cantidad || '0') || 0,
+          precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
+          total: parseFloat(obj.total || '0') || 0,
+          telefono: obj.telefono,
+          direccion: obj.direccion,
+        };
+
+        // Excluir filas de resumen
+        if (!excluirFilaResumenConLog(compra.producto)) {
+          comprasProcesadas.push(compra);
+        }
+      }
+
+      // Log de progreso
+      const progreso = Math.round((chunkFin / values.length) * 100);
+      console.log(`📊 Procesando... ${progreso}% (${comprasProcesadas.length} compras)`);
+
+      // Si quedan más filas, programar siguiente chunk
+      if (chunkFin < values.length) {
+        if (usarChunking) {
+          // Usar requestIdleCallback para no bloquear el UI
+          requestIdleCallback(() => procesarChunk(chunkFin), { timeout: 100 });
+        } else {
+          // Procesamiento directo (para datasets pequeños)
+          procesarChunk(chunkFin);
+        }
+      } else {
+        // Terminó el procesamiento de todas las filas
+        const tiempoTotal = Date.now() - inicio;
+        console.log(`✅ ${comprasProcesadas.length} compras procesadas en ${tiempoTotal}ms`);
+
+        // 3. Obtener datos adicionales para KPIs
+        const historicoPreciosValues = (apiResult.data.historico_precios?.values) || [];
+        const registroDiarioValues = (apiResult.data.registro_diario?.values) || [];
+
+        // 4. Calcular KPIs
+        const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
+
+        // 5. Actualizar estado (batched en una sola transición)
+        if (isMountedRef.current) {
+          startTransition(() => {
+            setCompras(comprasProcesadas);
+            setComprasFiltradas(comprasProcesadas);
+            setSheetsData(allData);
+            setKpiData(kpis);
+          });
+        }
+      }
+    };
+
+    // Iniciar procesamiento desde la fila 1 (saltar cabecera)
+    procesarChunk(1);
+  }, []);
 
   /**
    * Obtiene datos de la API y los procesa
@@ -111,49 +207,18 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           const cabeceras = normalizarCabeceras(values[0] as string[]);
 
           console.log('📊 Cabeceras normalizadas:', cabeceras);
+          console.log(`📊 Total de filas a procesar: ${values.length - 1}`);
 
-          // Procesar cada fila
-          const comprasProcesadas: Compra[] = [];
+          // Decidir si usar chunking o procesamiento directo
+          const filasAProcesar = values.length - 1;
+          const usarChunking = USE_CHUNKING && filasAProcesar > CHUNK_SIZE;
 
-          for (let i = 1; i < values.length; i++) {
-            const fila = values[i] as any[];
-            const obj = filaAObjeto(fila, cabeceras);
-
-            // Crear objeto Compra
-            const compra: Compra = {
-              id: `compra-${i}-${Date.now()}`,
-              fecha: parsearFecha(obj.fecha || ''),
-              tienda: obj.tienda || '',
-              producto: obj.descripcion || '',
-              cantidad: parseFloat(obj.cantidad || '0') || 0,
-              precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
-              total: parseFloat(obj.total || '0') || 0,
-              telefono: obj.telefono,
-              direccion: obj.direccion,
-            };
-
-            // Excluir filas de resumen
-            if (!excluirFilaResumenConLog(compra.producto)) {
-              comprasProcesadas.push(compra);
-            }
+          if (usarChunking) {
+            console.log(`🚀 Usando procesamiento por chunks (${CHUNK_SIZE} filas/chunk)`);
           }
 
-          console.log(`✅ ${comprasProcesadas.length} compras procesadas`);
-
-          // 3. Obtener datos adicionales para KPIs
-          const historicoPreciosValues = (result.data.historico_precios?.values) || [];
-          const registroDiarioValues = (result.data.registro_diario?.values) || [];
-
-          // 4. Calcular KPIs
-          const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
-
-          // 5. Actualizar estado (batched en una sola transición)
-          startTransition(() => {
-            setCompras(comprasProcesadas);
-            setComprasFiltradas(comprasProcesadas);
-            setSheetsData(allData);
-            setKpiData(kpis);
-          });
+          // Procesar filas (con chunks o directo)
+          procesarFilasConChunking(values, cabeceras, allData, result, usarChunking);
         }
       } else {
         console.warn('⚠️ No hay datos en base_de_datos');
@@ -175,7 +240,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     } finally {
       setLoading(false);
     }
-  }, [tabs]);
+  }, [tabs, procesarFilasConChunking]);
 
   /**
    * Función para refrescar datos manualmente
@@ -189,6 +254,14 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
   useEffect(() => {
     fetchDatos();
   }, [fetchDatos]);
+
+  // Limpiar ref al desmontar
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   return {
     compras,
