@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
@@ -35,13 +35,17 @@ type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'tota
 export default function DashboardPage() {
   // Hook personalizado para obtener datos de Sheets
   // Filtramos tabs que tienen sheetName (excluimos recordatorios que es navegable)
-  const tabsConfig = TABS
-    .filter(tab => tab.sheetName)
-    .map(tab => ({
-      id: tab.id,
-      sheetName: tab.sheetName!,
-      dataKey: tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName!,
-    }));
+  // Memoizamos para evitar re-creación en cada render (causaría infinite loop en useSheetData)
+  const tabsConfig = useMemo(() =>
+    TABS
+      .filter(tab => tab.sheetName)
+      .map(tab => ({
+        id: tab.id,
+        sheetName: tab.sheetName!,
+        dataKey: tab.sheetName === 'base_datos' ? 'base_de_datos' : tab.sheetName!,
+      })),
+    [] // TABS es una constante, no necesita dependencias
+  );
 
   const {
     compras,
