@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateProductoNombre, validateDias, sanitizeString } from '@/lib/validation';
+import { apiLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// Configuración de n8n
-const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-const N8N_RECORDATORIOS_WEBHOOK = process.env.N8N_RECORDATORIOS_WEBHOOK_URL || process.env.NEXT_PUBLIC_N8N_RECORDATORIOS_WEBHOOK_URL;
-
-// Debug: mostrar variables al iniciar
-console.log('🔧 Variables de entorno n8n:');
-console.log('  - N8N_WEBHOOK_URL:', N8N_WEBHOOK_URL ? '✓ configurado' : '✗ NO configurado');
-console.log('  - N8N_RECORDATORIOS_WEBHOOK_URL:', process.env.N8N_RECORDATORIOS_WEBHOOK_URL || 'undefined');
-console.log('  - NEXT_PUBLIC_N8N_RECORDATORIOS_WEBHOOK_URL:', process.env.NEXT_PUBLIC_N8N_RECORDATORIOS_WEBHOOK_URL || 'undefined');
-console.log('  - N8N_RECORDATORIOS_WEBHOOK final:', N8N_RECORDATORIOS_WEBHOOK || 'undefined');
+// Configuración de n8n (server-side only, no NEXT_PUBLIC_)
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
+const N8N_RECORDATORIOS_WEBHOOK_URL = process.env.N8N_RECORDATORIOS_WEBHOOK_URL;
 
 // Nombres de las hojas
 const HOJA_RECORDATORIOS = 'Recordatorios';
@@ -302,7 +297,8 @@ export async function GET(request: NextRequest) {
         const notas = String(fila[idxNotas] || '').trim();
 
         if (producto && activo && dias > 0) {
-          recordatoriosManuales.set(producto.toLowerCase(), { nombreOriginal: producto, dias, notas });
+          const productoLower = producto.toLowerCase();
+          recordatoriosManuales.set(productoLower, { nombreOriginal: producto, dias, notas });
         }
       }
     }
@@ -463,26 +459,37 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { producto, dias, notas = '' } = body;
 
-    // Validaciones
-    if (!producto || typeof producto !== 'string' || producto.trim().length < 2) {
+    apiLogger.info('POST /api/recordatorios', { producto, dias: body });
+
+    // Validar y sanitizar producto
+    const productoResult = validateProductoNombre(producto);
+    if (!productoResult.valid) {
+      apiLogger.warn('Validación fallida', { producto, errors: productoResult.errors });
       return NextResponse.json(
-        { success: false, error: 'El producto debe tener al menos 2 caracteres' },
+        { success: false, error: productoResult.errors.join('. ') },
         { status: 400 }
       );
     }
 
-    const diasNum = parseInt(dias);
-    if (!diasNum || diasNum < 1 || diasNum > 90) {
+    const productoSanitizado = productoResult.sanitized!;
+
+    // Validar días
+    const diasResult = validateDias(dias);
+    if (!diasResult.valid) {
+      apiLogger.warn('Validación días fallida', { dias, errors: diasResult.errors });
       return NextResponse.json(
-        { success: false, error: 'Los días deben estar entre 1 y 90' },
+        { success: false, error: diasResult.errors.join('. ') },
         { status: 400 }
       );
     }
+
+    const diasSanitizado = diasResult.sanitized!;
+    const notasSanitizado = sanitizeString(notas);
 
     // Verificar duplicados
     const sheetsData = await getAllSheetsData();
     const recordatoriosRaw = sheetsData.recordatorios;
-    const productoLower = producto.trim().toLowerCase();
+    const productoLower = productoSanitizado.toLowerCase();
 
     if (recordatoriosRaw.length > 1) {
       for (let i = 1; i < recordatoriosRaw.length; i++) {
@@ -502,20 +509,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Intentar guardar vía n8n
-    if (N8N_RECORDATORIOS_WEBHOOK) {
-      console.log('📤 Enviando a n8n:', {
+    if (N8N_RECORDATORIOS_WEBHOOK_URL) {
+      apiLogger.debug('Enviando a n8n', {
         action: 'append',
         sheet: HOJA_RECORDATORIOS,
-        row: [producto.trim(), diasNum.toString(), 'TRUE', String(notas).trim()],
+        row: [productoSanitizado, diasSanitizado.toString(), 'TRUE', notasSanitizado],
       });
 
-      const response = await fetch(N8N_RECORDATORIOS_WEBHOOK, {
+      const response = await fetch(N8N_RECORDATORIOS_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'append',
           sheet: HOJA_RECORDATORIOS,
-          row: [producto.trim(), diasNum.toString(), 'TRUE', String(notas).trim()],
+          row: [productoSanitizado, diasSanitizado.toString(), 'TRUE', notasSanitizado],
         }),
       });
 
@@ -553,9 +560,9 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Recordatorio creado correctamente',
       data: {
-        producto: producto.trim(),
-        dias: diasNum,
-        notas: String(notas).trim(),
+        producto: productoSanitizado,
+        dias: diasSanitizado,
+        notas: notasSanitizado,
       },
     });
   } catch (error: any) {
@@ -591,7 +598,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Intentar eliminar vía n8n
-    if (N8N_RECORDATORIOS_WEBHOOK) {
+    if (N8N_RECORDATORIOS_WEBHOOK_URL) {
       const payload = {
         action: 'delete',
         sheet: HOJA_RECORDATORIOS,
@@ -600,7 +607,7 @@ export async function DELETE(request: NextRequest) {
 
       console.log('📤 Enviando a n8n DELETE:', payload);
 
-      const response = await fetch(N8N_RECORDATORIOS_WEBHOOK, {
+      const response = await fetch(N8N_RECORDATORIOS_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -627,7 +634,7 @@ export async function DELETE(request: NextRequest) {
         );
       }
     } else {
-      console.error('❌ N8N_RECORDATORIOS_WEBHOOK no configurado');
+      console.error('❌ N8N_RECORDATORIOS_WEBHOOK_URL no configurado');
       return NextResponse.json(
         {
           success: false,

@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 const USE_MOCK = process.env.USE_MOCK_DATA === 'true';
 const MAX_RETRIES = 1;
 const TIMEOUT_MS = 15000; // 15 segundos
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL; // ✅ Server-side only, no NEXT_PUBLIC_
 
 type ErrorType = 'timeout' | 'network' | 'parse' | 'validation' | 'unknown';
 
@@ -159,11 +160,9 @@ export async function GET(request: Request) {
 
   console.log('📡 API /api/sheets llamada');
 
-  const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
-
   // Validar configuración
-  if (!webhookUrl) {
-    console.warn('⚠️ NEXT_PUBLIC_N8N_WEBHOOK_URL no configurada');
+  if (!N8N_WEBHOOK_URL) {
+    console.warn('⚠️ N8N_WEBHOOK_URL no configurada');
     const { GET } = await import('./mock/route');
     const mockResponse = await GET(request);
     const mockData = await mockResponse.json();
@@ -176,10 +175,10 @@ export async function GET(request: Request) {
     });
   }
 
-  console.log('📡 Webhook URL:', webhookUrl.substring(0, 40) + '...');
+  console.log('📡 Webhook URL:', N8N_WEBHOOK_URL.substring(0, 40) + '...');
 
   // Intentar obtener de n8n con reintentos
-  const n8nResult = await fetchWithRetry(webhookUrl);
+  const n8nResult = await fetchWithRetry(N8N_WEBHOOK_URL);
 
   if (!n8nResult.success) {
     console.error(`❌ n8n falló después de ${n8nResult.attempts} intentos:`, n8nResult.error);
