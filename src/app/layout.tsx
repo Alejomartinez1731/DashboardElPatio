@@ -5,7 +5,6 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { ToastContainer } from "@/components/ui/toast";
 import { ThemeProvider } from "@/contexts/theme-context";
-import { ErrorBoundary } from "@/components/error/error-boundary";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -35,23 +34,16 @@ export default function RootLayout({
         <body
           className={`${jakarta.variable} ${mono.variable} antialiased font-sans`}
         >
-          <ErrorBoundary
-            onError={(error, errorInfo) => {
-              // Error boundary raíz - captura errores globales
-              console.error('[Root Error Boundary]', error, errorInfo);
-            }}
-          >
-            <div className="flex min-h-screen bg-background overflow-x-hidden">
-              <Sidebar />
-              <div className="flex-1 ml-0 md:ml-64 w-full">
-                <Header />
-                <main className="p-4 md:p-6 w-full overflow-x-hidden">
-                  {children}
-                </main>
-              </div>
+          <div className="flex min-h-screen bg-background overflow-x-hidden">
+            <Sidebar />
+            <div className="flex-1 ml-0 md:ml-64 w-full">
+              <Header />
+              <main className="p-4 md:p-6 w-full overflow-x-hidden">
+                {children}
+              </main>
             </div>
-            <ToastContainer />
-          </ErrorBoundary>
+          </div>
+          <ToastContainer />
         </body>
       </html>
     </ThemeProvider>
