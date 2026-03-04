@@ -186,27 +186,15 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       }
 
       // 1. Extraer datos crudos de cada hoja
-      console.log('📊 Datos recibidos de API:', Object.keys(result.data || {}));
-      console.log('📊 Estructura de result.data:', JSON.stringify(result.data, null, 2).substring(0, 500));
-
       const allData: Record<string, string[][]> = {};
       tabs.forEach(tab => {
         const sheetData = result.data[tab.dataKey];
-        console.log(`📊 Procesando tab:`, tab.id, `dataKey:`, tab.dataKey, `sheetName:`, tab.sheetName);
-        console.log(`   sheetData existe?:`, !!sheetData);
-        console.log(`   sheetData.values?:`, sheetData?.values ? `Array(${sheetData.values.length})` : 'NO');
-
         if (sheetData?.values && Array.isArray(sheetData.values)) {
           allData[tab.sheetName] = sheetData.values;
-          console.log(`   ✅ Datos guardados para ${tab.sheetName}:`, sheetData.values.length, 'filas');
         } else {
           allData[tab.sheetName] = [];
-          console.log(`   ⚠️ Sin datos para ${tab.sheetName}, usando array vacío`);
         }
       });
-
-      console.log('📊 sheetsData extraído:', Object.keys(allData));
-      console.log('📊 Filas por hoja:', Object.fromEntries(Object.entries(allData).map(([k, v]) => [k, v.length])));
 
       // 2. Procesar compras desde base_de_datos
       const hojaBaseDatos = result.data.base_de_datos || result.data.historico;
