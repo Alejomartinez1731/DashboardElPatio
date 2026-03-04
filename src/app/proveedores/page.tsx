@@ -8,7 +8,7 @@ import { normalizarTienda, COLORES_TIENDA, normalizarFecha } from '@/lib/data-ut
 import { Store, MapPin, Phone, ShoppingCart, TrendingUp, Calendar, Award } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { useSheetData } from '@/hooks/useSheetData';
+import { fetchWithCache } from '@/lib/cache';
 
 interface InfoTienda {
   nombre: string;
@@ -26,14 +26,64 @@ interface InfoTienda {
 }
 
 export default function ProveedoresPage() {
-  // Usar el hook useSheetData para obtener datos con caché
-  const tabsConfig = useMemo(() => [
-    { id: 'base_datos', sheetName: 'base_datos' as const, dataKey: 'base_de_datos' }
-  ], []);
+  const [compras, setCompras] = useState<Compra[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { compras, loading: cargando, error, isUsingMock, warning, refetch } = useSheetData(tabsConfig);
+  useEffect(() => {
+    async function fetchDatos() {
+      try {
+        const result = await fetchWithCache(
+          'sheets_data',
+          async () => {
+            const response = await fetch('/api/sheets');
+            if (!response.ok) throw new Error('Error al obtener datos');
+            return response.json();
+          },
+          3
+        );
 
-  // Analizar información por tienda
+        if (result.success && result.data.base_de_datos?.values) {
+          const values = result.data.base_de_datos.values as string[][];
+          if (values.length > 1) {
+            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
+            const comprasProcesadas: Compra[] = [];
+
+            for (let i = 1; i < values.length; i++) {
+              const fila = values[i];
+              const obj: Record<string, string | number | undefined> = {};
+              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
+
+              const tiendaNormalizada = normalizarTienda(String(obj.tienda || ''));
+
+              const compra: Compra = {
+                id: `compra-${i}`,
+                fecha: normalizarFecha(String(obj.fecha || '')),
+                tienda: tiendaNormalizada,
+                producto: String(obj.descripcion || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
+                telefono: obj.telefono ? String(obj.telefono) : undefined,
+                direccion: obj.direccion ? String(obj.direccion) : undefined,
+              };
+
+              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
+                comprasProcesadas.push(compra);
+              }
+            }
+            setCompras(comprasProcesadas);
+          }
+        }
+      } catch (err) {
+        generalLogger.error('Error:', err);
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      } finally {
+        setCargando(false);
+      }
+    }
+    fetchDatos();
+  }, []);
   const infoTiendas = useMemo(() => {
     const tiendas: Record<string, Compra[]> = {};
 
@@ -105,7 +155,6 @@ export default function ProveedoresPage() {
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-muted-foreground">Cargando proveedores...</p>
-          {warning && <p className="text-xs text-amber-500 mt-2">{warning}</p>}
         </div>
       </div>
     );
@@ -116,7 +165,7 @@ export default function ProveedoresPage() {
       <div className="bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-6 text-center">
         <p className="text-[#ef4444] mb-2">Error al cargar datos</p>
         <p className="text-sm text-muted-foreground mb-4">{error}</p>
-        <button onClick={() => refetch()} className="px-4 py-2 bg-primary text-white rounded-lg">
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-white rounded-lg">
           Reintentar
         </button>
       </div>

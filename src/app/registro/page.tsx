@@ -1,27 +1,22 @@
 'use client';
 import { generalLogger } from '@/lib/logger';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
 import { Search, Filter, Calendar, Store, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useState as useReactState } from 'react';
-import { useSheetData } from '@/hooks/useSheetData';
+import { fetchWithCache, apiCache } from '@/lib/cache';
 
 type SortField = 'fecha' | 'tienda' | 'producto' | 'total';
 type SortOrder = 'asc' | 'desc';
 
 export default function RegistroPage() {
-  // Usar el hook useSheetData para obtener datos con caché
-  const tabsConfig = useMemo(() => [
-    { id: 'registro_diario', sheetName: 'registro_diario' as const, dataKey: 'registro_diario' }
-  ], []);
-
-  const { sheetsData, loading: cargando, error, isUsingMock, warning } = useSheetData(tabsConfig);
-  const registroData = sheetsData['registro_diario'] || [];
-
+  const [compras, setCompras] = useState<Compra[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroTienda, setFiltroTienda] = useState<string>('todas');
   const [sortField, setSortField] = useReactState<SortField>('fecha');
@@ -29,41 +24,64 @@ export default function RegistroPage() {
   const [pagina, setPagina] = useReactState(1);
   const ITEMS_POR_PAGINA = 25;
 
-  // Procesar compras desde registro_diario
-  const compras = useMemo(() => {
-    if (registroData.length === 0) return [];
+  useEffect(() => {
+    async function fetchDatos() {
+      try {
+        setCargando(true);
+        setError(null);
 
-    const values = registroData;
-    if (values.length <= 1) return [];
+        // Usar fetchWithCache para aprovechar el sistema de caché
+        const result = await fetchWithCache(
+          'sheets_data',
+          async () => {
+            const response = await fetch('/api/sheets');
+            if (!response.ok) throw new Error('Error al obtener datos');
+            return response.json();
+          },
+          3 // 3 minutos de caché
+        );
 
-    const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-    const comprasProcesadas: Compra[] = [];
+        if (result.success && result.data.registro_diario?.values) {
+          const values = result.data.registro_diario.values as string[][];
+          if (values.length > 1) {
+            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
+            const comprasProcesadas: Compra[] = [];
 
-    for (let i = 1; i < values.length; i++) {
-      const fila = values[i];
-      const obj: Record<string, string | number | undefined> = {};
-      cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
+            for (let i = 1; i < values.length; i++) {
+              const fila = values[i];
+              const obj: Record<string, string | number | undefined> = {};
+              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
-      // Buscar precio unitario en diferentes posibles nombres de columna
-      const precioUnitarioRaw = obj.totalunitario || obj['total unitario'] || obj['precio unitario'] || obj['precio_unitario'] || obj['preciounitario'] || obj.precio || obj['precio unit.'] || '0';
+              const precioUnitarioRaw = obj.totalunitario || obj['total unitario'] || obj['precio unitario'] || obj['precio_unitario'] || obj['preciounitario'] || obj.precio || obj['precio unit.'] || '0';
 
-      const compra: Compra = {
-        id: `compra-${i}`,
-        fecha: new Date(String(obj.fecha || '')),
-        tienda: String(obj.tienda || ''),
-        producto: String(obj.descripcion || obj.producto || ''),
-        cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
-        precioUnitario: parseFloat(String(precioUnitarioRaw)) || 0,
-        total: parseFloat(String(obj.total || '0')) || 0,
-      };
+              const compra: Compra = {
+                id: `compra-${i}`,
+                fecha: new Date(String(obj.fecha || '')),
+                tienda: String(obj.tienda || ''),
+                producto: String(obj.descripcion || obj.producto || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(precioUnitarioRaw)) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
+              };
 
-      if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
-        comprasProcesadas.push(compra);
+              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
+                comprasProcesadas.push(compra);
+              }
+            }
+            setCompras(comprasProcesadas);
+          }
+        } else {
+          setError('No se encontraron datos de registro diario');
+        }
+      } catch (err) {
+        generalLogger.error('Error:', err);
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      } finally {
+        setCargando(false);
       }
     }
-
-    return comprasProcesadas;
-  }, [registroData]);
+    fetchDatos();
+  }, []);
 
   // Obtener tiendas únicas
   const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda))));
@@ -110,7 +128,6 @@ export default function RegistroPage() {
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-muted-foreground">Cargando registro de compras...</p>
-          {warning && <p className="text-xs text-amber-500 mt-2">{warning}</p>}
         </div>
       </div>
     );
@@ -120,7 +137,6 @@ export default function RegistroPage() {
     return (
       <div className="bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-6 text-center">
         <p className="text-[#ef4444] mb-4">{error}</p>
-        {warning && <p className="text-amber-500 mb-4 text-sm">{warning}</p>}
         <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#f59e0b] text-white rounded-lg">
           Reintentar
         </button>

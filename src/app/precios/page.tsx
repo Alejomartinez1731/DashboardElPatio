@@ -11,7 +11,7 @@ import { MonthlyComparison } from '@/components/dashboard/monthly-comparison';
 import { CategoryKPIs } from '@/components/dashboard/category-kpis';
 import { CategoryDistribution } from '@/components/dashboard/category-distribution';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { useSheetData } from '@/hooks/useSheetData';
+import { fetchWithCache } from '@/lib/cache';
 
 interface PrecioProducto {
   producto: string;
@@ -25,12 +25,66 @@ interface PrecioProducto {
 }
 
 export default function PreciosPage() {
-  // Usar el hook useSheetData para obtener datos con caché
-  const tabsConfig = useMemo(() => [
-    { id: 'base_datos', sheetName: 'base_datos' as const, dataKey: 'base_de_datos' }
-  ], []);
+  const [compras, setCompras] = useState<Compra[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { compras, loading: cargando, error, isUsingMock, warning, refetch } = useSheetData(tabsConfig);
+  useEffect(() => {
+    async function fetchDatos() {
+      try {
+        const result = await fetchWithCache(
+          'sheets_data',
+          async () => {
+            const response = await fetch('/api/sheets');
+            if (!response.ok) throw new Error('Error al obtener datos');
+            return response.json();
+          },
+          3
+        );
+
+        if (result.success && result.data.base_de_datos?.values) {
+          const values = result.data.base_de_datos.values as string[][];
+          generalLogger.debug('Precios - Datos recibidos', { filas: values.length });
+
+          if (values.length > 1) {
+            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
+            generalLogger.debug('📊 Precios - Cabeceras:', cabeceras);
+            const comprasProcesadas: Compra[] = [];
+
+            for (let i = 1; i < values.length; i++) {
+              const fila = values[i];
+              const obj: Record<string, string | number | undefined> = {};
+              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
+
+              const precioRaw = obj.totalunitario || obj['precio unitario'] || obj['precio_unitario'] || obj.precio || '0';
+
+              const compra: Compra = {
+                id: `compra-${i}`,
+                fecha: normalizarFecha(String(obj.fecha || '')),
+                tienda: String(obj.tienda || ''),
+                producto: String(obj.descripcion || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(precioRaw)) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
+              };
+
+              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
+                comprasProcesadas.push(compra);
+              }
+            }
+            generalLogger.debug('✅ Precios - Compras procesadas:', comprasProcesadas.length);
+            setCompras(comprasProcesadas);
+          }
+        }
+      } catch (err) {
+        generalLogger.error('Error en precios:', err);
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      } finally {
+        setCargando(false);
+      }
+    }
+    fetchDatos();
+  }, []);
 
   // Analizar evolución de precios y frecuencia de compras por producto
   const preciosProductos = useMemo(() => {
@@ -179,7 +233,6 @@ export default function PreciosPage() {
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-muted-foreground">Cargando análisis de precios...</p>
-          {warning && <p className="text-xs text-amber-500 mt-2">{warning}</p>}
         </div>
       </div>
     );
@@ -190,7 +243,7 @@ export default function PreciosPage() {
       <div className="bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-6 text-center">
         <p className="text-[#ef4444] mb-2">Error al cargar datos</p>
         <p className="text-sm text-muted-foreground mb-4">{error}</p>
-        <button onClick={() => refetch()} className="px-4 py-2 bg-[#f59e0b] text-white rounded-lg">
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#f59e0b] text-white rounded-lg">
           Reintentar
         </button>
       </div>
