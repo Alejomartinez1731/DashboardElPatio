@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
-import { RecordatoriosSummary } from '@/components/dashboard/recordatorios-summary';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardKPIs } from '@/components/dashboard/dashboard-kpis';
 import { DashboardTabs, TABS } from '@/components/dashboard/dashboard-tabs';
@@ -328,9 +327,6 @@ export default function DashboardPage() {
 
       {/* Presupuesto Mensual */}
       {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} presupuestoInicial={3000} />}
-
-      {/* Recordatorios de Reposición - Resumen */}
-      <RecordatoriosSummary />
 
       {/* Quick Actions */}
       {showSkeletons ? (
