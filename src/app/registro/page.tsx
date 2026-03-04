@@ -22,6 +22,7 @@ export default function RegistroPage() {
   const [sortField, setSortField] = useReactState<SortField>('fecha');
   const [sortOrder, setSortOrder] = useReactState<SortOrder>('desc');
   const [pagina, setPagina] = useReactState(1);
+  const [totalCompras, setTotalCompras] = useState(0); // Nuevo estado para el total
   const ITEMS_POR_PAGINA = 25;
 
   useEffect(() => {
@@ -30,55 +31,49 @@ export default function RegistroPage() {
         setCargando(true);
         setError(null);
 
-        // Usar fetchWithCache para aprovechar el sistema de caché
-        const result = await fetchWithCache(
-          'sheets_data',
-          async () => {
-            const response = await fetch('/api/sheets');
-            if (!response.ok) throw new Error('Error al obtener datos');
-            return response.json();
-          },
-          3 // 3 minutos de caché
-        );
+        // Construir query params
+        const params = new URLSearchParams({
+          limit: ITEMS_POR_PAGINA.toString(),
+          offset: ((pagina - 1) * ITEMS_POR_PAGINA).toString(),
+        });
 
-        if (result.success && result.data.registro_diario?.values) {
-          const values = result.data.registro_diario.values as string[][];
-          if (values.length > 1) {
-            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-            const comprasProcesadas: Compra[] = [];
-
-            for (let i = 1; i < values.length; i++) {
-              const fila = values[i];
-              const obj: Record<string, string | number | undefined> = {};
-              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
-
-              // Buscar precio unitario - case insensitive porque cabeceras pueden ser mayúsculas
-              const buscarKey = (key: string) => {
-                const keys = Object.keys(obj);
-                return keys.find(k => k.toLowerCase() === key.toLowerCase());
-              };
-
-              const precioUnitarioRaw = buscarKey('TOTALUNITARIO') || buscarKey('total unitario') || buscarKey('precio unitario') || buscarKey('precio_unitario') || buscarKey('preciounitario') || buscarKey('precio') || buscarKey('precio unit.') || '0';
-
-              const compra: Compra = {
-                id: `compra-${i}`,
-                fecha: new Date(String(obj.fecha || '')),
-                tienda: String(obj.tienda || ''),
-                producto: String(obj.descripcion || obj.producto || ''),
-                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
-                precioUnitario: parseFloat(String(precioUnitarioRaw)) || 0,
-                total: parseFloat(String(obj.total || '0')) || 0,
-              };
-
-              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
-                comprasProcesadas.push(compra);
-              }
-            }
-            setCompras(comprasProcesadas);
-          }
-        } else {
-          setError('No se encontraron datos de registro diario');
+        // Aplicar filtros de búsqueda
+        if (filtroTienda !== 'todas') {
+          params.append('tienda', filtroTienda);
         }
+        if (busqueda.trim() !== '') {
+          params.append('producto', busqueda.trim());
+        }
+
+        // Fetch a Supabase API
+        const response = await fetch(`/api/compras?${params}`);
+
+        if (!response.ok) {
+          throw new Error('Error al obtener datos');
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Error desconocido');
+        }
+
+        // Transformar datos de Supabase al formato Compra
+        const comprasTransformadas: Compra[] = (result.data || []).map((c: any) => ({
+          id: c.id,
+          fecha: new Date(c.fecha),
+          tienda: c.tienda,
+          producto: c.descripcion,
+          cantidad: c.cantidad,
+          precioUnitario: c.precio_unitario,
+          total: c.total,
+        }));
+
+        setCompras(comprasTransformadas);
+
+        // Actualizar conteo total (para paginación)
+        setTotalCompras(result.pagination?.total || 0);
+
       } catch (err) {
         generalLogger.error('Error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -87,37 +82,28 @@ export default function RegistroPage() {
       }
     }
     fetchDatos();
-  }, []);
+  }, [pagina, filtroTienda, busqueda]); // Re-fetch cuando cambian filtros o página
 
-  // Obtener tiendas únicas
+  // Obtener tiendas únicas del listado de compras (puede variar según filtros)
   const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda))));
 
-  // Filtrar y ordenar
-  const comprasFiltradas = compras
-    .filter(c => {
-      const cumpleBusqueda = c.producto.toLowerCase().includes(busqueda.toLowerCase()) ||
-                            c.tienda.toLowerCase().includes(busqueda.toLowerCase());
-      const cumpleTienda = filtroTienda === 'todas' || normalizarTienda(c.tienda) === filtroTienda;
-      return cumpleBusqueda && cumpleTienda;
-    })
-    .sort((a, b) => {
-      let aVal: Date | string | number, bVal: Date | string | number;
-      switch (sortField) {
-        case 'fecha': aVal = a.fecha; bVal = b.fecha; break;
-        case 'tienda': aVal = normalizarTienda(a.tienda); bVal = normalizarTienda(b.tienda); break;
-        case 'producto': aVal = a.producto; bVal = b.producto; break;
-        case 'total': aVal = a.total; bVal = b.total; break;
-      }
-      if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
-      return aVal < bVal ? 1 : -1;
-    });
+  // NOTA: El filtrado ahora lo hace el servidor
+  // Solo mantenemos el ordenamiento en cliente si se desea cambiar el orden por defecto
+  const comprasOrdenadas = [...compras].sort((a, b) => {
+    let aVal: Date | string | number, bVal: Date | string | number;
+    switch (sortField) {
+      case 'fecha': aVal = a.fecha; bVal = b.fecha; break;
+      case 'tienda': aVal = normalizarTienda(a.tienda); bVal = normalizarTienda(b.tienda); break;
+      case 'producto': aVal = a.producto; bVal = b.producto; break;
+      case 'total': aVal = a.total; bVal = b.total; break;
+    }
+    if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
+    return aVal < bVal ? 1 : -1;
+  });
 
-  // Paginación
-  const totalPaginas = Math.ceil(comprasFiltradas.length / ITEMS_POR_PAGINA);
-  const comprasPaginadas = comprasFiltradas.slice(
-    (pagina - 1) * ITEMS_POR_PAGINA,
-    pagina * ITEMS_POR_PAGINA
-  );
+  // Paginación (ya viene del servidor, pero mantenemos la lógica por si acaso)
+  const totalPaginas = Math.ceil(totalCompras / ITEMS_POR_PAGINA);
+  const comprasPaginadas = comprasOrdenadas; // Ya está paginado del servidor
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -174,7 +160,7 @@ export default function RegistroPage() {
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Filtrando</p>
-          <p className="text-2xl font-bold text-[#3b82f6]">{comprasFiltradas.length}</p>
+          <p className="text-2xl font-bold text-[#3b82f6]">{totalCompras}</p>
         </Card>
       </div>
 
@@ -285,7 +271,7 @@ export default function RegistroPage() {
         {totalPaginas > 1 && (
           <div className="flex items-center justify-between px-4 py-3 bg-muted border-t border-border">
             <p className="text-sm text-muted-foreground">
-              Mostrando {(pagina - 1) * ITEMS_POR_PAGINA + 1} - {Math.min(pagina * ITEMS_POR_PAGINA, comprasFiltradas.length)} de {comprasFiltradas.length} compras
+              Mostrando {(pagina - 1) * ITEMS_POR_PAGINA + 1} - {Math.min(pagina * ITEMS_POR_PAGINA, totalCompras)} de {totalCompras} compras
             </p>
             <div className="flex items-center gap-2">
               <button
