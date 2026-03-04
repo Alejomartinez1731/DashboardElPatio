@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://n8n-alejomartinez-n8j.aejhww.easypanel.host https://*.easypanel.host",
+              "connect-src 'self' https://n8n-alejomartinez-n8n.aejhww.easypanel.host https://*.easypanel.host",
               "frame-src 'none'",
               "object-src 'none'",
               "base-uri 'self'",
