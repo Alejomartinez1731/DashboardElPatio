@@ -42,18 +42,18 @@ export const useListaCompra = create<ListaCompraStore>()(
       productos: [],
 
       agregarProducto: (producto) => {
-        generalLogger.debug('➕ agregarProducto:', producto);
+        generalLogger.debug('agregarProducto', { producto });
         set((state) => {
           // Verificar si ya existe
           const existe = state.productos.some((p) => p.producto === producto.producto);
-          generalLogger.debug('   ¿Ya existe?', existe);
+          generalLogger.debug('¿Ya existe?', { existe });
           if (existe) {
-            generalLogger.debug('   ⚠️ Producto ya existe, no se añade');
+            generalLogger.debug('Producto ya existe, no se añade');
             return state;
           }
 
           const nuevos = [...state.productos, producto];
-          generalLogger.debug('   ✅ Producto añadido. Total:', nuevos.length);
+          generalLogger.debug('Producto añadido', { total: nuevos.length });
           return {
             productos: nuevos,
           };
@@ -61,10 +61,10 @@ export const useListaCompra = create<ListaCompraStore>()(
       },
 
       eliminarProducto: (productoNombre) => {
-        generalLogger.debug('➖ eliminarProducto:', productoNombre);
+        generalLogger.debug('eliminarProducto', { producto: productoNombre });
         set((state) => {
           const nuevos = state.productos.filter((p) => p.producto !== productoNombre);
-          generalLogger.debug('   ✅ Producto eliminado. Antes:', state.productos.length, 'Ahora:', nuevos.length);
+          generalLogger.debug('Producto eliminado', { antes: state.productos.length, ahora: nuevos.length });
           return {
             productos: nuevos,
           };
@@ -72,19 +72,19 @@ export const useListaCompra = create<ListaCompraStore>()(
       },
 
       toggleProducto: (producto) => {
-        generalLogger.debug('🔄 toggleProducto llamado:', producto);
+        generalLogger.debug('toggleProducto llamado', { producto });
         const { estaEnLista, agregarProducto, eliminarProducto } = get();
         const esta = estaEnLista(producto.producto);
-        generalLogger.debug('   ¿Está en lista?', esta);
+        generalLogger.debug('¿Está en lista?', { esta });
 
         if (esta) {
-          generalLogger.debug('   ➖ Eliminando...', producto.producto);
+          generalLogger.debug('Eliminando producto', { producto: producto.producto });
           eliminarProducto(producto.producto);
         } else {
-          generalLogger.debug('   ➕ Añadiendo...', producto.producto);
+          generalLogger.debug('Añadiendo producto', { producto: producto.producto });
           agregarProducto(producto);
         }
-        generalLogger.debug('   ✅ Toggle completado');
+        generalLogger.debug('Toggle completado');
       },
 
       estaEnLista: (productoNombre) => {
