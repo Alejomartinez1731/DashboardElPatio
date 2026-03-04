@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateProductoNombre, validateDias, sanitizeString } from '@/lib/validation';
 import { apiLogger } from '@/lib/logger';
+import { crearRecordatorioSchema, recordatorioQuerySchema } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -306,8 +307,27 @@ export async function GET(request: NextRequest) {
 
     // Obtener query params
     const { searchParams } = new URL(request.url);
-    const incluirAutomaticosParam = searchParams.get('incluirAutomaticos');
-    const incluirAutomaticos = incluirAutomaticosParam !== 'false'; // Por defecto true
+    const queryParams = {
+      incluirAutomaticos: searchParams.get('incluirAutomaticos') || 'true',
+    };
+
+    // Validar query params con Zod
+    const validationResult = recordatorioQuerySchema.safeParse(queryParams);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.flatten().fieldErrors;
+      apiLogger.warn('Query params inválidos', { errors });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Parámetros inválidos',
+          details: errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const incluirAutomaticos = validationResult.data.incluirAutomaticos !== 'false';
 
     apiLogger.info('Query params:', { incluirAutomaticos });
 
@@ -521,34 +541,31 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { producto, dias, notas = '' } = body;
 
-    apiLogger.info('POST /api/recordatorios', { producto, dias: body });
+    apiLogger.info('POST /api/recordatorios', { body });
 
-    // Validar y sanitizar producto
-    const productoResult = validateProductoNombre(producto);
-    if (!productoResult.valid) {
-      apiLogger.warn('Validación fallida', { producto, errors: productoResult.errors });
+    // Validar con Zod
+    const validationResult = crearRecordatorioSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.flatten().fieldErrors;
+      apiLogger.warn('Validación fallida', { errors });
       return NextResponse.json(
-        { success: false, error: productoResult.errors.join('. ') },
+        {
+          success: false,
+          error: 'Datos inválidos',
+          details: errors,
+        },
         { status: 400 }
       );
     }
 
-    const productoSanitizado = productoResult.sanitized!;
+    const { producto, dias, notas } = validationResult.data;
 
-    // Validar días
-    const diasResult = validateDias(dias);
-    if (!diasResult.valid) {
-      apiLogger.warn('Validación días fallida', { dias, errors: diasResult.errors });
-      return NextResponse.json(
-        { success: false, error: diasResult.errors.join('. ') },
-        { status: 400 }
-      );
-    }
-
-    const diasSanitizado = diasResult.sanitized!;
-    const notasSanitizado = sanitizeString(notas);
+    // Sanitizar adicional (defence in depth)
+    const productoSanitizado = sanitizeString(producto);
+    const diasSanitizado = dias;
+    const notasSanitizado = sanitizeString(notas || '');
 
     // Verificar duplicados
     const sheetsData = await getAllSheetsData();
@@ -648,19 +665,28 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    const { producto } = body;
 
     apiLogger.info('🗑️ DELETE /api/recordatorios');
     apiLogger.info('  Body recibido:', body);
-    apiLogger.info('  Producto a eliminar:', producto);
 
-    if (!producto || typeof producto !== 'string') {
-      apiLogger.error('❌ Producto no especificado o invalido');
+    // Validar con Zod (producto es requerido)
+    const deleteSchema = crearRecordatorioSchema.pick({ producto: true });
+    const validationResult = deleteSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.flatten().fieldErrors;
+      apiLogger.error('❌ Validación fallida', { errors });
       return NextResponse.json(
-        { success: false, error: 'Producto no especificado' },
+        {
+          success: false,
+          error: 'Datos inválidos',
+          details: errors,
+        },
         { status: 400 }
       );
     }
+
+    const { producto } = validationResult.data;
 
     // Intentar eliminar vía n8n
     if (N8N_RECORDATORIOS_WEBHOOK_URL) {

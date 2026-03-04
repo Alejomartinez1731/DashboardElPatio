@@ -1,19 +1,30 @@
 import { NextResponse } from 'next/server';
 import { verifyPassword, createSession } from '@/lib/auth';
 import { generalLogger } from '@/lib/logger';
+import { loginSchema } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { password } = await request.json();
+    const body = await request.json();
 
-    if (!password) {
+    // Validar con Zod
+    const validationResult = loginSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.flatten().fieldErrors;
       return NextResponse.json(
-        { success: false, error: 'Contraseña requerida' },
+        {
+          success: false,
+          error: 'Datos inválidos',
+          details: errors,
+        },
         { status: 400 }
       );
     }
+
+    const { password } = validationResult.data;
 
     // Verificar contraseña
     const isValid = verifyPassword(password);
