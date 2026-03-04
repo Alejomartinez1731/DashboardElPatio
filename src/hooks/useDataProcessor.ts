@@ -4,25 +4,26 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { generalLogger } from '@/lib/logger';
+import type { Compra, KPIData } from '@/types';
 
 type WorkerMessageType = 'filter' | 'sort' | 'calculate-kpis' | 'process-raw-data';
 
 interface WorkerMessage {
   type: WorkerMessageType;
   id: string;
-  data: any;
+  data: unknown;
 }
 
 interface WorkerResponse {
   type: 'success' | 'error';
   id: string;
-  result?: any;
+  result?: unknown;
   error?: string;
 }
 
 export function useDataProcessor() {
   const workerRef = useRef<Worker | null>(null);
-  const pendingCallbacksRef = useRef<Map<string, (result: any, error?: string) => void>>(new Map());
+  const pendingCallbacksRef = useRef<Map<string, (result: unknown, error?: string) => void>>(new Map());
 
   // Inicializar worker
   useEffect(() => {
@@ -57,9 +58,9 @@ export function useDataProcessor() {
 
   // Función para enviar mensajes al worker
   const processInWorker = useCallback(
-    <T = any,>(
+    <T = unknown,>(
       type: WorkerMessageType,
-      data: any,
+      data: unknown,
       timeout: number = 5000
     ): Promise<T> => {
       return new Promise((resolve, reject) => {
@@ -77,7 +78,7 @@ export function useDataProcessor() {
         }, timeout);
 
         // Guardar callback
-        pendingCallbacksRef.current.set(id, (result: any, error?: string) => {
+        pendingCallbacksRef.current.set(id, (result: unknown, error?: string) => {
           clearTimeout(timeoutId);
           if (error) {
             reject(new Error(error));
@@ -96,29 +97,29 @@ export function useDataProcessor() {
 
   // Funciones específicas
   const filterCompras = useCallback(
-    (compras: any[], filtros: any) => {
-      return processInWorker<any[]>('filter', { compras, filtros });
+    (compras: Compra[], filtros: Record<string, unknown>) => {
+      return processInWorker<Compra[]>('filter', { compras, filtros });
     },
     [processInWorker]
   );
 
   const sortCompras = useCallback(
-    (compras: any[], sortField: string, sortOrder: 'asc' | 'desc') => {
-      return processInWorker<any[]>('sort', { compras, sortField, sortOrder });
+    (compras: Compra[], sortField: string, sortOrder: 'asc' | 'desc') => {
+      return processInWorker<Compra[]>('sort', { compras, sortField, sortOrder });
     },
     [processInWorker]
   );
 
   const calculateKPIs = useCallback(
-    (compras: any[]) => {
-      return processInWorker<any>('calculate-kpis', { compras });
+    (compras: Compra[]) => {
+      return processInWorker<KPIData>('calculate-kpis', { compras });
     },
     [processInWorker]
   );
 
   const processRawData = useCallback(
     (values: string[][], sheetName: string) => {
-      return processInWorker<any[]>('process-raw-data', { values, sheetName });
+      return processInWorker<Compra[]>('process-raw-data', { values, sheetName });
     },
     [processInWorker]
   );
