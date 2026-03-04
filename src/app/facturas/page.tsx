@@ -2,78 +2,49 @@
 import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
-import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { normalizarTienda, COLORES_TIENDA, agruparPorFactura, normalizarFecha } from '@/lib/data-utils';
+import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
 import { Receipt, Calendar, Store, ShoppingCart, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { useState as useReactState } from 'react';
-import { fetchWithCache } from '@/lib/cache';
 
 interface FacturaConDetalle {
   id: string;
-  fecha: Date;
+  fecha: string;
   tienda: string;
-  tiendaNormalizada: string;
-  color: string;
   total: number;
-  numProductos: number;
-  items: Compra[];
+  num_productos: number;
+  imagen_url: string | null;
+  nombre_archivo: string | null;
+  restaurante_id: string | null;
+  compras?: {
+    id: string;
+    descripcion: string;
+    cantidad: number;
+    precio_unitario: number;
+    total: number;
+  }[];
 }
 
 export default function FacturasPage() {
-  const [compras, setCompras] = useState<Compra[]>([]);
+  const [facturas, setFacturas] = useState<FacturaConDetalle[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [facturaExpandida, setFacturaExpandida] = useReactState<string | null>(null);
+  const [facturaExpandida, setFacturaExpandida] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDatos() {
       try {
-        const result = await fetchWithCache(
-          'sheets_data',
-          async () => {
-            const response = await fetch('/api/sheets');
-            if (!response.ok) throw new Error('Error al obtener datos');
-            return response.json();
-          },
-          3
-        );
+        const response = await fetch('/api/facturas');
+        if (!response.ok) throw new Error('Error al obtener datos');
 
-        if (result.success && result.data.base_de_datos?.values) {
-          const values = result.data.base_de_datos.values as string[][];
-          if (values.length > 1) {
-            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-            const comprasProcesadas: Compra[] = [];
+        const result = await response.json();
 
-            for (let i = 1; i < values.length; i++) {
-              const fila = values[i];
-              const obj: Record<string, string | number | undefined> = {};
-              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
-
-              // Buscar claves de forma case-insensitive porque las cabeceras pueden venir en mayúsculas
-              const buscarKey = (key: string) => {
-                const keys = Object.keys(obj);
-                return keys.find(k => k.toLowerCase() === key.toLowerCase());
-              };
-
-              const compra: Compra = {
-                id: `compra-${i}`,
-                fecha: normalizarFecha(String(buscarKey('fecha') || obj.fecha || '')),
-                tienda: String(buscarKey('tienda') || obj.tienda || ''),
-                producto: String(buscarKey('descripcion') || obj.descripcion || ''),
-                cantidad: parseFloat(String(buscarKey('cantidad') || obj.cantidad || '0')) || 0,
-                precioUnitario: parseFloat(String(buscarKey('PRECIO UNITARIO') || buscarKey('precio unitario') || buscarKey('precio_unitario') || obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
-                total: parseFloat(String(buscarKey('TOTAL') || buscarKey('total') || '0')) || 0,
-              };
-
-              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
-                comprasProcesadas.push(compra);
-              }
-            }
-            setCompras(comprasProcesadas);
-          }
+        if (!result.success) {
+          throw new Error(result.error || 'Error desconocido');
         }
+
+        setFacturas(result.data || []);
+
       } catch (err) {
         generalLogger.error('Error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -83,16 +54,6 @@ export default function FacturasPage() {
     }
     fetchDatos();
   }, []);
-
-  // Agrupar compras por factura
-  const facturas: FacturaConDetalle[] = agruparPorFactura(compras).map(factura => {
-    const tiendaNormalizada = normalizarTienda(factura.tienda);
-    return {
-      ...factura,
-      tiendaNormalizada,
-      color: COLORES_TIENDA[tiendaNormalizada] || COLORES_TIENDA['Otros'],
-    } as FacturaConDetalle;
-  }).sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
 
   // Estadísticas
   const stats = {
@@ -111,7 +72,7 @@ export default function FacturasPage() {
 
   // Agrupar facturas por mes
   const facturasPorMes = facturas.reduce((acc, factura) => {
-    const mes = factura.fecha.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
+    const mes = new Date(factura.fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
     if (!acc[mes]) {
       acc[mes] = [];
     }
@@ -225,6 +186,8 @@ export default function FacturasPage() {
             <div className="space-y-3">
               {facturasMes.map((factura) => {
                 const expandida = facturaExpandida === factura.id;
+                const tiendaNormalizada = normalizarTienda(factura.tienda);
+                const colorTienda = COLORES_TIENDA[tiendaNormalizada] || COLORES_TIENDA['Otros'];
                 return (
                   <Card
                     key={factura.id}
@@ -232,26 +195,26 @@ export default function FacturasPage() {
                       expandida ? 'border-[#f59e0b]' : ''
                     }`}
                   >
-                    {/* Header de factura (siempre visible) */}
+                    {/* Header de factura */}
                     <div
                       className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => toggleFactura(factura.id)}
                     >
                       <div className="flex items-center gap-4">
                         {/* Icono de tienda con color */}
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: factura.color + '20' }}>
-                          <Store className="w-5 h-5" style={{ color: factura.color }} />
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: colorTienda + '20' }}>
+                          <Store className="w-5 h-5" style={{ color: colorTienda }} />
                         </div>
 
                         {/* Info principal */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-white">{factura.tiendaNormalizada}</h3>
+                            <h3 className="font-semibold text-white">{tiendaNormalizada}</h3>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-sm text-muted-foreground">{formatearFecha(factura.fecha)}</span>
+                            <span className="text-sm text-muted-foreground">{formatearFecha(new Date(factura.fecha))}</span>
                           </div>
                           <div className="flex items-center gap-3 text-sm">
-                            <span className="text-muted-foreground">{factura.numProductos} productos</span>
+                            <span className="text-muted-foreground">{factura.num_productos} productos</span>
                             <span className="text-muted-foreground">•</span>
                             <span className="text-muted-foreground">ID: {factura.id}</span>
                           </div>
@@ -273,23 +236,23 @@ export default function FacturasPage() {
                       </div>
                     </div>
 
-                    {/* Detalle de productos (expansible) */}
-                    {expandida && (
+                    {/* Detalle de productos */}
+                    {expandida && factura.compras && (
                       <div className="border-t border-border bg-muted/30">
                         <div className="p-4">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3">
                             Productos de esta factura
                           </p>
                           <div className="space-y-2">
-                            {factura.items.map((item, idx) => (
+                            {factura.compras.map((item) => (
                               <div
                                 key={item.id}
                                 className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/50 transition-colors"
                               >
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm text-white font-medium truncate">{item.producto}</p>
+                                  <p className="text-sm text-white font-medium truncate">{item.descripcion}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    {item.cantidad} × {formatearMoneda(item.precioUnitario)}
+                                    {item.cantidad} × {formatearMoneda(item.precio_unitario)}
                                   </p>
                                 </div>
                                 <div className="ml-4 text-right">
