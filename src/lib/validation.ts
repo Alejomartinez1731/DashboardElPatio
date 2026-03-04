@@ -3,6 +3,8 @@
  * Sanitiza y valida inputs de usuario para prevenir ataques
  */
 
+import DOMPurify from 'dompurify';
+
 /**
  * Opciones de validación
  */
@@ -137,13 +139,33 @@ export function validateObject(data: Record<string, unknown>, schema: Record<str
 }
 
 /**
- * Sanitiza un string para prevenir inyección de código
+ * Sanitiza un string para prevenir inyección de código y XSS
+ * Usa DOMPurify para una sanitización robusta de HTML
  */
-export function sanitizeString(input: string): string {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Remove potential HTML
-    .substring(0, 1000); // Limitar longitud
+export function sanitizeString(input: string, options?: { maxLength?: number; allowHTML?: boolean }): string {
+  const maxLength = options?.maxLength || 1000;
+  const allowHTML = options?.allowHTML || false;
+
+  // Primero recortar longitud
+  let trimmed = input.trim().substring(0, maxLength);
+
+  if (allowHTML) {
+    // Permitir HTML pero sanitizar con DOMPurify
+    trimmed = DOMPurify.sanitize(trimmed, {
+      ALLOWED_TAGS: ['B', 'I', 'EM', 'STRONG', 'A', 'UL', 'OL', 'LI', 'BR', 'P'],
+      ALLOWED_ATTR: ['href', 'title', 'target'],
+      ALLOW_DATA_ATTR: false,
+    });
+  } else {
+    // No permitir HTML, escapar todo
+    trimmed = DOMPurify.sanitize(trimmed, {
+      ALLOWED_TAGS: [], // No permitir ninguna etiqueta HTML
+      ALLOWED_ATTR: [],
+      ALLOW_DATA_ATTR: false,
+    });
+  }
+
+  return trimmed;
 }
 
 /**
@@ -152,6 +174,27 @@ export function sanitizeString(input: string): string {
 export function sanitizeNumber(input: unknown): number | null {
   const num = Number(input);
   return isNaN(num) ? null : num;
+}
+
+/**
+ * Sanitiza una URL para prevenir ataques de javascript:
+ */
+export function sanitizeUrl(url: string): string {
+  if (!url || typeof url !== 'string') {
+    return '';
+  }
+
+  // Solo permitir http/https
+  const trimmed = url.trim();
+  if (!trimmed.match(/^https?:\/\//i)) {
+    return '';
+  }
+
+  // Sanitizar cualquier HTML que pueda contener
+  return DOMPurify.sanitize(trimmed, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+  });
 }
 
 /**
@@ -168,14 +211,11 @@ export function validateProductoNombre(producto: unknown): { valid: boolean; san
     };
   }
 
-  const sanitized = sanitizeString(producto);
+  // Sanitizar con DOMPurify (no permitir HTML)
+  const sanitized = sanitizeString(producto, { maxLength: 200, allowHTML: false });
 
   if (sanitized.length < 2) {
     errors.push('El producto debe tener al menos 2 caracteres');
-  }
-
-  if (sanitized.length > 200) {
-    errors.push('El producto debe tener máximo 200 caracteres');
   }
 
   return {
@@ -210,4 +250,26 @@ export function validateDias(dias: unknown): { valid: boolean; sanitized: number
     sanitized: num,
     errors,
   };
+}
+
+/**
+ * Sanitiza un objeto completo recursivamente
+ * Útil para sanitizar payloads JSON completos
+ */
+export function sanitizeObject<T extends Record<string, unknown>>(obj: T, options?: { maxLength?: number }): T {
+  const sanitized = {} as Record<string, unknown>;
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === null || value === undefined) {
+      sanitized[key] = value;
+    } else if (typeof value === 'string') {
+      sanitized[key] = sanitizeString(value, options);
+    } else if (typeof value === 'object') {
+      sanitized[key] = sanitizeObject(value as Record<string, unknown>, options);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized as T;
 }
