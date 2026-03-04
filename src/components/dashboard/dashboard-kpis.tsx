@@ -21,9 +21,9 @@ export function DashboardKPIs({ kpiData }: DashboardKPIsProps) {
         tipo="numero"
       />
       <KPICardEnhanced
-        titulo="Alertas de Precio"
-        valor={kpiData?.alertasDePrecio || 0}
-        icono="trending-up"
+        titulo="Recordatorios de Reposición"
+        valor={kpiData?.numeroDeRecordatorios || 0}
+        icono="activity"
         tipo="numero"
       />
     </div>

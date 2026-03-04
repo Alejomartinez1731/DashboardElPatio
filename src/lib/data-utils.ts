@@ -9,7 +9,7 @@ interface KPICache {
   result: {
     gastoQuincenal: number;
     facturasProcesadas: number;
-    alertasDePrecio: number;
+    numeroDeRecordatorios: number;
   };
 }
 
@@ -354,15 +354,17 @@ export function obtenerTiendasUnicas(compras: Compra[]): string[] {
  * @param compras - Lista de compras procesadas
  * @param historicoPreciosValues - Datos crudos de historico_precios (array de arrays)
  * @param registroDiarioValues - Datos crudos de registro_diario (array de arrays)
+ * @param numeroDeRecordatorios - Número de recordatorios activos (opcional)
  */
 export function calcularKPIs(
   compras: Compra[],
   historicoPreciosValues: string[][] = [],
-  registroDiarioValues: string[][] = []
+  registroDiarioValues: string[][] = [],
+  numeroDeRecordatorios?: number
 ): {
   gastoQuincenal: number;
   facturasProcesadas: number;
-  alertasDePrecio: number;
+  numeroDeRecordatorios: number;
 } {
   // Generar hashes de los datos de entrada
   const comprasHash = generateHash(compras);
@@ -460,13 +462,10 @@ export function calcularKPIs(
   generalLogger.debug('🧾 Facturas desde registro_diario:', facturasProcesadas.size);
   generalLogger.debug('🧾 Facturas únicas:', Array.from(facturasProcesadas));
 
-  // Alertas de precio
-  const alertas = detectarAlertasPrecio(compras);
-
   const result = {
     gastoQuincenal,
     facturasProcesadas: facturasProcesadas.size,
-    alertasDePrecio: alertas.length,
+    numeroDeRecordatorios: numeroDeRecordatorios || 0,
   };
 
   // Actualizar caché

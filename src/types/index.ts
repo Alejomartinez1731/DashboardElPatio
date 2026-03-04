@@ -54,7 +54,7 @@ export interface AlertaPrecio {
 export interface KPIData {
   gastoQuincenal: number;
   facturasProcesadas: number;
-  alertasDePrecio: number;
+  numeroDeRecordatorios: number;  // Cambiado de alertasDePrecio
 }
 
 // Datos para gráfico de gasto semanal

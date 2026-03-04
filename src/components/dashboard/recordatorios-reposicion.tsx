@@ -12,6 +12,7 @@ import { Bell, Plus, Trash2, Check, X, AlertTriangle, Clock, CheckCircle, HelpCi
 import { Recordatorio } from '@/types';
 import { formatearFecha, formatearMoneda } from '@/lib/formatters';
 import { useListaCompra } from '@/store/useListaCompra';
+import { useRecordatoriosConfig } from '@/store/useRecordatoriosConfig';
 import Link from 'next/link';
 
 interface RecordatoriosReposicionProps {
@@ -29,8 +30,9 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
 
-  // Store de lista de compra - suscribirse a cambios
+  // Stores
   const { toggleProducto, productos } = useListaCompra();
+  const { automaticosActivados, toggleAutomaticos } = useRecordatoriosConfig();
 
   // Debug: log estado cada vez que cambia
   generalLogger.debug('🔄 Render Recordatorios - Productos en lista:', productos.length);
@@ -48,7 +50,8 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/recordatorios');
+      // Pasar parámetro para incluir/excluir automáticos
+      const response = await fetch(`/api/recordatorios?incluirAutomaticos=${automaticosActivados}`);
       const result = await response.json();
 
       if (result.success) {
@@ -66,7 +69,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [automaticosActivados]);
 
   useEffect(() => {
     fetchRecordatorios();
@@ -304,6 +307,20 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
           >
             <Settings className="w-4 h-4 mr-2" />
             Manual
+          </Button>
+
+          <Button
+            onClick={toggleAutomaticos}
+            size="sm"
+            variant={automaticosActivados ? "default" : "outline"}
+            className={automaticosActivados
+              ? "bg-purple-600 hover:bg-purple-700"
+              : "border-purple-500/50 hover:bg-purple-500/20 hover:border-purple-500"
+            }
+            data-testid="toggle-automatic-reminders"
+          >
+            <Zap className={`w-4 h-4 mr-2 ${automaticosActivados ? 'animate-pulse' : ''}`} />
+            Automáticos
           </Button>
         </div>
       </div>
@@ -544,10 +561,22 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
 
       {/* Footer con info */}
       <div className="mt-4 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-        <p className="text-xs text-purple-400/80">
-          <strong className="text-purple-300">Modo hbrido:</strong> El sistema calcula automaticamente la frecuencia de cada producto.
-          Configura recordatorios manuales para overridear el calculo automatico.
+        <p className="text-xs text-purple-400/80 mb-2">
+          <strong className="text-purple-300">Dos tipos de recordatorios:</strong>
         </p>
+        <ul className="text-xs text-purple-400/80 space-y-1 ml-4 list-disc">
+          <li>
+            <span className="text-blue-300">Manuales:</span> Configurados por ti con el botón "Manual"
+          </li>
+          <li>
+            <span className="text-purple-300">Automáticos:</span> Calculados por el sistema según tu historial de compras
+            {automaticosActivados ? (
+              <span className="text-green-400 ml-1"> (Activados)</span>
+            ) : (
+              <span className="text-muted-foreground ml-1"> (Desactivados - pulsa "Automáticos" para activar)</span>
+            )}
+          </li>
+        </ul>
       </div>
     </Card>
   );

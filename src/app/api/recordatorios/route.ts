@@ -297,10 +297,19 @@ function calcularEstado(diasTranscurridos: number | null, diasConfigurados: numb
 
 /**
  * GET - Obtiene todos los recordatorios (manuales + automáticos)
+ * Query params:
+ * - incluirAutomaticos: "true" | "false" - Si incluye recordatorios automáticos (default: true)
  */
 export async function GET(request: NextRequest) {
   try {
     apiLogger.info('📡 GET /api/recordatorios');
+
+    // Obtener query params
+    const { searchParams } = new URL(request.url);
+    const incluirAutomaticosParam = searchParams.get('incluirAutomaticos');
+    const incluirAutomaticos = incluirAutomaticosParam !== 'false'; // Por defecto true
+
+    apiLogger.info('Query params:', { incluirAutomaticos });
 
     // Obtener TODOS los datos de n8n en una sola llamada
     const sheetsData = await getAllSheetsData();
@@ -439,8 +448,16 @@ export async function GET(request: NextRequest) {
 
     apiLogger.info('✅ Recordatorios procesados:', recordatorios.length);
 
-    // PASO 4: Ordenar por urgencia
-    recordatorios.sort((a, b) => {
+    // PASO 4: Filtrar según incluirAutomaticos
+    let recordatoriosFiltrados = recordatorios;
+    if (!incluirAutomaticos) {
+      // Solo incluir manuales
+      recordatoriosFiltrados = recordatorios.filter(r => r.tipo === 'manual');
+      apiLogger.info('🔒 Filtrados automáticos - solo manuales:', recordatoriosFiltrados.length);
+    }
+
+    // PASO 5: Ordenar por urgencia
+    recordatoriosFiltrados.sort((a, b) => {
       const orden = { vencido: 0, proximo: 1, sin_datos: 2, ok: 3 };
       const ordenA = orden[a.estado as keyof typeof orden];
       const ordenB = orden[b.estado as keyof typeof orden];
@@ -469,17 +486,19 @@ export async function GET(request: NextRequest) {
       productosUnicos: productosUnicos.size,
       manuales: recordatoriosManuales.size,
       automaticos: recordatorios.length - recordatoriosManuales.size,
+      filtrados: recordatoriosFiltrados.length,
+      incluirAutomaticos,
       porEstado: {
-        vencido: recordatorios.filter(r => r.estado === 'vencido').length,
-        proximo: recordatorios.filter(r => r.estado === 'proximo').length,
-        ok: recordatorios.filter(r => r.estado === 'ok').length,
-        sin_datos: recordatorios.filter(r => r.estado === 'sin_datos').length,
+        vencido: recordatoriosFiltrados.filter(r => r.estado === 'vencido').length,
+        proximo: recordatoriosFiltrados.filter(r => r.estado === 'proximo').length,
+        ok: recordatoriosFiltrados.filter(r => r.estado === 'ok').length,
+        sin_datos: recordatoriosFiltrados.filter(r => r.estado === 'sin_datos').length,
       },
     };
 
     return NextResponse.json({
       success: true,
-      data: recordatorios,
+      data: recordatoriosFiltrados,
       debug: debugInfo,
       timestamp: new Date().toISOString(),
     });

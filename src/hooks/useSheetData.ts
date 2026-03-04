@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, startTransition, useRef } from 'react';
-import { Compra, KPIData, SheetName } from '@/types';
+import { Compra, KPIData, SheetName, Recordatorio } from '@/types';
 import { parsearFecha, excluirFilaResumenConLog, normalizarCabeceras, filaAObjeto } from '@/lib/parsers';
 import { calcularKPIs } from '@/lib/data-utils';
 import { apiLogger } from '@/lib/logger';
@@ -72,7 +72,8 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     cabeceras: string[],
     allData: Record<string, string[][]>,
     apiResult: SheetsApiResponse,
-    usarChunking: boolean
+    usarChunking: boolean,
+    onProcesamientoCompletado: (comprasProcesadas: Compra[]) => void
   ) => {
     const comprasProcesadas: Compra[] = [];
     const inicio = Date.now();
@@ -130,24 +131,8 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
         const tiempoTotal = Date.now() - inicio;
         apiLogger.debug(`✅ ${comprasProcesadas.length} compras procesadas en ${tiempoTotal}ms`);
 
-        // 3. Obtener datos adicionales para KPIs
-        const historicoPreciosValues = (apiResult.data.historico_precios?.values) || [];
-        const registroDiarioValues = (apiResult.data.registro_diario?.values) || [];
-
-        // 4. Calcular KPIs
-        // NOTA: Para datasets muy grandes (>1000 compras), considera usar useDataProcessor
-        // que implementa Web Workers para no bloquear el UI
-        const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues);
-
-        // 5. Actualizar estado (batched en una sola transición)
-        if (isMountedRef.current) {
-          startTransition(() => {
-            setCompras(comprasProcesadas);
-            setComprasFiltradas(comprasProcesadas);
-            setSheetsData(allData);
-            setKpiData(kpis);
-          });
-        }
+        // Llamar callback cuando el procesamiento se completa
+        onProcesamientoCompletado(comprasProcesadas);
       }
     };
 
@@ -219,7 +204,43 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           }
 
           // Procesar filas (con chunks o directo)
-          procesarFilasConChunking(values, cabeceras, allData, result, usarChunking);
+          procesarFilasConChunking(values, cabeceras, allData, result, usarChunking, async (comprasProcesadas) => {
+            // 3. Obtener datos adicionales para KPIs
+            const historicoPreciosValues = (result.data.historico_precios?.values) || [];
+            const registroDiarioValues = (result.data.registro_diario?.values) || [];
+
+            // 4. Obtener número de recordatorios (fetch)
+            let numeroDeRecordatorios = 0;
+            try {
+              const recordatoriosResponse = await fetch('/api/recordatorios?incluirAutomaticos=true');
+              if (recordatoriosResponse.ok) {
+                const resp = await recordatoriosResponse.json();
+                if (resp.success) {
+                  // Contar solo recordatorios vencidos, próximos o sin datos (los importantes)
+                  const importantes = resp.data.filter((r: Recordatorio) =>
+                    r.estado === 'vencido' || r.estado === 'proximo' || r.estado === 'sin_datos'
+                  );
+                  numeroDeRecordatorios = importantes.length;
+                  apiLogger.debug('🔔 Recordatorios obtenidos:', numeroDeRecordatorios);
+                }
+              }
+            } catch (error) {
+              apiLogger.warn('No se pudieron obtener recordatorios:', error);
+            }
+
+            // 5. Calcular KPIs
+            const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues, numeroDeRecordatorios);
+
+            // 6. Actualizar estado (batched en una sola transición)
+            if (isMountedRef.current) {
+              startTransition(() => {
+                setCompras(comprasProcesadas);
+                setComprasFiltradas(comprasProcesadas);
+                setSheetsData(allData);
+                setKpiData(kpis);
+              });
+            }
+          });
         }
       } else {
         apiLogger.warn('⚠️ No hay datos en base_de_datos');
@@ -230,7 +251,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           setKpiData({
             gastoQuincenal: 0,
             facturasProcesadas: 0,
-            alertasDePrecio: 0,
+            numeroDeRecordatorios: 0,
           });
         });
       }
