@@ -1,13 +1,14 @@
 'use client';
 import { generalLogger } from '@/lib/logger';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA, agruparPorFactura, normalizarFecha } from '@/lib/data-utils';
 import { Receipt, Calendar, Store, ShoppingCart, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useState as useReactState } from 'react';
+import { useSheetData } from '@/hooks/useSheetData';
 
 interface FacturaConDetalle {
   id: string;
@@ -21,51 +22,13 @@ interface FacturaConDetalle {
 }
 
 export default function FacturasPage() {
-  const [compras, setCompras] = useState<Compra[]>([]);
-  const [cargando, setCargando] = useState(true);
+  // Usar el hook useSheetData para obtener datos con caché
+  const tabsConfig = useMemo(() => [
+    { id: 'base_datos', sheetName: 'base_datos' as const, dataKey: 'base_de_datos' }
+  ], []);
+
+  const { compras, loading: cargando, error, isUsingMock, warning, refetch } = useSheetData(tabsConfig);
   const [facturaExpandida, setFacturaExpandida] = useReactState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchDatos() {
-      try {
-        const response = await fetch('/api/sheets');
-        const result = await response.json();
-        if (result.success && result.data.base_de_datos?.values) {
-          const values = result.data.base_de_datos.values as string[][];
-          if (values.length > 1) {
-            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-            const comprasProcesadas: Compra[] = [];
-
-            for (let i = 1; i < values.length; i++) {
-              const fila = values[i];
-              const obj: Record<string, string | number | undefined> = {};
-              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
-
-              const compra: Compra = {
-                id: `compra-${i}`,
-                fecha: normalizarFecha(String(obj.fecha || '')),
-                tienda: String(obj.tienda || ''),
-                producto: String(obj.descripcion || ''),
-                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
-                precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
-                total: parseFloat(String(obj.total || '0')) || 0,
-              };
-
-              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
-                comprasProcesadas.push(compra);
-              }
-            }
-            setCompras(comprasProcesadas);
-          }
-        }
-      } catch (err) {
-        generalLogger.error('Error:', err);
-      } finally {
-        setCargando(false);
-      }
-    }
-    fetchDatos();
-  }, []);
 
   // Agrupar compras por factura
   const facturas: FacturaConDetalle[] = agruparPorFactura(compras).map(factura => {
@@ -109,7 +72,23 @@ export default function FacturasPage() {
   if (cargando) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto mb-4 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground">Cargando facturas...</p>
+          {warning && <p className="text-xs text-amber-500 mt-2">{warning}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#1a2234] border border-[#ef4444]/30 rounded-lg p-6 text-center">
+        <p className="text-[#ef4444] mb-2">Error al cargar datos</p>
+        <p className="text-sm text-muted-foreground mb-4">{error}</p>
+        <button onClick={() => refetch()} className="px-4 py-2 bg-[#f59e0b] text-white rounded-lg">
+          Reintentar
+        </button>
       </div>
     );
   }
