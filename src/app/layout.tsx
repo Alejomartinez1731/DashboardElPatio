@@ -4,6 +4,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { ToastContainer } from "@/components/ui/toast";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -28,21 +29,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
-      <body
-        className={`${jakarta.variable} ${mono.variable} antialiased font-sans`}
-      >
-        <div className="flex min-h-screen bg-background overflow-x-hidden">
-          <Sidebar />
-          <div className="flex-1 ml-0 md:ml-64 w-full">
-            <Header />
-            <main className="p-4 md:p-6 w-full overflow-x-hidden">
-              {children}
-            </main>
+    <ThemeProvider>
+      <html lang="es" suppressHydrationWarning>
+        <body
+          className={`${jakarta.variable} ${mono.variable} antialiased font-sans`}
+        >
+          <div className="flex min-h-screen bg-background overflow-x-hidden">
+            <Sidebar />
+            <div className="flex-1 ml-0 md:ml-64 w-full">
+              <Header />
+              <main className="p-4 md:p-6 w-full overflow-x-hidden">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-        <ToastContainer />
-      </body>
-    </html>
+          <ToastContainer />
+        </body>
+      </html>
+    </ThemeProvider>
   );
 }

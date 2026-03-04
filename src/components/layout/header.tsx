@@ -6,6 +6,8 @@ import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { generalLogger } from '@/lib/logger';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { GlobalSearchTrigger } from '@/components/search/global-search';
 
 export function Header() {
   const router = useRouter();
@@ -72,6 +74,12 @@ export function Header() {
 
         {/* Separador */}
         <div className="hidden lg:block w-px h-8 bg-card"></div>
+
+        {/* Búsqueda global */}
+        <GlobalSearchTrigger />
+
+        {/* Toggle de tema */}
+        <ThemeToggle />
 
         {/* Notificaciones */}
         <button className="relative p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200">

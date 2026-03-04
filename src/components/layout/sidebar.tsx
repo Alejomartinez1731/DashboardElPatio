@@ -9,6 +9,7 @@ import {
   Store,
   Receipt,
   Bell,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const navegacion = [
   { titulo: 'Proveedores', href: '/proveedores', icono: Store },
   { titulo: 'Recordatorios', href: '/dashboard/recordatorios', icono: Bell },
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
+  { titulo: 'Configuración', href: '/settings', icono: Settings },
 ];
 
 export function Sidebar() {
