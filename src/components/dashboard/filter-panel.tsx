@@ -74,7 +74,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     const nuevasTiendas = filtros.tiendas.includes(tienda)
       ? filtros.tiendas.filter(t => t !== tienda)
       : [...filtros.tiendas, tienda];
-    componentLogger.debug('🏪 Toggle tienda:', tienda, '→', nuevasTiendas);
+    componentLogger.debug('Toggle tienda', { tienda, resultado: nuevasTiendas });
     onFiltrosChange({ ...filtros, tiendas: nuevasTiendas });
   };
 

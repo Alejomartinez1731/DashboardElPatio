@@ -1,4 +1,5 @@
 import type { SheetData, SheetName } from '@/types';
+import { generalLogger } from '@/lib/logger';
 
 const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
 
@@ -25,15 +26,16 @@ export async function getN8NData(): Promise<Record<SheetName, SheetData>> {
       // El cache se maneja a través de headers de respuesta
     });
 
-    generalLogger.debug('📡 Respuesta de n8n - Status:', response.status, 'OK:', response.ok);
+    generalLogger.debug('Respuesta de n8n', { status: response.status, ok: response.ok });
 
     if (!response.ok) {
       throw new Error(`n8n webhook respondió con status ${response.status}`);
     }
 
     const text = await response.text();
-    generalLogger.debug('📡 Respuesta de n8n - Longitud:', text.length, 'caracteres');
-    generalLogger.debug('📡 Primeros 200 caracteres:', text.substring(0, 200));
+    if (text.length > 0) {
+      generalLogger.debug('Respuesta de n8n', { longitud: text.length });
+    }
 
     let n8nResponse;
     try {

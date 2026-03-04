@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { generalLogger } from '@/lib/logger';
 import { persist } from 'zustand/middleware';
 
 export interface ProductoListaCompra {

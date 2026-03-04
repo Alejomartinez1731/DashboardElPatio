@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { generalLogger } from '@/lib/logger';
 import type { NextRequest } from 'next/server';
 
 /**

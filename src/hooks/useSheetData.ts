@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, startTransition, useRef } from 'react
 import { Compra, KPIData, SheetName } from '@/types';
 import { parsearFecha, excluirFilaResumenConLog, normalizarCabeceras, filaAObjeto } from '@/lib/parsers';
 import { calcularKPIs } from '@/lib/data-utils';
+import { apiLogger } from '@/lib/logger';
 
 export interface SheetData {
   values: string[][];

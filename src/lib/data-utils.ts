@@ -1,4 +1,5 @@
 import type { Compra, AlertaPrecio, SheetCompraRaw, ProductoCostoso, GastoPorTiendaRaw, PrecioProductoRaw, Proveedor, Factura } from '@/types';
+import { generalLogger } from '@/lib/logger';
 
 // Cache simple para memoización de KPIs
 interface KPICache {

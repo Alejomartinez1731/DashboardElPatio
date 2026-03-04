@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { generalLogger } from '@/lib/logger';
 import type { SheetData, SheetName } from '@/types';
 
 // IDs de las hojas de Google Sheets

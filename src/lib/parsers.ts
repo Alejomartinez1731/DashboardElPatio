@@ -1,4 +1,5 @@
 /**
+import { generalLogger } from '@/lib/logger';
  * Funciones de parseo y procesamiento de datos
  * Archivo unificado para evitar duplicación de código
  */

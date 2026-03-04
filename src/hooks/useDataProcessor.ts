@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react';
+import { generalLogger } from '@/lib/logger';
 
 type WorkerMessageType = 'filter' | 'sort' | 'calculate-kpis' | 'process-raw-data';
 

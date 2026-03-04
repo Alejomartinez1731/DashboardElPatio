@@ -30,7 +30,7 @@ export function RecordatoriosSummary({ className }: RecordatoriosSummaryProps) {
           setRecordatorios(importantes.slice(0, 5)); // Máximo 5
         }
       } catch (err) {
-        generalLogger.error('Error cargando resumen recordatorios:', err);
+        componentLogger.error('Error cargando resumen recordatorios:', err);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { generalLogger } from '@/lib/logger';
 
 interface HojaDatos {
   nombre: string;

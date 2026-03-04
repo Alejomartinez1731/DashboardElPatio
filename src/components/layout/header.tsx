@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { generalLogger } from '@/lib/logger';
 
 export function Header() {
   const router = useRouter();

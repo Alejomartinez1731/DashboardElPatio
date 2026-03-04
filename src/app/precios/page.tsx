@@ -35,7 +35,7 @@ export default function PreciosPage() {
         const result = await response.json();
         if (result.success && result.data.base_de_datos?.values) {
           const values = result.data.base_de_datos.values as any[][];
-          generalLogger.debug('📊 Precios - Datos recibidos:', values.length, 'filas');
+          generalLogger.debug('Precios - Datos recibidos', { filas: values.length });
 
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
