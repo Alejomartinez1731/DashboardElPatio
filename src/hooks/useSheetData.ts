@@ -3,6 +3,7 @@ import { Compra, KPIData, SheetName, Recordatorio } from '@/types';
 import { parsearFecha, excluirFilaResumenConLog, normalizarCabeceras, filaAObjeto } from '@/lib/parsers';
 import { calcularKPIs } from '@/lib/data-utils';
 import { apiLogger } from '@/lib/logger';
+import { fetchWithCache } from '@/lib/cache';
 
 export interface SheetData {
   values: string[][];
@@ -63,6 +64,94 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
 
   // Ref para abortar procesamiento si se desmonta el componente
   const isMountedRef = useRef(true);
+
+  /**
+   * Procesa filas de forma directa (sin chunking) - más rápido para datasets pequeños
+   */
+  const procesarFilasDirecto = useCallback((values: string[][], cabeceras: string[]): Compra[] => {
+    const inicio = Date.now();
+    const comprasProcesadas: Compra[] = [];
+
+    for (let i = 1; i < values.length; i++) {
+      const fila = values[i] as any[];
+      const obj = filaAObjeto(fila, cabeceras);
+
+      const compra: Compra = {
+        id: `compra-${i}-${Date.now()}`,
+        fecha: parsearFecha(String(obj.fecha || '')),
+        tienda: String(obj.tienda || ''),
+        producto: String(obj.descripcion || ''),
+        cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+        precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
+        total: parseFloat(String(obj.total || '0')) || 0,
+        telefono: obj.telefono ? String(obj.telefono) : undefined,
+        direccion: obj.direccion ? String(obj.direccion) : undefined,
+      };
+
+      if (!excluirFilaResumenConLog(compra.producto)) {
+        comprasProcesadas.push(compra);
+      }
+    }
+
+    const tiempoTotal = Date.now() - inicio;
+    apiLogger.debug(`✅ ${comprasProcesadas.length} compras procesadas en ${tiempoTotal}ms (directo)`);
+
+    return comprasProcesadas;
+  }, []);
+
+  /**
+   * Finaliza la carga de datos
+   */
+  const finalizarCarga = useCallback((
+    comprasProcesadas: Compra[],
+    allData: Record<string, string[][]>,
+    result: SheetsApiResponse,
+    numeroDeRecordatorios: number
+  ) => {
+    // Obtener datos adicionales para KPIs
+    const historicoPreciosValues = (result.data.historico_precios?.values) || [];
+    const registroDiarioValues = (result.data.registro_diario?.values) || [];
+
+    // Calcular KPIs
+    const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues, numeroDeRecordatorios);
+
+    // Actualizar estado (batched en una sola transición)
+    if (isMountedRef.current) {
+      startTransition(() => {
+        setCompras(comprasProcesadas);
+        setComprasFiltradas(comprasProcesadas);
+        setSheetsData(allData);
+        setKpiData(kpis);
+      });
+    }
+  }, []);
+
+  /**
+   * Obtiene el número de recordatorios (con caché)
+   */
+  const fetchNumeroDeRecordatorios = useCallback(async (): Promise<number> => {
+    try {
+      const resp = await fetchWithCache(
+        'recordatorios_count',
+        async () => {
+          const response = await fetch('/api/recordatorios?incluirAutomaticos=true');
+          if (!response.ok) throw new Error('Error fetching recordatorios');
+          return response.json();
+        },
+        2 // 2 minutos de caché
+      );
+
+      if (resp.success) {
+        const importantes = resp.data.filter((r: Recordatorio) =>
+          r.estado === 'vencido' || r.estado === 'proximo' || r.estado === 'sin_datos'
+        );
+        return importantes.length;
+      }
+    } catch (error) {
+      apiLogger.warn('No se pudieron obtener recordatorios:', error);
+    }
+    return 0;
+  }, []);
 
   /**
    * Procesa filas en chunks para no bloquear el UI
@@ -141,7 +230,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
   }, []);
 
   /**
-   * Obtiene datos de la API y los procesa
+   * Obtiene datos de la API y los procesa (optimizado con fetch paralelo y caché)
    */
   const fetchDatos = useCallback(async () => {
     try {
@@ -149,13 +238,23 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       setError(null);
       setWarning(null);
 
-      const response = await fetch('/api/sheets');
-
-      if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result: SheetsApiResponse = await response.json();
+      // 🚀 FETCH PARALELO: Hacer ambos fetches al mismo tiempo
+      const [result, numeroDeRecordatorios] = await Promise.all([
+        // Fetch principal con caché de 3 minutos
+        fetchWithCache(
+          'sheets_data',
+          async () => {
+            const response = await fetch('/api/sheets');
+            if (!response.ok) {
+              throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json() as Promise<SheetsApiResponse>;
+          },
+          3 // 3 minutos de caché
+        ),
+        // Fetch de recordatorios en paralelo
+        fetchNumeroDeRecordatorios(),
+      ]);
 
       // Actualizar metadata de fuente de datos
       setIsUsingMock(result._isMock || false);
@@ -195,52 +294,25 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           apiLogger.debug('📊 Cabeceras normalizadas:', cabeceras);
           apiLogger.debug(`📊 Total de filas a procesar: ${values.length - 1}`);
 
-          // Decidir si usar chunking o procesamiento directo
+          // 🚀 OPTIMIZACIÓN: Procesar directamente sin chunking para datasets < 500 filas
           const filasAProcesar = values.length - 1;
-          const usarChunking = USE_CHUNKING && filasAProcesar > CHUNK_SIZE;
+          const usarChunking = filasAProcesar > 500; // Aumentado de CHUNK_SIZE a 500
 
           if (usarChunking) {
             apiLogger.debug(`🚀 Usando procesamiento por chunks (${CHUNK_SIZE} filas/chunk)`);
           }
 
-          // Procesar filas (con chunks o directo)
-          procesarFilasConChunking(values, cabeceras, allData, result, usarChunking, async (comprasProcesadas) => {
-            // 3. Obtener datos adicionales para KPIs
-            const historicoPreciosValues = (result.data.historico_precios?.values) || [];
-            const registroDiarioValues = (result.data.registro_diario?.values) || [];
-
-            // 4. Obtener número de recordatorios (fetch)
-            let numeroDeRecordatorios = 0;
-            try {
-              const recordatoriosResponse = await fetch('/api/recordatorios?incluirAutomaticos=true');
-              if (recordatoriosResponse.ok) {
-                const resp = await recordatoriosResponse.json();
-                if (resp.success) {
-                  // Contar solo recordatorios vencidos, próximos o sin datos (los importantes)
-                  const importantes = resp.data.filter((r: Recordatorio) =>
-                    r.estado === 'vencido' || r.estado === 'proximo' || r.estado === 'sin_datos'
-                  );
-                  numeroDeRecordatorios = importantes.length;
-                  apiLogger.debug('🔔 Recordatorios obtenidos:', numeroDeRecordatorios);
-                }
-              }
-            } catch (error) {
-              apiLogger.warn('No se pudieron obtener recordatorios:', error);
-            }
-
-            // 5. Calcular KPIs
-            const kpis = calcularKPIs(comprasProcesadas, historicoPreciosValues, registroDiarioValues, numeroDeRecordatorios);
-
-            // 6. Actualizar estado (batched en una sola transición)
-            if (isMountedRef.current) {
-              startTransition(() => {
-                setCompras(comprasProcesadas);
-                setComprasFiltradas(comprasProcesadas);
-                setSheetsData(allData);
-                setKpiData(kpis);
-              });
-            }
-          });
+          // Procesar filas
+          if (usarChunking) {
+            // Con chunking para datasets grandes
+            procesarFilasConChunking(values, cabeceras, allData, result, true, (comprasProcesadas) => {
+              finalizarCarga(comprasProcesadas, allData, result, numeroDeRecordatorios);
+            });
+          } else {
+            // 🚀 Procesamiento directo para datasets pequeños (más rápido)
+            const comprasProcesadas = procesarFilasDirecto(values, cabeceras);
+            finalizarCarga(comprasProcesadas, allData, result, numeroDeRecordatorios);
+          }
         }
       } else {
         apiLogger.warn('⚠️ No hay datos en base_de_datos');
@@ -251,7 +323,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           setKpiData({
             gastoQuincenal: 0,
             facturasProcesadas: 0,
-            numeroDeRecordatorios: 0,
+            numeroDeRecordatorios,
           });
         });
       }
@@ -262,7 +334,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     } finally {
       setLoading(false);
     }
-  }, [tabs, procesarFilasConChunking]);
+  }, [tabs, procesarFilasConChunking, fetchNumeroDeRecordatorios, procesarFilasDirecto, finalizarCarga]);
 
   /**
    * Función para refrescar datos manualmente
