@@ -1,4 +1,5 @@
 'use client';
+import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
@@ -58,7 +59,7 @@ export default function FacturasPage() {
           }
         }
       } catch (err) {
-        console.error('Error:', err);
+        generalLogger.error('Error:', err);
       } finally {
         setCargando(false);
       }

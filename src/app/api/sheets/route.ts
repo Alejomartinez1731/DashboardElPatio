@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -39,7 +40,7 @@ function validateN8NResponse(data: any): { valid: boolean; error?: string } {
  * Intenta obtener datos de n8n con reintentos
  */
 async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ success: boolean; data?: any; error?: string; errorType?: ErrorType }> {
-  console.log(`📡 Intento ${attempt}/${MAX_RETRIES} de conexión a n8n...`);
+  apiLogger.debug(`Intento ${attempt}/${MAX_RETRIES} de conexión a n8n`);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -54,7 +55,7 @@ async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ 
     });
     clearTimeout(timeoutId);
 
-    console.log(`📡 Respuesta n8n status: ${response.status}`);
+    apiLogger.debug(`Respuesta n8n status: ${response.status}`);
 
     if (!response.ok) {
       return {
@@ -75,7 +76,7 @@ async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ 
     }
 
     const data = await response.json();
-    console.log('📡 Datos recibidos de n8n:', Object.keys(data.data || {}));
+    apiLogger.debug('Datos recibidos de n8n', { keys: Object.keys(data.data || {}) });
 
     // Validar estructura
     const validation = validateN8NResponse(data);
@@ -135,7 +136,7 @@ async function fetchWithRetry(webhookUrl: string): Promise<{ success: boolean; d
 
     // Esperar antes de reintentar (backoff exponencial)
     const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Max 5s
-    console.log(`⏳ Esperando ${waitTime}ms antes del reintento...`);
+    apiLogger.debug(`Esperando ${waitTime}ms antes del reintento`);
     await new Promise(resolve => setTimeout(resolve, waitTime));
   }
 
@@ -145,7 +146,7 @@ async function fetchWithRetry(webhookUrl: string): Promise<{ success: boolean; d
 export async function GET(request: Request) {
   // Modo MOCK explícito
   if (USE_MOCK) {
-    console.log('📭 MODO MOCK EXPLÍCITO (USE_MOCK_DATA=true)');
+    apiLogger.warn('MODO MOCK EXPLÍCITO (USE_MOCK_DATA=true)');
     const { GET } = await import('./mock/route');
     const mockResponse = await GET(request);
     const mockData = await mockResponse.json();
@@ -158,11 +159,11 @@ export async function GET(request: Request) {
     });
   }
 
-  console.log('📡 API /api/sheets llamada');
+  apiLogger.info('API /api/sheets llamada');
 
   // Validar configuración
   if (!N8N_WEBHOOK_URL) {
-    console.warn('⚠️ N8N_WEBHOOK_URL no configurada');
+    apiLogger.warn('N8N_WEBHOOK_URL no configurada');
     const { GET } = await import('./mock/route');
     const mockResponse = await GET(request);
     const mockData = await mockResponse.json();
@@ -175,13 +176,13 @@ export async function GET(request: Request) {
     });
   }
 
-  console.log('📡 Webhook URL:', N8N_WEBHOOK_URL.substring(0, 40) + '...');
+  apiLogger.debug(`Webhook URL: ${N8N_WEBHOOK_URL.substring(0, 40)}...`);
 
   // Intentar obtener de n8n con reintentos
   const n8nResult = await fetchWithRetry(N8N_WEBHOOK_URL);
 
   if (!n8nResult.success) {
-    console.error(`❌ n8n falló después de ${n8nResult.attempts} intentos:`, n8nResult.error);
+    apiLogger.error(`n8n falló después de ${n8nResult.attempts} intentos`, { error: n8nResult.error });
 
     // Usar mock como fallback
     const { GET } = await import('./mock/route');
@@ -199,7 +200,7 @@ export async function GET(request: Request) {
     });
   }
 
-  console.log(`✅ n8n respondió correctamente (${n8nResult.attempts ?? 1} intento${(n8nResult.attempts ?? 1) > 1 ? 's' : ''})`);
+  apiLogger.info(`n8n respondió correctamente (${n8nResult.attempts ?? 1} intento${(n8nResult.attempts ?? 1) > 1 ? 's' : ''})`);
 
   const data = n8nResult.data!;
 

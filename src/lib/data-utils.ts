@@ -97,7 +97,7 @@ export function normalizarFecha(fecha: string | Date): Date {
   // Manejar formatos ISO u otros
   const parsed = new Date(fecha);
   if (isNaN(parsed.getTime())) {
-    console.warn(`Fecha inválida: ${fecha}`);
+    generalLogger.warn(`Fecha inválida: ${fecha}`);
     return new Date();
   }
 
@@ -373,11 +373,11 @@ export function calcularKPIs(
       kpiCache.comprasHash === comprasHash &&
       kpiCache.historicoHash === historicoHash &&
       kpiCache.registroHash === registroHash) {
-    console.log('💾 KPIs cacheados - reutilizando cálculo previo');
+    generalLogger.debug('💾 KPIs cacheados - reutilizando cálculo previo');
     return kpiCache.result;
   }
 
-  console.log('🔄 Recalculando KPIs...');
+  generalLogger.debug('🔄 Recalculando KPIs...');
 
   const hoy = new Date();
   hoy.setHours(23, 59, 59, 999);
@@ -415,8 +415,8 @@ export function calcularKPIs(
     }
   }
 
-  console.log('🧾 Facturas desde registro_diario:', facturasProcesadas.size);
-  console.log('🧾 Facturas únicas:', Array.from(facturasProcesadas));
+  generalLogger.debug('🧾 Facturas desde registro_diario:', facturasProcesadas.size);
+  generalLogger.debug('🧾 Facturas únicas:', Array.from(facturasProcesadas));
 
   // Alertas de precio
   const alertas = detectarAlertasPrecio(compras);
@@ -443,7 +443,7 @@ export function calcularKPIs(
  */
 export function limpiarCacheKPIs(): void {
   kpiCache = null;
-  console.log('🗑️ Caché de KPIs limpiado');
+  generalLogger.debug('🗑️ Caché de KPIs limpiado');
 }
 
 /**
@@ -464,7 +464,7 @@ export interface ComparativaMensual {
 
 export function calcularComparativaMensual(compras: Compra[]): ComparativaMensual | null {
   if (compras.length === 0) {
-    console.log('calcularComparativaMensual: No hay compras');
+    generalLogger.debug('calcularComparativaMensual: No hay compras');
     return null;
   }
 
@@ -491,12 +491,12 @@ export function calcularComparativaMensual(compras: Compra[]): ComparativaMensua
     return new Date(anioB, mesB, 1).getTime() - new Date(anioA, mesA, 1).getTime();
   });
 
-  console.log('Meses con datos:', mesesOrdenados);
-  console.log('Gastos por mes:', Object.fromEntries(Object.entries(gastosPorMes).map(([k, v]) => [k, v.gasto])));
+  generalLogger.debug('Meses con datos:', mesesOrdenados);
+  generalLogger.debug('Gastos por mes:', Object.fromEntries(Object.entries(gastosPorMes).map(([k, v]) => [k, v.gasto])));
 
   // Necesitamos al menos 2 meses con datos para comparar
   if (mesesOrdenados.length < 2) {
-    console.log('No hay suficientes meses con datos');
+    generalLogger.debug('No hay suficientes meses con datos');
     return null;
   }
 

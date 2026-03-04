@@ -38,7 +38,7 @@ export async function getSheetData(sheetName: SheetName, range?: string): Promis
       values: response.data.values || [],
     };
   } catch (error) {
-    console.error(`Error fetching sheet ${sheetName}:`, error);
+    generalLogger.error(`Error fetching sheet ${sheetName}:`, error);
     throw new Error(`Failed to fetch data from ${sheetName}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -55,7 +55,7 @@ export async function getAllSheetsData(): Promise<Record<SheetName, SheetData>> 
         const data = await getSheetData(name);
         return { name, data, success: true };
       } catch (error) {
-        console.error(`Failed to load ${name}:`, error);
+        generalLogger.error(`Failed to load ${name}:`, error);
         return { name, data: { range: '', values: [] }, success: false };
       }
     })

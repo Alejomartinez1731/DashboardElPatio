@@ -25,7 +25,7 @@ export function isAuthenticatedFromRequest(request: NextRequest): boolean {
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
 
   if (!sessionCookie) {
-    console.log('🔐 Auth check: No cookie found');
+    generalLogger.debug('🔐 Auth check: No cookie found');
     return false;
   }
 
@@ -33,10 +33,10 @@ export function isAuthenticatedFromRequest(request: NextRequest): boolean {
     const sessionData = JSON.parse(sessionCookie.value);
     const now = Date.now();
     const isValid = sessionData.expiresAt > now;
-    console.log(`🔐 Auth check: Cookie found, valid=${isValid}, expiresAt=${new Date(sessionData.expiresAt).toISOString()}`);
+    generalLogger.debug(`🔐 Auth check: Cookie found, valid=${isValid}, expiresAt=${new Date(sessionData.expiresAt).toISOString()}`);
     return isValid;
   } catch (error) {
-    console.log('🔐 Auth check: Error parsing cookie', error);
+    generalLogger.debug('🔐 Auth check: Error parsing cookie', error);
     return false;
   }
 }

@@ -34,7 +34,7 @@ export { excluirFilaResumen } from './data-utils';
  */
 export function excluirFilaResumenConLog(descripcion: string): boolean {
   if (!descripcion) {
-    console.log('⚠️ excluirFilaResumen: descripción vacía');
+    generalLogger.debug('⚠️ excluirFilaResumen: descripción vacía');
     return true;
   }
 
@@ -42,7 +42,7 @@ export function excluirFilaResumenConLog(descripcion: string): boolean {
 
   // Excluir si está vacía después de trim
   if (descripcionLower === '') {
-    console.log('⚠️ excluirFilaResumen: descripción vacía después de trim');
+    generalLogger.debug('⚠️ excluirFilaResumen: descripción vacía después de trim');
     return true;
   }
 
@@ -63,7 +63,7 @@ export function excluirFilaResumenConLog(descripcion: string): boolean {
   );
 
   if (excluida) {
-    console.log(`🚫 Fila excluida: "${descripcion}" → coincide con palabra de exclusión`);
+    generalLogger.debug(`🚫 Fila excluida: "${descripcion}" → coincide con palabra de exclusión`);
   }
 
   return excluida;

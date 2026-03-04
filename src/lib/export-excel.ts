@@ -113,7 +113,7 @@ export async function exportToExcel(
     };
 
   } catch (error) {
-    console.error('Error al exportar a Excel:', error);
+    generalLogger.error('Error al exportar a Excel:', error);
 
     return {
       success: false,

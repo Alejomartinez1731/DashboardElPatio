@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import { componentLogger } from '@/lib/logger';
 
 interface DashboardHeaderProps {
   title: string;

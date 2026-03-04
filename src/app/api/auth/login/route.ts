@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyPassword, createSession } from '@/lib/auth';
+import { generalLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     const isValid = verifyPassword(password);
 
     if (!isValid) {
-      console.log('❌ Login fallido: contraseña incorrecta');
+      generalLogger.debug('❌ Login fallido: contraseña incorrecta');
       return NextResponse.json(
         { success: false, error: 'Contraseña incorrecta' },
         { status: 401 }
@@ -26,9 +27,9 @@ export async function POST(request: Request) {
     }
 
     // Crear sesión
-    console.log('✅ Login exitoso, creando sesión...');
+    generalLogger.debug('✅ Login exitoso, creando sesión...');
     await createSession();
-    console.log('✅ Sesión creada correctamente');
+    generalLogger.debug('✅ Sesión creada correctamente');
 
     const response = NextResponse.json({
       success: true,
@@ -36,11 +37,11 @@ export async function POST(request: Request) {
     });
 
     // Debug: Log headers de respuesta
-    console.log('📝 Response headers:', response.headers);
+    generalLogger.debug('📝 Response headers:', response.headers);
 
     return response;
   } catch (error) {
-    console.error('❌ Error en login:', error);
+    generalLogger.error('❌ Error en login:', error);
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor' },
       { status: 500 }

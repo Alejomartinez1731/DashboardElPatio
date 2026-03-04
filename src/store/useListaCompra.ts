@@ -41,18 +41,18 @@ export const useListaCompra = create<ListaCompraStore>()(
       productos: [],
 
       agregarProducto: (producto) => {
-        console.log('➕ agregarProducto:', producto);
+        generalLogger.debug('➕ agregarProducto:', producto);
         set((state) => {
           // Verificar si ya existe
           const existe = state.productos.some((p) => p.producto === producto.producto);
-          console.log('   ¿Ya existe?', existe);
+          generalLogger.debug('   ¿Ya existe?', existe);
           if (existe) {
-            console.log('   ⚠️ Producto ya existe, no se añade');
+            generalLogger.debug('   ⚠️ Producto ya existe, no se añade');
             return state;
           }
 
           const nuevos = [...state.productos, producto];
-          console.log('   ✅ Producto añadido. Total:', nuevos.length);
+          generalLogger.debug('   ✅ Producto añadido. Total:', nuevos.length);
           return {
             productos: nuevos,
           };
@@ -60,10 +60,10 @@ export const useListaCompra = create<ListaCompraStore>()(
       },
 
       eliminarProducto: (productoNombre) => {
-        console.log('➖ eliminarProducto:', productoNombre);
+        generalLogger.debug('➖ eliminarProducto:', productoNombre);
         set((state) => {
           const nuevos = state.productos.filter((p) => p.producto !== productoNombre);
-          console.log('   ✅ Producto eliminado. Antes:', state.productos.length, 'Ahora:', nuevos.length);
+          generalLogger.debug('   ✅ Producto eliminado. Antes:', state.productos.length, 'Ahora:', nuevos.length);
           return {
             productos: nuevos,
           };
@@ -71,19 +71,19 @@ export const useListaCompra = create<ListaCompraStore>()(
       },
 
       toggleProducto: (producto) => {
-        console.log('🔄 toggleProducto llamado:', producto);
+        generalLogger.debug('🔄 toggleProducto llamado:', producto);
         const { estaEnLista, agregarProducto, eliminarProducto } = get();
         const esta = estaEnLista(producto.producto);
-        console.log('   ¿Está en lista?', esta);
+        generalLogger.debug('   ¿Está en lista?', esta);
 
         if (esta) {
-          console.log('   ➖ Eliminando...', producto.producto);
+          generalLogger.debug('   ➖ Eliminando...', producto.producto);
           eliminarProducto(producto.producto);
         } else {
-          console.log('   ➕ Añadiendo...', producto.producto);
+          generalLogger.debug('   ➕ Añadiendo...', producto.producto);
           agregarProducto(producto);
         }
-        console.log('   ✅ Toggle completado');
+        generalLogger.debug('   ✅ Toggle completado');
       },
 
       estaEnLista: (productoNombre) => {

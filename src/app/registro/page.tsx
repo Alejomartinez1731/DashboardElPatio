@@ -1,4 +1,5 @@
 'use client';
+import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
@@ -63,7 +64,7 @@ export default function RegistroPage() {
           }
         }
       } catch (err) {
-        console.error('Error:', err);
+        generalLogger.error('Error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setCargando(false);

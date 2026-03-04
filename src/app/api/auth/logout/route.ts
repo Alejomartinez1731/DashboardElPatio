@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { destroySession } from '@/lib/auth';
+import { generalLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
       message: 'Sesión cerrada',
     });
   } catch (error) {
-    console.error('Error en logout:', error);
+    generalLogger.error('Error en logout:', error);
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor' },
       { status: 500 }

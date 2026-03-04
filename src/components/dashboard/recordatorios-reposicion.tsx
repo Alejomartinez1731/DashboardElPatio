@@ -1,4 +1,6 @@
 'use client';
+import { generalLogger } from '@/lib/logger';
+import { componentLogger } from '@/lib/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
@@ -31,12 +33,12 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
   const { toggleProducto, productos } = useListaCompra();
 
   // Debug: log estado cada vez que cambia
-  console.log('🔄 Render Recordatorios - Productos en lista:', productos.length);
+  generalLogger.debug('🔄 Render Recordatorios - Productos en lista:', productos.length);
 
   // Funciones locales que dependen de productos
   const estaEnLista = (productoNombre: string) => {
     const resultado = productos.some(p => p.producto === productoNombre);
-    console.log(`   ¿"${productoNombre}" en lista?`, resultado);
+    generalLogger.debug(`   ¿"${productoNombre}" en lista?`, resultado);
     return resultado;
   };
 
@@ -432,7 +434,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
             const estilo = getEstiloRecordatorio(rec.estado, rec.tipo);
             const Icono = estilo.icono;
 
-            console.log(`🎨 Renderizando checkbox #${idx} para:`, rec.producto);
+            generalLogger.debug(`🎨 Renderizando checkbox #${idx} para:`, rec.producto);
 
             return (
               <Card
@@ -445,7 +447,7 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                 <div className="flex items-center gap-3">
                   {/* Checkbox para añadir a lista de compra */}
                   {(() => {
-                    console.log(`✅ Creando elemento checkbox para: ${rec.producto}`);
+                    generalLogger.debug(`✅ Creando elemento checkbox para: ${rec.producto}`);
                     return (
                       <div className="relative" style={{ zIndex: 10 }}>
                         <button
@@ -453,9 +455,9 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('🛒 Click en checkbox:', rec.producto);
-                            console.log('   Estado actual:', estaEnLista(rec.producto) ? 'EN LISTA' : 'NO EN LISTA');
-                            console.log('   Productos en lista:', productos.length);
+                            generalLogger.debug('🛒 Click en checkbox:', rec.producto);
+                            generalLogger.debug('   Estado actual:', estaEnLista(rec.producto) ? 'EN LISTA' : 'NO EN LISTA');
+                            generalLogger.debug('   Productos en lista:', productos.length);
 
                             const productoData = {
                               producto: rec.producto,
@@ -466,16 +468,16 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                               agregadoEn: new Date().toISOString(),
                             };
 
-                            console.log('   Datos a enviar:', productoData);
+                            generalLogger.debug('   Datos a enviar:', productoData);
                             toggleProducto(productoData);
-                            console.log('   ✅ Toggle ejecutado');
+                            generalLogger.debug('   ✅ Toggle ejecutado');
                           }}
                           onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('🖱️ MouseDown en checkbox:', rec.producto);
+                            generalLogger.debug('🖱️ MouseDown en checkbox:', rec.producto);
                           }}
-                          onMouseEnter={() => console.log('📍 Mouse ENTER checkbox:', rec.producto)}
+                          onMouseEnter={() => generalLogger.debug('📍 Mouse ENTER checkbox:', rec.producto)}
                           className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
                             estaEnLista(rec.producto)
                               ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/30'

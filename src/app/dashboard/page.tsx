@@ -1,4 +1,5 @@
 'use client';
+import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useMemo, useState } from 'react';
 import { QuickActions } from '@/components/dashboard/quick-actions';
@@ -127,7 +128,7 @@ export default function DashboardPage() {
         toast.error(resultado.message);
       }
     } catch (error) {
-      console.error('Error inesperado al exportar:', error);
+      generalLogger.error('Error inesperado al exportar:', error);
       toast.error('Error inesperado al exportar el archivo');
     } finally {
       setIsExporting(false);
@@ -181,7 +182,7 @@ export default function DashboardPage() {
   // Usar comprasFiltradas del store (ya incluye filtros y ordenamiento)
   const numFilasFiltradas = comprasFiltradas.length;
 
-  console.log('Estado del dashboard:', {
+  generalLogger.debug('Estado del dashboard:', {
     activeTab,
     activeSheetName,
     numRows,
@@ -211,7 +212,10 @@ export default function DashboardPage() {
           c.telefono || '',
           c.direccion || ''
         ];
-        console.log('Row de compra:', row, 'Tipos:', row.map(r => typeof r));
+        // Solo debug en desarrollo
+        if (process.env.NODE_ENV === 'development') {
+          generalLogger.debug('Row de compra:', { row, types: row.map(r => typeof r) });
+        }
         return row;
       })
     : [];
@@ -219,7 +223,7 @@ export default function DashboardPage() {
   // Para base_datos, calcular el número real de filas desde compras
   const numFilasBaseDatos = activeTab === 'base_datos' ? comprasComoTabla.length : numRows;
 
-  console.log('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos });
+  generalLogger.debug('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos });
 
   // Cabeceras personalizadas para Histórico
   const cabecerasHistorico = ['FECHA', 'TIENDA', 'PRODUCTO', 'CATEGORÍA', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
@@ -285,17 +289,17 @@ export default function DashboardPage() {
         return row;
       });
 
-    console.log('📊 Cabeceras finales para', activeTab, ':', datosTabla[0]);
+    generalLogger.debug('Cabeceras finales para', { tab: activeTab, headers: datosTabla[0] });
   }
 
   if (activeTab === 'base_datos') {
-    console.log('📊 Estado de Histórico:');
-    console.log('  - comprasFiltradas.length:', comprasFiltradas.length);
-    console.log('  - compras.length:', compras.length);
-    console.log('  - comprasComoTabla.length:', comprasComoTabla.length);
-    console.log('  - datosTabla.length:', datosTabla.length);
-    console.log('  - datosTabla[0]:', datosTabla[0]);
-    console.log('  - datosTabla[1]:', datosTabla[1]);
+    generalLogger.debug('📊 Estado de Histórico:');
+    generalLogger.debug('  - comprasFiltradas.length:', comprasFiltradas.length);
+    generalLogger.debug('  - compras.length:', compras.length);
+    generalLogger.debug('  - comprasComoTabla.length:', comprasComoTabla.length);
+    generalLogger.debug('  - datosTabla.length:', datosTabla.length);
+    generalLogger.debug('  - datosTabla[0]:', datosTabla[0]);
+    generalLogger.debug('  - datosTabla[1]:', datosTabla[1]);
   }
 
   return (

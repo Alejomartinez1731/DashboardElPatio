@@ -1,4 +1,5 @@
 'use client';
+import { componentLogger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
@@ -29,7 +30,7 @@ export function RecordatoriosSummary({ className }: RecordatoriosSummaryProps) {
           setRecordatorios(importantes.slice(0, 5)); // Máximo 5
         }
       } catch (err) {
-        console.error('Error cargando resumen recordatorios:', err);
+        generalLogger.error('Error cargando resumen recordatorios:', err);
       } finally {
         setLoading(false);
       }

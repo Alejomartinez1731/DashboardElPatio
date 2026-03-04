@@ -44,7 +44,7 @@ export function useDataProcessor() {
     };
 
     worker.onerror = (error) => {
-      console.error('Error en Web Worker:', error);
+      generalLogger.error('Error en Web Worker:', error);
     };
 
     // Limpiar al desmontar

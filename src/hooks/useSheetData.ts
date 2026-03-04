@@ -79,7 +79,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     const procesarChunk = (chunkInicio: number): void => {
       // Si el componente se desmontó, detener procesamiento
       if (!isMountedRef.current) {
-        console.log('⏹️ Componente desmontado, deteniendo procesamiento');
+        apiLogger.debug('⏹️ Componente desmontado, deteniendo procesamiento');
         return;
       }
 
@@ -113,7 +113,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
 
       // Log de progreso
       const progreso = Math.round((chunkFin / values.length) * 100);
-      console.log(`📊 Procesando... ${progreso}% (${comprasProcesadas.length} compras)`);
+      apiLogger.debug(`📊 Procesando... ${progreso}% (${comprasProcesadas.length} compras)`);
 
       // Si quedan más filas, programar siguiente chunk
       if (chunkFin < values.length) {
@@ -127,7 +127,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       } else {
         // Terminó el procesamiento de todas las filas
         const tiempoTotal = Date.now() - inicio;
-        console.log(`✅ ${comprasProcesadas.length} compras procesadas en ${tiempoTotal}ms`);
+        apiLogger.debug(`✅ ${comprasProcesadas.length} compras procesadas en ${tiempoTotal}ms`);
 
         // 3. Obtener datos adicionales para KPIs
         const historicoPreciosValues = (apiResult.data.historico_precios?.values) || [];
@@ -178,7 +178,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
 
       // Mostrar advertencia si usa mock (no es un error, pero es info importante)
       if (result._isMock) {
-        console.warn('⚠️ Usando datos MOCK:', result._warning);
+        apiLogger.warn('⚠️ Usando datos MOCK:', result._warning);
       }
 
       if (!result.success) {
@@ -206,22 +206,22 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
           // Normalizar cabeceras
           const cabeceras = normalizarCabeceras(values[0] as string[]);
 
-          console.log('📊 Cabeceras normalizadas:', cabeceras);
-          console.log(`📊 Total de filas a procesar: ${values.length - 1}`);
+          apiLogger.debug('📊 Cabeceras normalizadas:', cabeceras);
+          apiLogger.debug(`📊 Total de filas a procesar: ${values.length - 1}`);
 
           // Decidir si usar chunking o procesamiento directo
           const filasAProcesar = values.length - 1;
           const usarChunking = USE_CHUNKING && filasAProcesar > CHUNK_SIZE;
 
           if (usarChunking) {
-            console.log(`🚀 Usando procesamiento por chunks (${CHUNK_SIZE} filas/chunk)`);
+            apiLogger.debug(`🚀 Usando procesamiento por chunks (${CHUNK_SIZE} filas/chunk)`);
           }
 
           // Procesar filas (con chunks o directo)
           procesarFilasConChunking(values, cabeceras, allData, result, usarChunking);
         }
       } else {
-        console.warn('⚠️ No hay datos en base_de_datos');
+        apiLogger.warn('⚠️ No hay datos en base_de_datos');
         startTransition(() => {
           setCompras([]);
           setComprasFiltradas([]);
@@ -235,7 +235,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error('❌ Error en useSheetData:', errorMessage);
+      apiLogger.error('❌ Error en useSheetData:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -246,7 +246,7 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
    * Función para refrescar datos manualmente
    */
   const refetch = useCallback(async () => {
-    console.log('🔄 Refrescando datos...');
+    apiLogger.debug('🔄 Refrescando datos...');
     await fetchDatos();
   }, [fetchDatos]);
 

@@ -19,7 +19,7 @@ const HOJA_HISTORICO_PRECIOS = 'Histórico de Precios';
  */
 async function getAllSheetsData(): Promise<Record<string, string[][]>> {
   if (!N8N_WEBHOOK_URL) {
-    console.error('❌ N8N_WEBHOOK_URL no configurado');
+    apiLogger.error('❌ N8N_WEBHOOK_URL no configurado');
     return {
       recordatorios: [],
       registro_diario: [],
@@ -28,20 +28,20 @@ async function getAllSheetsData(): Promise<Record<string, string[][]>> {
   }
 
   try {
-    console.log('📡 Llamando a n8n para todas las hojas...');
+    apiLogger.info('📡 Llamando a n8n para todas las hojas...');
     const response = await fetch(N8N_WEBHOOK_URL, {
       headers: { 'Accept': 'application/json' },
     });
 
     if (!response.ok) {
-      console.error('❌ n8n respondió con status:', response.status);
+      apiLogger.error('❌ n8n respondió con status:', response.status);
       throw new Error(`n8n falló con status ${response.status}`);
     }
 
     const result = await response.json();
-    console.log('✅ n8n respondió');
-    console.log('📦 Claves en result:', Object.keys(result));
-    console.log('📦 Claves en result.data:', Object.keys(result.data || {}));
+    apiLogger.info('✅ n8n respondió');
+    apiLogger.info('📦 Claves en result:', Object.keys(result));
+    apiLogger.info('📦 Claves en result.data:', Object.keys(result.data || {}));
 
     // n8n devuelve: { success: true, data: { recordatorios: { values: [...] } } }
     const data = result.data || {};
@@ -52,7 +52,7 @@ async function getAllSheetsData(): Promise<Record<string, string[][]>> {
       historico_precios: data.historico_precios?.values || [],
     };
   } catch (error: any) {
-    console.error('❌ Error obteniendo datos de n8n:', error.message);
+    apiLogger.error('❌ Error obteniendo datos de n8n:', error.message);
     return {
       recordatorios: [],
       registro_diario: [],
@@ -257,7 +257,7 @@ function calcularEstado(diasTranscurridos: number | null, diasConfigurados: numb
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('📡 GET /api/recordatorios');
+    apiLogger.info('📡 GET /api/recordatorios');
 
     // Obtener TODOS los datos de n8n en una sola llamada
     const sheetsData = await getAllSheetsData();
@@ -266,14 +266,15 @@ export async function GET(request: NextRequest) {
     const registroDiario = sheetsData.registro_diario;
     const historico = sheetsData.historico_precios;
 
-    console.log('📊 Datos recibidos de n8n:');
-    console.log('  - recordatorios:', recordatoriosRaw.length, 'filas');
-    console.log('  - registro_diario:', registroDiario.length, 'filas');
-    console.log('  - historico_precios:', historico.length, 'filas');
+    apiLogger.info('Datos recibidos de n8n', {
+      recordatorios: recordatoriosRaw.length,
+      registro_diario: registroDiario.length,
+      historico_precios: historico.length
+    });
 
     // PASO 1: Obtener todos los productos únicos del historial
     const productosUnicos = obtenerProductosUnicos(registroDiario, historico);
-    console.log('📦 Productos únicos encontrados:', productosUnicos.size);
+    apiLogger.info('📦 Productos únicos encontrados:', productosUnicos.size);
 
     // PASO 2: Procesar recordatorios manuales
     // Map: nombre lowercase -> { nombreOriginal, dias, notas }
@@ -303,7 +304,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('📝 Recordatorios manuales:', recordatoriosManuales.size);
+    apiLogger.info('📝 Recordatorios manuales:', recordatoriosManuales.size);
 
     // PASO 2.5: Agregar productos de recordatorios manuales al conjunto
     // Esto asegura que productos solo configurados manualmente también aparezcan
@@ -311,7 +312,7 @@ export async function GET(request: NextRequest) {
       productosUnicos.add(data.nombreOriginal);
     }
 
-    console.log('📦 Productos únicos finales (con manuales):', productosUnicos.size);
+    apiLogger.info('📦 Productos únicos finales (con manuales):', productosUnicos.size);
 
     // PASO 3: Generar recordatorios para todos los productos
     const recordatorios: any[] = [];
@@ -393,7 +394,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log('✅ Recordatorios procesados:', recordatorios.length);
+    apiLogger.info('✅ Recordatorios procesados:', recordatorios.length);
 
     // PASO 4: Ordenar por urgencia
     recordatorios.sort((a, b) => {
@@ -440,7 +441,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('❌ Error en GET /api/recordatorios:', error);
+    apiLogger.error('❌ Error en GET /api/recordatorios:', error);
     return NextResponse.json(
       {
         success: false,
@@ -526,11 +527,11 @@ export async function POST(request: NextRequest) {
         }),
       });
 
-      console.log('📡 Respuesta n8n status:', response.status);
+      apiLogger.info('📡 Respuesta n8n status:', response.status);
 
       if (!response.ok) {
         const text = await response.text();
-        console.error('❌ n8n append falló:', text);
+        apiLogger.error('❌ n8n append falló:', text);
         return NextResponse.json(
           { success: false, error: 'Error al guardar en n8n. Verifica que el webhook esté configurado correctamente.' },
           { status: 500 }
@@ -538,7 +539,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await response.json();
-      console.log('✅ n8n append éxito:', result);
+      apiLogger.info('✅ n8n append éxito:', result);
 
       if (!result.success) {
         return NextResponse.json(
@@ -566,7 +567,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('❌ Error en POST /api/recordatorios:', error);
+    apiLogger.error('❌ Error en POST /api/recordatorios:', error);
     return NextResponse.json(
       {
         success: false,
@@ -585,12 +586,12 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json();
     const { producto } = body;
 
-    console.log('🗑️ DELETE /api/recordatorios');
-    console.log('  Body recibido:', body);
-    console.log('  Producto a eliminar:', producto);
+    apiLogger.info('🗑️ DELETE /api/recordatorios');
+    apiLogger.info('  Body recibido:', body);
+    apiLogger.info('  Producto a eliminar:', producto);
 
     if (!producto || typeof producto !== 'string') {
-      console.error('❌ Producto no especificado o invalido');
+      apiLogger.error('❌ Producto no especificado o invalido');
       return NextResponse.json(
         { success: false, error: 'Producto no especificado' },
         { status: 400 }
@@ -605,7 +606,7 @@ export async function DELETE(request: NextRequest) {
         producto: producto.trim(),
       };
 
-      console.log('📤 Enviando a n8n DELETE:', payload);
+      apiLogger.info('📤 Enviando a n8n DELETE:', payload);
 
       const response = await fetch(N8N_RECORDATORIOS_WEBHOOK_URL, {
         method: 'POST',
@@ -613,11 +614,11 @@ export async function DELETE(request: NextRequest) {
         body: JSON.stringify(payload),
       });
 
-      console.log('📡 Respuesta n8n status:', response.status);
+      apiLogger.info('📡 Respuesta n8n status:', response.status);
 
       if (!response.ok) {
         const text = await response.text();
-        console.error('❌ n8n delete falló (status ' + response.status + '):', text);
+        apiLogger.error('❌ n8n delete falló (status ' + response.status + '):', text);
         return NextResponse.json(
           { success: false, error: 'Error al eliminar en n8n. Status: ' + response.status },
           { status: response.status }
@@ -625,7 +626,7 @@ export async function DELETE(request: NextRequest) {
       }
 
       const result = await response.json();
-      console.log('✅ n8n delete resultado:', result);
+      apiLogger.info('✅ n8n delete resultado:', result);
 
       if (!result.success) {
         return NextResponse.json(
@@ -634,7 +635,7 @@ export async function DELETE(request: NextRequest) {
         );
       }
     } else {
-      console.error('❌ N8N_RECORDATORIOS_WEBHOOK_URL no configurado');
+      apiLogger.error('❌ N8N_RECORDATORIOS_WEBHOOK_URL no configurado');
       return NextResponse.json(
         {
           success: false,
@@ -649,8 +650,8 @@ export async function DELETE(request: NextRequest) {
       message: 'Recordatorio eliminado correctamente',
     });
   } catch (error: any) {
-    console.error('❌ Error en DELETE /api/recordatorios:', error);
-    console.error('  Error stack:', error.stack);
+    apiLogger.error('❌ Error en DELETE /api/recordatorios:', error);
+    apiLogger.error('  Error stack:', error.stack);
     return NextResponse.json(
       {
         success: false,

@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
   const authenticated = isAuthenticatedFromRequest(request);
 
   // Debug: Log autenticación (comentar en producción)
-  // console.log(`🔐 Middleware: ${pathname} | Auth: ${authenticated}`);
+  // generalLogger.debug(`🔐 Middleware: ${pathname} | Auth: ${authenticated}`);
 
   if (!authenticated) {
     // Redirigir al login si no está autenticado

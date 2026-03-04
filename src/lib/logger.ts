@@ -69,7 +69,7 @@ class Logger {
 
   debug(message: string, meta?: any): void {
     if (this.shouldLog('debug')) {
-      console.log(this.formatMessage('debug', message, meta));
+      generalLogger.debug(this.formatMessage('debug', message, meta));
     }
   }
 
@@ -81,13 +81,13 @@ class Logger {
 
   warn(message: string, meta?: any): void {
     if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', message, meta));
+      generalLogger.warn(this.formatMessage('warn', message, meta));
     }
   }
 
   error(message: string, meta?: any): void {
     if (this.shouldLog('error')) {
-      console.error(this.formatMessage('error', message, meta));
+      generalLogger.error(this.formatMessage('error', message, meta));
     }
   }
 }

@@ -1,4 +1,5 @@
 'use client';
+import { generalLogger } from '@/lib/logger';
 
 import { useState } from 'react';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
@@ -56,7 +57,7 @@ export default function ListaCompraPage() {
       setMensajeCopiado(true);
       setTimeout(() => setMensajeCopiado(false), 2000);
     } catch (err) {
-      console.error('Error al copiar:', err);
+      generalLogger.error('Error al copiar:', err);
     }
   };
 

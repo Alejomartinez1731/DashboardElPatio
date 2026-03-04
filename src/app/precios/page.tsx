@@ -1,4 +1,5 @@
 'use client';
+import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
 import { Compra } from '@/types';
@@ -34,11 +35,11 @@ export default function PreciosPage() {
         const result = await response.json();
         if (result.success && result.data.base_de_datos?.values) {
           const values = result.data.base_de_datos.values as any[][];
-          console.log('📊 Precios - Datos recibidos:', values.length, 'filas');
+          generalLogger.debug('📊 Precios - Datos recibidos:', values.length, 'filas');
 
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-            console.log('📊 Precios - Cabeceras:', cabeceras);
+            generalLogger.debug('📊 Precios - Cabeceras:', cabeceras);
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
@@ -63,12 +64,12 @@ export default function PreciosPage() {
                 comprasProcesadas.push(compra);
               }
             }
-            console.log('✅ Precios - Compras procesadas:', comprasProcesadas.length);
+            generalLogger.debug('✅ Precios - Compras procesadas:', comprasProcesadas.length);
             setCompras(comprasProcesadas);
           }
         }
       } catch (err) {
-        console.error('Error en precios:', err);
+        generalLogger.error('Error en precios:', err);
       } finally {
         setCargando(false);
       }
@@ -133,7 +134,7 @@ export default function PreciosPage() {
     const fechaMax = new Date(Math.max(...fechas));
 
     // Crear periodos quincenales desde la fecha más antigua hasta hoy
-    let fechaActual = new Date(fechaMin);
+    const fechaActual = new Date(fechaMin);
     fechaActual.setDate(1); // Empezar el primer día del mes
     fechaActual.setHours(0, 0, 0, 0);
 

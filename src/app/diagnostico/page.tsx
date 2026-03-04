@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { generalLogger } from '@/lib/logger';
 
 export default function DiagnosticoPage() {
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
@@ -20,11 +21,11 @@ export default function DiagnosticoPage() {
         return res.json();
       })
       .then(data => {
-        console.log('✅ API Response:', data);
+        generalLogger.debug('✅ API Response:', data);
         setApiStatus('success');
       })
       .catch(err => {
-        console.error('❌ API Error:', err);
+        generalLogger.error('❌ API Error:', err);
         setApiError(err.message);
         setApiStatus('error');
       });

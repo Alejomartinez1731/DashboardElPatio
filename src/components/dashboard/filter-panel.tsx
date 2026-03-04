@@ -1,4 +1,5 @@
 'use client';
+import { componentLogger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
 import { X, Calendar, Store, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
@@ -35,7 +36,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   const precioMaxGlobal = precios.length > 0 ? Math.max(...precios) : 100;
 
   const handleRangoFechaChange = (rango: typeof filtros.rangoFecha) => {
-    console.log('📅 Cambiando rango de fecha:', rango);
+    componentLogger.debug('📅 Cambiando rango de fecha:', rango);
     const ahora = new Date();
     let inicio = null;
     let fin = null;
@@ -65,7 +66,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     }
 
     const nuevosFiltros = { ...filtros, rangoFecha: rango, fechaInicio: inicio, fechaFin: fin };
-    console.log('📅 Nuevos filtros:', nuevosFiltros);
+    componentLogger.debug('📅 Nuevos filtros:', nuevosFiltros);
     onFiltrosChange(nuevosFiltros);
   };
 
@@ -73,7 +74,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     const nuevasTiendas = filtros.tiendas.includes(tienda)
       ? filtros.tiendas.filter(t => t !== tienda)
       : [...filtros.tiendas, tienda];
-    console.log('🏪 Toggle tienda:', tienda, '→', nuevasTiendas);
+    componentLogger.debug('🏪 Toggle tienda:', tienda, '→', nuevasTiendas);
     onFiltrosChange({ ...filtros, tiendas: nuevasTiendas });
   };
 
