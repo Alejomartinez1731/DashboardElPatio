@@ -2,6 +2,7 @@
 import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { ErrorInfo } from 'react';
 import { ErrorBoundary } from '@/components/error/error-boundary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
@@ -198,7 +199,7 @@ export default function DashboardPage() {
   const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradas : compras;
 
   // Error handler específico para el dashboard
-  const handleDashboardError = (error: Error, errorInfo: React.ErrorInfo) => {
+  const handleDashboardError = (error: Error, errorInfo: ErrorInfo) => {
     generalLogger.error('Error en Dashboard:', {
       error: error.message,
       componentStack: errorInfo.componentStack,

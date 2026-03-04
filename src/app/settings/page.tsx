@@ -6,12 +6,13 @@ import { useSettings } from '@/store/useSettings';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { ErrorBoundary } from '@/components/error/error-boundary';
 import { generalLogger } from '@/lib/logger';
+import type { ErrorInfo } from 'react';
 
 export default function SettingsPage() {
   const settings = useSettings();
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSettingsError = (error: Error, errorInfo: React.ErrorInfo) => {
+  const handleSettingsError = (error: Error, errorInfo: ErrorInfo) => {
     generalLogger.error('Error en Configuración:', {
       error: error.message,
       componentStack: errorInfo.componentStack,
