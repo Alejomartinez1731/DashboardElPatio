@@ -7,11 +7,23 @@ const mockData = {
   base_de_datos: {
     values: [
       ['FECHA', 'TIENDA', 'DESCRIPCION', 'CANTIDAD', 'PRECIO UNITARIO', 'TOTAL', 'TELEFONO', 'DIRECCION'],
-      ['15/02/2026', 'Carrefour', 'Tomates', 5, 2.50, 12.50, '933456789', 'Av. Principal 123'],
-      ['15/02/2026', 'Lidl', 'Leche', 10, 1.20, 12.00, '933456789', 'Calle Mayor 45'],
-      ['14/02/2026', 'Mercadona', 'Pan', 3, 1.50, 4.50, '933456789', 'Plaza Central 1'],
-      ['14/02/2026', 'Consum', 'Huevos', 12, 0.30, 3.60, '933456789', 'Carrer Major 78'],
-      ['13/02/2026', 'Carrefour', 'Aceite', 2, 8.00, 16.00, '933456789', 'Av. Principal 123'],
+      // Datos variados de prueba
+      ['01/03/2026', 'Carrefour', 'Tomates', 5, 2.50, 12.50, '933456789', 'Av. Principal 123'],
+      ['01/03/2026', 'Lidl', 'Leche Entera', 10, 1.20, 12.00, '933456789', 'Calle Mayor 45'],
+      ['01/03/2026', 'Mercadona', 'Pan Barrido', 3, 1.50, 4.50, '933456789', 'Plaza Central 1'],
+      ['01/03/2026', 'Consum', 'Huevos XL', 12, 0.30, 3.60, '933456789', 'Carrer Major 78'],
+      ['01/03/2026', 'Carrefour', 'Aceite Oliva', 2, 8.00, 16.00, '933456789', 'Av. Principal 123'],
+      ['28/02/2026', 'Lidl', 'Yogur Natural', 8, 0.80, 6.40, '933456789', 'Calle Mayor 45'],
+      ['28/02/2026', 'Mercadona', 'Manzanas', 6, 2.00, 12.00, '933456789', 'Plaza Central 1'],
+      ['28/02/2026', 'Consum', 'Pollo', 2, 5.50, 11.00, '933456789', 'Carrer Major 78'],
+      ['27/02/2026', 'Carrefour', 'Pasta', 4, 1.80, 7.20, '933456789', 'Av. Principal 123'],
+      ['27/02/2026', 'Lidl', 'Queso', 3, 3.50, 10.50, '933456789', 'Calle Mayor 45'],
+      ['27/02/2026', 'Mercadona', 'Naranjas', 10, 0.40, 4.00, '933456789', 'Plaza Central 1'],
+      ['26/02/2026', 'Consum', 'Arroz', 2, 3.00, 6.00, '933456789', 'Carrer Major 78'],
+      ['26/02/2026', 'Carrefour', 'Lechuga', 5, 0.90, 4.50, '933456789', 'Av. Principal 123'],
+      ['26/02/2026', 'Lidl', 'Patatas', 10, 1.20, 12.00, '933456789', 'Calle Mayor 45'],
+      ['25/02/2026', 'Mercadona', 'Tomate Frito', 3, 2.00, 6.00, '933456789', 'Plaza Central 1'],
+      ['25/02/2026', 'Consum', 'Cerveza', 12, 0.50, 6.00, '933456789', 'Carrer Major 78'],
     ]
   },
   historico_precios: {
@@ -41,10 +53,14 @@ const mockData = {
   },
   registro_diario: {
     values: [
-      ['FECHA', 'GASTO_TOTAL', 'NUM_FACTURAS', 'TIENDA_MAYOR'],
-      ['15/02/2026', 24.50, 2, 'Carrefour'],
-      ['14/02/2026', 8.10, 2, 'Mercadona'],
-      ['13/02/2026', 16.00, 1, 'Carrefour'],
+      ['FECHA', 'TIENDA', 'DESCRIPCION', 'CANTIDAD', 'TOTALUNITARIO', 'TOTAL'],
+      ['01/03/2026', 'Carrefour', 'Tomates', 5, 2.50, 12.50],
+      ['01/03/2026', 'Lidl', 'Leche Entera', 10, 1.20, 12.00],
+      ['01/03/2026', 'Mercadona', 'Pan Barrido', 3, 1.50, 4.50],
+      ['28/02/2026', 'Carrefour', 'Aceite Oliva', 2, 8.00, 16.00],
+      ['28/02/2026', 'Lidl', 'Yogur Natural', 8, 0.80, 6.40],
+      ['27/02/2026', 'Mercadona', 'Manzanas', 6, 2.00, 12.00],
+      ['27/02/2026', 'Consum', 'Pollo', 2, 5.50, 11.00],
     ]
   }
 };
