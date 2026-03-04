@@ -14,6 +14,35 @@ const HOJA_RECORDATORIOS = 'Recordatorios';
 const HOJA_REGISTRO_DIARIO = 'Registro Diario';
 const HOJA_HISTORICO_PRECIOS = 'Histórico de Precios';
 
+// Types
+interface UltimaCompra {
+  fecha: Date;
+  tienda: string;
+  precio: number;
+}
+
+interface NormalizedCabeceras {
+  fecha: number;
+  tienda: number;
+  descripcion: number;
+  precio: number;
+  [key: string]: number;
+}
+
+type RecordatorioEstado = 'vencido' | 'proximo' | 'ok' | 'sin_datos';
+
+interface Recordatorio {
+  producto: string;
+  diasConfigurados: number;
+  ultimaCompra: string | null;
+  diasTranscurridos: number | null;
+  estado: RecordatorioEstado;
+  tiendaUltimaCompra: string | null;
+  precioUltimaCompra: number | null;
+  notas: string;
+  tipo: 'manual' | 'automatico';
+}
+
 /**
  * Obtiene los datos de n8n (todas las hojas)
  */
@@ -51,8 +80,9 @@ async function getAllSheetsData(): Promise<Record<string, string[][]>> {
       registro_diario: data.registro_diario?.values || [],
       historico_precios: data.historico_precios?.values || [],
     };
-  } catch (error: any) {
-    apiLogger.error('❌ Error obteniendo datos de n8n:', error.message);
+  } catch (error) {
+    const err = error as Error;
+    apiLogger.error('❌ Error obteniendo datos de n8n:', err.message);
     return {
       recordatorios: [],
       registro_diario: [],
@@ -65,9 +95,9 @@ async function getAllSheetsData(): Promise<Record<string, string[][]>> {
  * Busca la última compra de un producto en las hojas de datos
  * Búsqueda parcial (case-insensitive)
  */
-function buscarUltimaCompra(producto: string, registroDiario: string[][], historico: string[][]) {
+function buscarUltimaCompra(producto: string, registroDiario: string[][], historico: string[][]): UltimaCompra | null {
   const productoLower = producto.toLowerCase();
-  let ultimaCompra: any = null;
+  let ultimaCompra: UltimaCompra | null = null;
 
   // Buscar en Registro Diario primero (más reciente)
   if (registroDiario.length > 1) {
@@ -76,14 +106,18 @@ function buscarUltimaCompra(producto: string, registroDiario: string[][], histor
       const fila = registroDiario[i];
       if (fila.length < 3) continue;
 
-      const descripcion = String(fila[cabeceras.descripcion] || fila[2] || '').toLowerCase();
+      const idxDesc = cabeceras.descripcion ?? 2;
+      const descripcion = String(fila[idxDesc] || '').toLowerCase();
       if (descripcion.includes(productoLower) || productoLower.includes(descripcion)) {
-        const fecha = parsearFecha(fila[cabeceras.fecha] || fila[0] || '');
+        const idxFecha = cabeceras.fecha ?? 0;
+        const fecha = parsearFecha(fila[idxFecha] || '');
         if (!ultimaCompra || fecha > ultimaCompra.fecha) {
+          const idxTienda = cabeceras.tienda ?? 1;
+          const idxPrecio = cabeceras.precio ?? 3;
           ultimaCompra = {
             fecha,
-            tienda: fila[cabeceras.tienda] || fila[1] || '',
-            precio: parseFloat(fila[cabeceras.precio] || fila[3] || '0') || 0,
+            tienda: fila[idxTienda] || '',
+            precio: parseFloat(fila[idxPrecio] || '0') || 0,
           };
         }
       }
@@ -97,14 +131,18 @@ function buscarUltimaCompra(producto: string, registroDiario: string[][], histor
       const fila = historico[i];
       if (fila.length < 3) continue;
 
-      const descripcion = String(fila[cabeceras.descripcion] || fila[2] || '').toLowerCase();
+      const idxDesc = cabeceras.descripcion ?? 2;
+      const descripcion = String(fila[idxDesc] || '').toLowerCase();
       if (descripcion.includes(productoLower) || productoLower.includes(descripcion)) {
-        const fecha = parsearFecha(fila[cabeceras.fecha] || fila[0] || '');
+        const idxFecha = cabeceras.fecha ?? 0;
+        const fecha = parsearFecha(fila[idxFecha] || '');
         if (!ultimaCompra || fecha > ultimaCompra.fecha) {
+          const idxTienda = cabeceras.tienda ?? 1;
+          const idxPrecio = cabeceras.precio ?? 3;
           ultimaCompra = {
             fecha,
-            tienda: fila[cabeceras.tienda] || fila[1] || '',
-            precio: parseFloat(fila[cabeceras.precio] || fila[3] || '0') || 0,
+            tienda: fila[idxTienda] || '',
+            precio: parseFloat(fila[idxPrecio] || '0') || 0,
           };
         }
       }
@@ -117,8 +155,13 @@ function buscarUltimaCompra(producto: string, registroDiario: string[][], histor
 /**
  * Normaliza cabeceras para encontrar índices de columnas
  */
-function normalizarCabeceras(cabeceras: any[]): Record<string, number> {
-  const normalized: Record<string, number> = {};
+function normalizarCabeceras(cabeceras: string[]): NormalizedCabeceras {
+  const normalized: NormalizedCabeceras = {
+    fecha: 0,        // Default: primera columna
+    tienda: 1,       // Default: segunda columna
+    descripcion: 2,  // Default: tercera columna
+    precio: 3,       // Default: cuarta columna
+  };
   cabeceras.forEach((cab, idx) => {
     const cabLower = String(cab).toLowerCase().trim();
     if (cabLower.includes('fecha') || cabLower === 'date') normalized.fecha = idx;
@@ -245,7 +288,7 @@ function calcularFrecuenciaAutomatica(producto: string, registroDiario: string[]
 /**
  * Calcula el estado de un recordatorio
  */
-function calcularEstado(diasTranscurridos: number | null, diasConfigurados: number): string {
+function calcularEstado(diasTranscurridos: number | null, diasConfigurados: number): RecordatorioEstado {
   if (diasTranscurridos === null) return 'sin_datos';
   if (diasTranscurridos >= diasConfigurados) return 'vencido';
   if (diasTranscurridos >= diasConfigurados * 0.7) return 'proximo';
@@ -315,7 +358,7 @@ export async function GET(request: NextRequest) {
     apiLogger.info('📦 Productos únicos finales (con manuales):', productosUnicos.size);
 
     // PASO 3: Generar recordatorios para todos los productos
-    const recordatorios: any[] = [];
+    const recordatorios: Recordatorio[] = [];
     const procesados = new Set<string>(); // Evitar duplicados
 
     for (const producto of productosUnicos) {
@@ -440,12 +483,13 @@ export async function GET(request: NextRequest) {
       debug: debugInfo,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    apiLogger.error('❌ Error en GET /api/recordatorios:', error);
+  } catch (error) {
+    const err = error as Error;
+    apiLogger.error('❌ Error en GET /api/recordatorios:', err);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Error al obtener recordatorios',
+        error: err.message || 'Error al obtener recordatorios',
       },
       { status: 500 }
     );
@@ -566,12 +610,13 @@ export async function POST(request: NextRequest) {
         notas: notasSanitizado,
       },
     });
-  } catch (error: any) {
-    apiLogger.error('❌ Error en POST /api/recordatorios:', error);
+  } catch (error) {
+    const err = error as Error;
+    apiLogger.error('❌ Error en POST /api/recordatorios:', err);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Error al crear recordatorio',
+        error: err.message || 'Error al crear recordatorio',
       },
       { status: 500 }
     );
@@ -649,13 +694,14 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: 'Recordatorio eliminado correctamente',
     });
-  } catch (error: any) {
-    apiLogger.error('❌ Error en DELETE /api/recordatorios:', error);
-    apiLogger.error('  Error stack:', error.stack);
+  } catch (error) {
+    const err = error as Error & { stack?: string };
+    apiLogger.error('❌ Error en DELETE /api/recordatorios:', err);
+    apiLogger.error('  Error stack:', err.stack);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Error al eliminar recordatorio',
+        error: err.message || 'Error al eliminar recordatorio',
       },
       { status: 500 }
     );

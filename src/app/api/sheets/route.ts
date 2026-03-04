@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { apiLogger } from '@/lib/logger';
+import type { SheetName, SheetData } from '@/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -17,10 +18,33 @@ interface N8NError extends Error {
   isTimeout?: boolean;
 }
 
+// Tipos para respuesta de n8n
+interface N8NSheetData {
+  values?: string[][];
+}
+
+interface N8NResponseData {
+  base_de_datos?: N8NSheetData;
+  historico?: N8NSheetData;
+  historico_precios?: N8NSheetData;
+  producto_mas_costoso?: N8NSheetData;
+  costosos?: N8NSheetData;
+  gasto_por_tienda?: N8NSheetData;
+  precio_por_producto?: N8NSheetData;
+  registro_diario?: N8NSheetData;
+  [key: string]: N8NSheetData | undefined;
+}
+
+interface N8NResponse {
+  success: boolean;
+  data?: N8NResponseData;
+  [key: string]: unknown;
+}
+
 /**
  * Valida que la respuesta de n8n tenga la estructura esperada
  */
-function validateN8NResponse(data: any): { valid: boolean; error?: string } {
+function validateN8NResponse(data: N8NResponse): { valid: boolean; error?: string } {
   if (!data || typeof data !== 'object') {
     return { valid: false, error: 'La respuesta no es un objeto válido' };
   }
@@ -39,7 +63,7 @@ function validateN8NResponse(data: any): { valid: boolean; error?: string } {
 /**
  * Intenta obtener datos de n8n con reintentos
  */
-async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ success: boolean; data?: any; error?: string; errorType?: ErrorType }> {
+async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ success: boolean; data?: N8NResponseData; error?: string; errorType?: ErrorType }> {
   apiLogger.debug(`Intento ${attempt}/${MAX_RETRIES} de conexión a n8n`);
 
   const controller = new AbortController();
@@ -75,7 +99,7 @@ async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ 
       };
     }
 
-    const data = await response.json();
+    const data = await response.json() as N8NResponse;
     apiLogger.debug('Datos recibidos de n8n', { keys: Object.keys(data.data || {}) });
 
     // Validar estructura
@@ -88,13 +112,14 @@ async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ 
       };
     }
 
-    return { success: true, data };
+    return { success: true, data: data.data };
 
-  } catch (error: any) {
+  } catch (error) {
     clearTimeout(timeoutId);
 
     // Diferenciar tipos de error
-    if (error.name === 'AbortError') {
+    const err = error as Error & { name?: string };
+    if (err.name === 'AbortError') {
       return {
         success: false,
         error: `Timeout después de ${TIMEOUT_MS}ms`,
@@ -112,7 +137,7 @@ async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ 
 
     return {
       success: false,
-      error: error.message || 'Error desconocido',
+      error: err.message || 'Error desconocido',
       errorType: 'network'
     };
   }
@@ -121,7 +146,7 @@ async function fetchFromN8N(webhookUrl: string, attempt: number = 1): Promise<{ 
 /**
  * Intenta obtener datos con reintentos exponenciales
  */
-async function fetchWithRetry(webhookUrl: string): Promise<{ success: boolean; data?: any; error?: string; errorType?: ErrorType; attempts?: number }> {
+async function fetchWithRetry(webhookUrl: string): Promise<{ success: boolean; data?: N8NResponseData; error?: string; errorType?: ErrorType; attempts?: number }> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     const result = await fetchFromN8N(webhookUrl, attempt);
 
@@ -206,13 +231,13 @@ export async function GET(request: Request) {
 
   // Mapear nombres de n8n a nombres internos del dashboard
   const mappedData = {
-    base_de_datos: data.data?.base_de_datos || data.data?.historico || {},
-    historico: data.data?.historico || {},
-    historico_precios: data.data?.historico_precios || {},
-    costosos: data.data?.producto_mas_costoso || data.data?.costosos || {},
-    gasto_tienda: data.data?.gasto_por_tienda || data.data?.gasto_tienda || {},
-    precio_producto: data.data?.precio_por_producto || data.data?.precio_producto || {},
-    registro_diario: data.data?.registro_diario || {},
+    base_de_datos: data.base_de_datos || data.historico || {},
+    historico: data.historico || {},
+    historico_precios: data.historico_precios || {},
+    costosos: data.producto_mas_costoso || data.costosos || {},
+    gasto_tienda: data.gasto_por_tienda || data.gasto_tienda || {},
+    precio_producto: data.precio_por_producto || data.precio_producto || {},
+    registro_diario: data.registro_diario || {},
   };
 
   return NextResponse.json({
