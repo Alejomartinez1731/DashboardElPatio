@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -31,11 +32,13 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-border bg-gradient-to-b from-[#f59e0b]/5 to-transparent">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#f59e0b]/10 overflow-hidden p-2">
-            <img
+          <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-[#f59e0b]/10 overflow-hidden p-2 relative">
+            <Image
               src="/el-patio-vila-seca-restaurante.jpg"
               alt="El Patio & Grill Logo"
-              className="w-full h-full object-contain"
+              fill
+              className="object-contain"
+              priority
             />
           </div>
           <div className="text-center">
