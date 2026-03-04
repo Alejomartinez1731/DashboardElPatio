@@ -243,11 +243,14 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       const cachedData = apiCache.get<SheetsApiResponse>('sheets_data');
       const skipCache = cachedData?._isMock === true; // Forzar refresco si el caché tiene datos mock
 
+      apiLogger.debug('📊 Iniciando fetch de datos...', { hasCached: !!cachedData, isMock: cachedData?._isMock, skipCache });
+
       const [result, numeroDeRecordatorios] = await Promise.all([
         // Fetch principal con caché de 3 minutos
         fetchWithCache(
           'sheets_data',
           async () => {
+            apiLogger.debug('📊 Fetching /api/sheets...');
             const response = await fetch('/api/sheets');
             if (!response.ok) {
               throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
@@ -266,6 +269,13 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       setDataSource(result._source || 'n8n');
       setWarning(result._warning || null);
 
+      apiLogger.debug('📊 Datos recibidos:', {
+        success: result.success,
+        dataKeys: Object.keys(result.data || {}),
+        isMock: result._isMock,
+        warning: result._warning,
+      });
+
       // ⚠️ Si son datos mock, limpiar el caché para no persistirlos
       if (result._isMock) {
         apiLogger.warn('⚠️ Usando datos MOCK:', result._warning);
@@ -280,11 +290,25 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       const allData: Record<string, string[][]> = {};
       tabs.forEach(tab => {
         const sheetData = result.data[tab.dataKey];
+        apiLogger.debug(`📊 Tab ${tab.id}:`, {
+          sheetName: tab.sheetName,
+          dataKey: tab.dataKey,
+          hasData: !!sheetData,
+          hasValues: !!sheetData?.values,
+          valuesLength: sheetData?.values?.length || 0,
+        });
+
         if (sheetData?.values && Array.isArray(sheetData.values)) {
           allData[tab.sheetName] = sheetData.values;
         } else {
+          apiLogger.warn(`⚠️ Tab ${tab.id} (${tab.sheetName}) sin datos válidos`);
           allData[tab.sheetName] = [];
         }
+      });
+
+      apiLogger.debug('📊 allData después de mapear:', {
+        keys: Object.keys(allData),
+        entries: Object.entries(allData).map(([k, v]) => [k, v.length]),
       });
 
       // 2. Procesar compras desde base_de_datos
@@ -340,7 +364,14 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
     } finally {
       setLoading(false);
     }
-  }, [tabs, procesarFilasConChunking, fetchNumeroDeRecordatorios, procesarFilasDirecto, finalizarCarga]);
+
+    apiLogger.debug('📊 fetchDatos completado:', {
+      comprasCount: compras.length,
+      sheetsDataKeys: Object.keys(sheetsData),
+      loading,
+      error,
+    });
+  }, [tabs, procesarFilasConChunking, fetchNumeroDeRecordatorios, procesarFilasDirecto, finalizarCarga, compras, sheetsData, loading, error]);
 
   /**
    * Función para refrescar datos manualmente

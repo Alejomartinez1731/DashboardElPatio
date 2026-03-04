@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw, Bell, LogOut, User } from 'lucide-react';
+import { RefreshCw, Bell, LogOut, User, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { generalLogger } from '@/lib/logger';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { GlobalSearchTrigger } from '@/components/search/global-search';
+import { apiCache } from '@/lib/cache';
 
 export function Header() {
   const router = useRouter();
@@ -30,6 +31,13 @@ export function Header() {
   }, []);
 
   const handleRefresh = () => {
+    setCargando(true);
+    window.location.reload();
+  };
+
+  const handleClearCache = () => {
+    apiCache.clear();
+    generalLogger.info('Caché limpiado por el usuario');
     setCargando(true);
     window.location.reload();
   };
@@ -99,6 +107,18 @@ export function Header() {
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${cargando ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Actualizar</span>
+        </Button>
+
+        {/* Botón limpiar caché */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClearCache}
+          disabled={cargando}
+          className="border-border hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive text-muted-foreground transition-all duration-200"
+          title="Limpiar caché y recargar"
+        >
+          <Trash2 className="w-4 h-4" />
         </Button>
 
         {/* Avatar con menú de logout */}
