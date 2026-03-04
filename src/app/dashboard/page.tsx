@@ -2,6 +2,7 @@
 import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ErrorBoundary } from '@/components/error/error-boundary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
@@ -196,6 +197,15 @@ export default function DashboardPage() {
   // Usar comprasFiltradas para base_datos (ya filtrado y ordenado por el store)
   const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradas : compras;
 
+  // Error handler específico para el dashboard
+  const handleDashboardError = (error: Error, errorInfo: React.ErrorInfo) => {
+    generalLogger.error('Error en Dashboard:', {
+      error: error.message,
+      componentStack: errorInfo.componentStack,
+      context: { activeTab, numCompras: compras.length }
+    });
+  };
+
   const comprasComoTabla = activeTab === 'base_datos'
     ? comprasParaTabla.map(c => {
         const categoria = categorizarProducto(c.producto);
@@ -302,7 +312,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <ErrorBoundary
+      onError={handleDashboardError}
+      showDetails={process.env.NODE_ENV === 'development'}
+    >
+      <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <DashboardHeader
         title="Panel General"
@@ -388,5 +402,6 @@ export default function DashboardPage() {
         </DataTableWrapper>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

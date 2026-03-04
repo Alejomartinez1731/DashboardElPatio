@@ -4,10 +4,19 @@ import { useState } from 'react';
 import { Settings } from 'lucide-react';
 import { useSettings } from '@/store/useSettings';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { ErrorBoundary } from '@/components/error/error-boundary';
+import { generalLogger } from '@/lib/logger';
 
 export default function SettingsPage() {
   const settings = useSettings();
   const [hasChanges, setHasChanges] = useState(false);
+
+  const handleSettingsError = (error: Error, errorInfo: React.ErrorInfo) => {
+    generalLogger.error('Error en Configuración:', {
+      error: error.message,
+      componentStack: errorInfo.componentStack,
+    });
+  };
 
   const handleReset = () => {
     if (confirm('¿Estás seguro de que quieres restablecer todas las configuraciones a los valores por defecto?')) {
@@ -17,7 +26,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <ErrorBoundary
+      onError={handleSettingsError}
+      showDetails={process.env.NODE_ENV === 'development'}
+    >
+      <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 bg-muted/50 rounded-lg">
@@ -228,5 +241,6 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
