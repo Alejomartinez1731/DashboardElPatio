@@ -2,6 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Download, RefreshCw, Filter, Calendar, Printer, Loader2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QuickActionsProps {
@@ -14,7 +15,7 @@ interface QuickActionsProps {
 }
 
 interface Accion {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   descripcion: string;
   color: string;

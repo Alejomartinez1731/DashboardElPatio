@@ -1,4 +1,5 @@
 import { Table, TrendingUp, PieChart, ShoppingBag, Bell } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { SheetName } from '@/types';
 import Link from 'next/link';
 
@@ -8,7 +9,7 @@ export interface Tab {
   id: TabId;
   label: string;
   sheetName?: SheetName;  // Opcional para recordatorios que no usa sheet
-  icon: any;
+  icon: LucideIcon;
   description: string;
   href?: string;  // Para tabs que navegan a otra página
 }

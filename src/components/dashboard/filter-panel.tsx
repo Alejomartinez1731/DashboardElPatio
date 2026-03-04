@@ -4,6 +4,7 @@ import { componentLogger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { X, Calendar, Store, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { Compra } from '@/types';
 
 interface Filtros {
   fechaInicio: Date | null;
@@ -20,7 +21,7 @@ interface FilterPanelProps {
   onFiltrosChange: (filtros: Filtros) => void;
   onReset: () => void;
   tiendasUnicas: string[];
-  compras: any[];
+  compras: Compra[];
 }
 
 export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
@@ -28,7 +29,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
 
   // Calcular estadísticas para los sliders
   const precios = compras.flatMap(c => {
-    const precio = parseFloat(c.precioUnitario || '0');
+    const precio = typeof c.precioUnitario === 'number' ? c.precioUnitario : parseFloat(c.precioUnitario || '0');
     return isNaN(precio) ? [] : precio;
   }).filter(p => p > 0);
 

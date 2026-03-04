@@ -1,15 +1,16 @@
 import { Table } from 'lucide-react';
 import { DataTableHeader, DataTableRow } from './data-table-row';
+import type { Compra } from '@/types';
 
 type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'total';
 
 interface DataTableProps {
   activeTab: string;
-  datosTabla: any[][];
+  datosTabla: string[][];
   numRows: number;
   numFilasBaseDatos?: number;
-  comprasParaTabla?: any[];
-  compras?: any[];
+  comprasParaTabla?: Compra[];
+  compras?: Compra[];
   sortField?: SortField;
   sortOrder?: 'asc' | 'desc';
   onSort?: (field: SortField) => void;
@@ -50,7 +51,7 @@ export function DataTable({
           isSortable={isSortable}
         />
         <tbody className="divide-y divide-[#1e293b]">
-          {datosTabla.slice(1).map((row: any[], rowIdx: number) => (
+          {datosTabla.slice(1).map((row: string[], rowIdx: number) => (
             <DataTableRow
               key={rowIdx}
               row={row}

@@ -35,7 +35,7 @@ export function CategoryDistribution({ compras }: CategoryDistributionProps) {
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: typeof datosGrafico[0] }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -53,20 +53,27 @@ export function CategoryDistribution({ compras }: CategoryDistributionProps) {
     return null;
   };
 
-  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.05) return null; // No mostrar etiqueta si es menos del 5%
+  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
+    cx?: number;
+    cy?: number;
+    midAngle?: number;
+    innerRadius?: number;
+    outerRadius?: number;
+    percent?: number;
+  }) => {
+    if (!percent || percent < 0.05) return null; // No mostrar etiqueta si es menos del 5%
 
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const radius = (innerRadius || 0) + ((outerRadius || 0) - (innerRadius || 0)) * 0.5;
+    const x = (cx || 0) + radius * Math.cos(-(midAngle || 0) * RADIAN);
+    const y = (cy || 0) + radius * Math.sin(-(midAngle || 0) * RADIAN);
 
     return (
       <text
         x={x}
         y={y}
         fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
+        textAnchor={x > (cx || 0) ? 'start' : 'end'}
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold"

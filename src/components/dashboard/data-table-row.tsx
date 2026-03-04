@@ -5,7 +5,7 @@ import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 type SortField = 'fecha' | 'tienda' | 'producto' | 'cantidad' | 'precio' | 'total';
 
 interface DataTableRowProps {
-  row: any[];
+  row: (string | number)[];
   rowIdx: number;
   headers: string[];
   sortField?: SortField;
