@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Store,
   Receipt,
+  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,7 @@ const navegacion = [
   { titulo: 'Registro de Compras', href: '/registro', icono: FileText },
   { titulo: 'Análisis de Precios', href: '/precios', icono: TrendingUp },
   { titulo: 'Proveedores', href: '/proveedores', icono: Store },
+  { titulo: 'Recordatorios', href: '/dashboard/recordatorios', icono: Bell },
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
 ];
 
