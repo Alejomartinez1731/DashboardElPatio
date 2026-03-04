@@ -51,14 +51,20 @@ export default function FacturasPage() {
               const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
+              // Buscar claves de forma case-insensitive porque las cabeceras pueden venir en mayúsculas
+              const buscarKey = (key: string) => {
+                const keys = Object.keys(obj);
+                return keys.find(k => k.toLowerCase() === key.toLowerCase());
+              };
+
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: normalizarFecha(String(obj.fecha || '')),
-                tienda: String(obj.tienda || ''),
-                producto: String(obj.descripcion || ''),
-                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
-                precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
-                total: parseFloat(String(obj.total || '0')) || 0,
+                fecha: normalizarFecha(String(buscarKey('fecha') || obj.fecha || '')),
+                tienda: String(buscarKey('tienda') || obj.tienda || ''),
+                producto: String(buscarKey('descripcion') || obj.descripcion || ''),
+                cantidad: parseFloat(String(buscarKey('cantidad') || obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(buscarKey('PRECIO UNITARIO') || buscarKey('precio unitario') || buscarKey('precio_unitario') || obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
+                total: parseFloat(String(buscarKey('TOTAL') || buscarKey('total') || '0')) || 0,
               };
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {

@@ -54,6 +54,12 @@ export default function ProveedoresPage() {
               const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
+              // Buscar precio unitario - case insensitive
+              const buscarKey = (key: string) => {
+                const keys = Object.keys(obj);
+                return keys.find(k => k.toLowerCase() === key.toLowerCase());
+              };
+
               const tiendaNormalizada = normalizarTienda(String(obj.tienda || ''));
 
               const compra: Compra = {
@@ -61,11 +67,11 @@ export default function ProveedoresPage() {
                 fecha: normalizarFecha(String(obj.fecha || '')),
                 tienda: tiendaNormalizada,
                 producto: String(obj.descripcion || ''),
-                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
-                precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
-                total: parseFloat(String(obj.total || '0')) || 0,
-                telefono: obj.telefono ? String(obj.telefono) : undefined,
-                direccion: obj.direccion ? String(obj.direccion) : undefined,
+                cantidad: parseFloat(String(buscarKey('CANTIDAD') || obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(buscarKey('PRECIO UNITARIO') || buscarKey('precio unitario') || buscarKey('precio_unitario') || '0')) || 0,
+                total: parseFloat(String(buscarKey('TOTAL') || obj.total || '0')) || 0,
+                telefono: buscarKey('TELEFONO') ? String(buscarKey('TELEFONO')) : undefined,
+                direccion: buscarKey('DIRECCION') ? String(buscarKey('DIRECCION')) : undefined,
               };
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {

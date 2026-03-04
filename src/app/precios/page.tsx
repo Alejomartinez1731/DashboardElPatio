@@ -56,7 +56,13 @@ export default function PreciosPage() {
               const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
-              const precioRaw = obj.totalunitario || obj['precio unitario'] || obj['precio_unitario'] || obj.precio || '0';
+              // Buscar precio unitario - case insensitive
+              const buscarKey = (key: string) => {
+                const keys = Object.keys(obj);
+                return keys.find(k => k.toLowerCase() === key.toLowerCase());
+              };
+
+              const precioRaw = buscarKey('PRECIO UNITARIO') || buscarKey('precio unitario') || buscarKey('precio_unitario') || buscarKey('precio') || '0';
 
               const compra: Compra = {
                 id: `compra-${i}`,

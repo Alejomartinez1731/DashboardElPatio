@@ -52,7 +52,13 @@ export default function RegistroPage() {
               const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
-              const precioUnitarioRaw = obj.totalunitario || obj['total unitario'] || obj['precio unitario'] || obj['precio_unitario'] || obj['preciounitario'] || obj.precio || obj['precio unit.'] || '0';
+              // Buscar precio unitario - case insensitive porque cabeceras pueden ser mayúsculas
+              const buscarKey = (key: string) => {
+                const keys = Object.keys(obj);
+                return keys.find(k => k.toLowerCase() === key.toLowerCase());
+              };
+
+              const precioUnitarioRaw = buscarKey('TOTALUNITARIO') || buscarKey('total unitario') || buscarKey('precio unitario') || buscarKey('precio_unitario') || buscarKey('preciounitario') || buscarKey('precio') || buscarKey('precio unit.') || '0';
 
               const compra: Compra = {
                 id: `compra-${i}`,
