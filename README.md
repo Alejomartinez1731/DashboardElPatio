@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dashboard El Patio & Grill
 
-## Getting Started
+Dashboard de gestión para restaurante con análisis de gastos, proveedores, precios y más.
 
-First, run the development server:
+## 🚀 Getting Started (Desarrollo Local)
 
+### Prerrequisitos
+
+- Node.js 18+
+- npm/yarn/pnpm
+
+### Instalación
+
+1. Clona el repositorio:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <tu-repo-url>
+cd elpatio-dashboard
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Instala dependencias:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Configura las variables de entorno:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Crea un archivo `.env.local` en la raíz del proyecto:
 
-## Learn More
+```bash
+# n8n Webhook URL (para obtener datos de Google Sheets)
+N8N_WEBHOOK_URL=https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/dashboard-data
 
-To learn more about Next.js, take a look at the following resources:
+# n8n Webhook URL para recordatorios (ESCRITURA)
+N8N_RECORDATORIOS_WEBHOOK_URL=https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/Recordatorios
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> **IMPORTANTE**: La variable `N8N_WEBHOOK_URL` NO debe tener el prefijo `NEXT_PUBLIC_` porque se usa en el servidor (API routes).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. Ejecuta el servidor de desarrollo:
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 Configuración de Variables de Entorno
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Explicación de Variables
+
+| Variable | Prefijo | Uso | ¿En Vercel? |
+|----------|---------|-----|-------------|
+| `N8N_WEBHOOK_URL` | Sin prefijo | API route - Lee datos de n8n | ✅ Configurar |
+| `N8N_RECORDATORIOS_WEBHOOK_URL` | Sin prefijo | API route - Escribe recordatorios | ✅ Configurar |
+| `NEXT_PUBLIC_GOOGLE_SHEETS_SPREADSHEET_ID` | `NEXT_PUBLIC_` | Cliente - ID del spreadsheet | ❌ Opcional |
+| `NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY` | `NEXT_PUBLIC_` | Cliente - API key de Google | ❌ Opcional |
+
+### ¿Por qué algunas variables NO tienen NEXT_PUBLIC_?
+
+Las variables con `NEXT_PUBLIC_` se exponen al navegador (pueden verse en el código fuente).
+Las variables SIN `NEXT_PUBLIC_` solo están disponibles en el servidor (API routes).
+
+**Nunca** pongas `NEXT_PUBLIC_` en variables sensibles como URLs de webhook internos.
+
+## 🌐 Deploy en Vercel
+
+### Paso 1: Configurar Variables de Entorno en Vercel
+
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+2. Navega a **Settings** → **Environment Variables**
+3. Agrega las siguientes variables:
+
+```
+N8N_WEBHOOK_URL
+Valor: https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/dashboard-data
+Entornos: Production, Preview, Development
+
+N8N_RECORDATORIOS_WEBHOOK_URL
+Valor: https://n8n-alejomartinez-n8n.aejhww.easypanel.host/webhook/Recordatorios
+Entornos: Production, Preview, Development
+```
+
+4. Haz clic en **Save**
+
+### Paso 2: Redesplegar
+
+Opción A - Desde Vercel Dashboard:
+1. Ve a **Deployments**
+2. Haz clic en el botón **...** del deployment más reciente
+3. Selecciona **Redeploy**
+
+Opción B - Desde git:
+```bash
+git commit --allow-empty -m "Trigger redeploy"
+git push
+```
+
+### Paso 3: Verificar
+
+Después del redeploy, visita `/diagnostico-api` y verifica:
+- **Source**: `n8n` (no debe decir `mock`)
+- **Is Mock**: ✅ NO
+
+## 📊 Diagnóstico
+
+Si los datos no se muestran correctamente:
+
+1. Visita `/diagnostico-api`
+2. Revisa los campos:
+   - **Success**: ✅
+   - **Source**: `n8n`
+   - **Is Mock**: ✅ NO
+   - **Warning**: (debe estar vacío)
+
+3. Si dice **Is Mock: ⚠️ YES**, revisa:
+   - Que `N8N_WEBHOOK_URL` esté configurada en Vercel
+   - Que el webhook de n8n esté accesible
+   - Los logs del servidor en Vercel
+
+## 🛠️ Stack Tecnológico
+
+- **Next.js 16** - App Router
+- **React 19** - UI
+- **TypeScript** - Tipado
+- **Tailwind CSS** - Estilos
+- **Recharts** - Gráficos
+- **Zustand** - Estado global
+- **Zod** - Validación de datos
+- **Lucide React** - Iconos
+- **n8n** - Integración con Google Sheets
+
+## 📝 Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── api/                # API Routes
+│   │   └── sheets/         # Endpoint de datos
+│   ├── dashboard/          # Panel principal
+│   ├── registro/           # Registro de compras
+│   ├── precios/            # Análisis de precios
+│   ├── proveedores/        # Proveedores
+│   ├── facturas/           # Facturas
+│   └── settings/           # Configuración
+├── components/
+│   ├── layout/             # Sidebar, Header
+│   └── ui/                 # Componentes UI base
+├── lib/                    # Utilidades
+│   ├── cache.ts            # Sistema de caché
+│   ├── logger.ts           # Logging
+│   ├── data-utils.ts       # Procesamiento de datos
+│   └── formatters.ts       # Formato de moneda/fecha
+└── types/                  # TypeScript types
+```
+
+## 📄 Licencia
+
+Proyecto privado para El Patio & Grill.

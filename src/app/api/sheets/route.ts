@@ -169,6 +169,13 @@ async function fetchWithRetry(webhookUrl: string): Promise<{ success: boolean; d
 }
 
 export async function GET(request: Request) {
+  // DEBUG: Log environment variables
+  apiLogger.debug('Environment check:', {
+    USE_MOCK,
+    N8N_WEBHOOK_URL: N8N_WEBHOOK_URL ? N8N_WEBHOOK_URL.substring(0, 40) + '...' : 'UNDEFINED',
+    NODE_ENV: process.env.NODE_ENV
+  });
+
   // Modo MOCK explícito
   if (USE_MOCK) {
     apiLogger.warn('MODO MOCK EXPLÍCITO (USE_MOCK_DATA=true)');
@@ -188,7 +195,9 @@ export async function GET(request: Request) {
 
   // Validar configuración
   if (!N8N_WEBHOOK_URL) {
-    apiLogger.warn('N8N_WEBHOOK_URL no configurada');
+    apiLogger.error('N8N_WEBHOOK_URL no configurada - Variables disponibles:', {
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('N8N')),
+    });
     const { GET } = await import('./mock/route');
     const mockResponse = await GET(request);
     const mockData = await mockResponse.json();
