@@ -1,24 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isAuthenticatedFromRequest } from '@/lib/auth';
 
 /**
  * Middleware para proteger las rutas del dashboard
  *
- * Rutas públicas:
- * - /login
- * - /api/* (API routes)
+ * ⚠️ AUTENTICACIÓN DESACTIVADA
+ * El dashboard ahora es de acceso público sin contraseña.
  *
- * Rutas protegidas:
- * - / (redirige a /dashboard)
- * - /dashboard
- * - /registro
- * - /precios
- * - /proveedores
- * - /facturas
- * - /diagnostico
+ * Para reactivar la autenticación, descomentar el código de abajo
+ * y agregar de nuevo: import { isAuthenticatedFromRequest } from '@/lib/auth';
  */
 export function middleware(request: NextRequest) {
+  // Autenticación desactivada - permitir acceso a todas las rutas
+  return NextResponse.next();
+
+  /* === CÓDIGO DE AUTENTICACIÓN (DESACTIVADO) ===
   const { pathname } = request.nextUrl;
 
   // Rutas públicas que no requieren autenticación
@@ -57,6 +53,7 @@ export function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
+  === FIN CÓDIGO DE AUTENTICACIÓN === */
 }
 
 /**
