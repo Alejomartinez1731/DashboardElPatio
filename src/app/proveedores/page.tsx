@@ -11,76 +11,42 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Ba
 import { fetchWithCache } from '@/lib/cache';
 
 interface InfoTienda {
-  nombre: string;
-  color: string;
-  totalGastado: number;
-  numCompras: number;
-  productosUnicos: number;
-  gastoPromedio: number;
-  precioPromedio: number;
-  primeraCompra: Date;
-  ultimaCompra: Date;
-  telefonos: Set<string>;
-  direcciones: Set<string>;
-  productosTop: { producto: string; total: number }[];
+  tienda: string;
+  restaurante_id: string | null;
+  total_compras: number;
+  productos_unicos: number;
+  gasto_total: number;
+  precio_promedio: number;
+  primera_compra: string;
+  ultima_compra: string;
+  color: string; // Agregado para el color del gráfico
 }
 
 export default function ProveedoresPage() {
-  const [compras, setCompras] = useState<Compra[]>([]);
+  const [infoTiendas, setInfoTiendas] = useState<InfoTienda[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDatos() {
       try {
-        const result = await fetchWithCache(
-          'sheets_data',
-          async () => {
-            const response = await fetch('/api/sheets');
-            if (!response.ok) throw new Error('Error al obtener datos');
-            return response.json();
-          },
-          3
-        );
+        const response = await fetch('/api/proveedores');
+        if (!response.ok) throw new Error('Error al obtener datos');
 
-        if (result.success && result.data.base_de_datos?.values) {
-          const values = result.data.base_de_datos.values as string[][];
-          if (values.length > 1) {
-            const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
-            const comprasProcesadas: Compra[] = [];
+        const result = await response.json();
 
-            for (let i = 1; i < values.length; i++) {
-              const fila = values[i];
-              const obj: Record<string, string | number | undefined> = {};
-              cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
-
-              // Buscar precio unitario - case insensitive
-              const buscarKey = (key: string) => {
-                const keys = Object.keys(obj);
-                return keys.find(k => k.toLowerCase() === key.toLowerCase());
-              };
-
-              const tiendaNormalizada = normalizarTienda(String(obj.tienda || ''));
-
-              const compra: Compra = {
-                id: `compra-${i}`,
-                fecha: normalizarFecha(String(obj.fecha || '')),
-                tienda: tiendaNormalizada,
-                producto: String(obj.descripcion || ''),
-                cantidad: parseFloat(String(buscarKey('CANTIDAD') || obj.cantidad || '0')) || 0,
-                precioUnitario: parseFloat(String(buscarKey('PRECIO UNITARIO') || buscarKey('precio unitario') || buscarKey('precio_unitario') || '0')) || 0,
-                total: parseFloat(String(buscarKey('TOTAL') || obj.total || '0')) || 0,
-                telefono: buscarKey('TELEFONO') ? String(buscarKey('TELEFONO')) : undefined,
-                direccion: buscarKey('DIRECCION') ? String(buscarKey('DIRECCION')) : undefined,
-              };
-
-              if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
-                comprasProcesadas.push(compra);
-              }
-            }
-            setCompras(comprasProcesadas);
-          }
+        if (!result.success) {
+          throw new Error(result.error || 'Error desconocido');
         }
+
+        // Transformar datos de Supabase para incluir colores
+        const tiendasConColor = (result.data || []).map((t: InfoTienda) => ({
+          ...t,
+          color: COLORES_TIENDA[t.tienda] || COLORES_TIENDA['Otros']
+        }));
+
+        setInfoTiendas(tiendasConColor);
+
       } catch (err) {
         generalLogger.error('Error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -90,69 +56,18 @@ export default function ProveedoresPage() {
     }
     fetchDatos();
   }, []);
-  const infoTiendas = useMemo(() => {
-    const tiendas: Record<string, Compra[]> = {};
-
-    compras.forEach(compra => {
-      const tiendaNormalizada = normalizarTienda(compra.tienda);
-      if (!tiendas[tiendaNormalizada]) {
-        tiendas[tiendaNormalizada] = [];
-      }
-      tiendas[tiendaNormalizada].push(compra);
-    });
-
-    return Object.entries(tiendas).map(([nombre, comprasTienda]) => {
-      const productos: Record<string, number> = {};
-      let totalGastado = 0;
-      let precioTotal = 0;
-      const telefonos = new Set<string>();
-      const direcciones = new Set<string>();
-      let primeraCompra = comprasTienda[0].fecha;
-      let ultimaCompra = comprasTienda[0].fecha;
-
-      comprasTienda.forEach(c => {
-        totalGastado += c.total;
-        precioTotal += c.precioUnitario;
-        productos[c.producto] = (productos[c.producto] || 0) + c.total;
-        if (c.telefono) telefonos.add(c.telefono);
-        if (c.direccion) direcciones.add(c.direccion);
-        if (c.fecha < primeraCompra) primeraCompra = c.fecha;
-        if (c.fecha > ultimaCompra) ultimaCompra = c.fecha;
-      });
-
-      const productosTop = Object.entries(productos)
-        .map(([producto, total]) => ({ producto, total }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 5);
-
-      return {
-        nombre,
-        color: COLORES_TIENDA[nombre] || COLORES_TIENDA['Otros'],
-        totalGastado,
-        numCompras: comprasTienda.length,
-        productosUnicos: Object.keys(productos).length,
-        gastoPromedio: totalGastado / comprasTienda.length,
-        precioPromedio: precioTotal / comprasTienda.length,
-        primeraCompra,
-        ultimaCompra,
-        telefonos,
-        direcciones,
-        productosTop,
-      } as InfoTienda;
-    }).sort((a, b) => b.totalGastado - a.totalGastado);
-  }, [compras]);
 
   // Datos para gráficos
   const datosGraficoDistribucion = infoTiendas.map(t => ({
-    name: t.nombre,
-    value: t.totalGastado,
+    name: t.tienda,
+    value: t.gasto_total,
     color: t.color,
   }));
 
   const datosGraficoBarras = infoTiendas.map(t => ({
-    name: t.nombre,
-    gasto: t.totalGastado,
-    compras: t.numCompras,
+    name: t.tienda,
+    gasto: t.gasto_total,
+    compras: t.total_compras,
   }));
 
   if (cargando) {
@@ -194,15 +109,15 @@ export default function ProveedoresPage() {
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Gasto Total</p>
-          <p className="text-2xl font-bold text-chart-1">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
+          <p className="text-2xl font-bold text-chart-1">{formatearMoneda(infoTiendas.reduce((sum, t) => sum + t.gasto_total, 0))}</p>
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Tienda Principal</p>
-          <p className="text-2xl font-bold text-primary">{infoTiendas[0]?.nombre || '-'}</p>
+          <p className="text-2xl font-bold text-primary">{infoTiendas[0]?.tienda || '-'}</p>
         </Card>
         <Card className="p-4 bg-card border-border">
           <p className="text-muted-foreground text-sm mb-1">Gasto en Principal</p>
-          <p className="text-2xl font-bold text-chart-2">{formatearMoneda(infoTiendas[0]?.totalGastado || 0)}</p>
+          <p className="text-2xl font-bold text-chart-2">{formatearMoneda(infoTiendas[0]?.gasto_total || 0)}</p>
         </Card>
       </div>
 
@@ -266,7 +181,7 @@ export default function ProveedoresPage() {
       {/* Tarjetas de tiendas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {infoTiendas.map((tienda) => (
-          <Card key={tienda.nombre} className="p-6 bg-card border-border hover:border-primary/30 transition-all">
+          <Card key={tienda.tienda} className="p-6 bg-card border-border hover:border-primary/30 transition-all">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -274,8 +189,8 @@ export default function ProveedoresPage() {
                   <Store className="w-6 h-6" style={{ color: tienda.color }} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{tienda.nombre}</h3>
-                  <p className="text-sm text-muted-foreground">{tienda.numCompras} compras realizadas</p>
+                  <h3 className="text-lg font-bold text-white">{tienda.tienda}</h3>
+                  <p className="text-sm text-muted-foreground">{tienda.total_compras} compras realizadas</p>
                 </div>
               </div>
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center`} style={{ backgroundColor: tienda.color + '20' }}>
@@ -287,23 +202,24 @@ export default function ProveedoresPage() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Total Gastado</p>
-                <p className="text-lg font-bold text-chart-1">{formatearMoneda(tienda.totalGastado)}</p>
+                <p className="text-lg font-bold text-chart-1">{formatearMoneda(tienda.gasto_total)}</p>
               </div>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Gasto Promedio</p>
-                <p className="text-lg font-bold text-primary">{formatearMoneda(tienda.gastoPromedio)}</p>
+                <p className="text-lg font-bold text-primary">{formatearMoneda(tienda.gasto_total / tienda.total_compras)}</p>
               </div>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Productos Únicos</p>
-                <p className="text-lg font-bold text-chart-2">{tienda.productosUnicos}</p>
+                <p className="text-lg font-bold text-chart-2">{tienda.productos_unicos}</p>
               </div>
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Precio Promedio</p>
-                <p className="text-lg font-bold text-muted-foreground">{formatearMoneda(tienda.precioPromedio)}</p>
+                <p className="text-lg font-bold text-muted-foreground">{formatearMoneda(tienda.precio_promedio)}</p>
               </div>
             </div>
 
-            {/* Información de contacto */}
+            {/* Información de contacto - TEMPORALMENTE OCULTO */}
+            {/* La vista de Supabase no incluye teléfono/dirección por ahora
             {(tienda.telefonos.size > 0 || tienda.direcciones.size > 0) && (
               <div className="space-y-2 mb-4 pb-4 border-b border-border">
                 {tienda.telefonos.size > 0 && (
@@ -320,22 +236,24 @@ export default function ProveedoresPage() {
                 )}
               </div>
             )}
+            */}
 
             {/* Fechas */}
             <div className="flex items-center justify-between text-sm mb-4 pb-4 border-b border-border">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Primera compra:</span>
-                <span className="text-muted-foreground">{formatearFecha(tienda.primeraCompra)}</span>
+                <span className="text-muted-foreground">{formatearFecha(new Date(tienda.primera_compra))}</span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Última compra:</span>
-                <span className="text-muted-foreground">{formatearFecha(tienda.ultimaCompra)}</span>
+                <span className="text-muted-foreground">{formatearFecha(new Date(tienda.ultima_compra))}</span>
               </div>
             </div>
 
-            {/* Productos top */}
+            {/* Productos top - TEMPORALMENTE OCULTO */}
+            {/* La vista de Supabase no incluye productos top por ahora
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2">Productos Más Comprados</p>
               <div className="space-y-2">
@@ -354,6 +272,7 @@ export default function ProveedoresPage() {
                 ))}
               </div>
             </div>
+            */}
           </Card>
         ))}
       </div>
