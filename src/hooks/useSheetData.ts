@@ -3,7 +3,7 @@ import { Compra, KPIData, SheetName, Recordatorio } from '@/types';
 import { parsearFecha, excluirFilaResumenConLog, normalizarCabeceras, filaAObjeto } from '@/lib/parsers';
 import { calcularKPIs } from '@/lib/data-utils';
 import { apiLogger } from '@/lib/logger';
-import { fetchWithCache } from '@/lib/cache';
+import { fetchWithCache, apiCache } from '@/lib/cache';
 
 export interface SheetData {
   values: string[][];
@@ -239,6 +239,10 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       setWarning(null);
 
       // 🚀 FETCH PARALELO: Hacer ambos fetches al mismo tiempo
+      // Primero intentamos obtener del caché para ver si hay datos mock ahí
+      const cachedData = apiCache.get<SheetsApiResponse>('sheets_data');
+      const skipCache = cachedData?._isMock === true; // Forzar refresco si el caché tiene datos mock
+
       const [result, numeroDeRecordatorios] = await Promise.all([
         // Fetch principal con caché de 3 minutos
         fetchWithCache(
@@ -250,7 +254,8 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
             }
             return response.json() as Promise<SheetsApiResponse>;
           },
-          3 // 3 minutos de caché
+          3, // 3 minutos de caché
+          skipCache // Forzar nuevo fetch si el caché tenía datos mock
         ),
         // Fetch de recordatorios en paralelo
         fetchNumeroDeRecordatorios(),
@@ -261,9 +266,10 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
       setDataSource(result._source || 'n8n');
       setWarning(result._warning || null);
 
-      // Mostrar advertencia si usa mock (no es un error, pero es info importante)
+      // ⚠️ Si son datos mock, limpiar el caché para no persistirlos
       if (result._isMock) {
         apiLogger.warn('⚠️ Usando datos MOCK:', result._warning);
+        apiCache.delete('sheets_data'); // Limpiar caché para que la próxima vez haga fetch nuevo
       }
 
       if (!result.success) {

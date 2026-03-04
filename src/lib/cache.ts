@@ -100,20 +100,24 @@ export const apiCache = new ApiCache();
 
 /**
  * Wrapper para fetch con caché
+ * @param skipCache Si es true, ignora el caché y fuerza un nuevo fetch
  */
 export async function fetchWithCache<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlMinutes: number = 5
+  ttlMinutes: number = 5,
+  skipCache: boolean = false
 ): Promise<T> {
-  // Verificar caché primero
-  const cached = apiCache.get<T>(key);
-  if (cached) {
-    console.log(`[Cache HIT] ${key}`);
-    return cached;
+  // Verificar caché primero (a menos que skipCache sea true)
+  if (!skipCache) {
+    const cached = apiCache.get<T>(key);
+    if (cached) {
+      console.log(`[Cache HIT] ${key}`);
+      return cached;
+    }
   }
 
-  console.log(`[Cache MISS] ${key}`);
+  console.log(`[Cache MISS] ${key}${skipCache ? ' (forced refresh)' : ''}`);
   const data = await fetcher();
 
   // Guardar en caché
