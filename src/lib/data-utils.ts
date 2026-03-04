@@ -387,10 +387,51 @@ export function calcularKPIs(
   hace15Dias.setDate(hace15Dias.getDate() - 15);
   hace15Dias.setHours(0, 0, 0, 0);
 
-  // Gasto quincenal desde compras (base_de_datos) - últimos 15 días
-  const gastoQuincenal = compras
-    .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
-    .reduce((sum, c) => sum + c.total, 0);
+  // Gasto quincenal: calcular desde registro_diario (más actualizado)
+  // Procesar registro_diario si está disponible, si no usar compras de base_de_datos
+  let gastoQuincenal = 0;
+
+  if (registroDiarioValues.length > 1) {
+    // Usar registro_diario para el cálculo (es la hoja más actualizada)
+    const cabeceras = registroDiarioValues[0].map((h: string) => h.toLowerCase().trim());
+    const idxFecha = cabeceras.indexOf('fecha');
+    const idxTotal = cabeceras.findIndex(c => c.includes('total'));
+    const idxCantidad = cabeceras.findIndex(c => c.includes('cantidad'));
+    const idxPrecioUnitario = cabeceras.findIndex(c => c.includes('precio') && c.includes('unit'));
+
+    for (let i = 1; i < registroDiarioValues.length; i++) {
+      const fila = registroDiarioValues[i];
+      const fechaStr = fila[idxFecha];
+
+      if (fechaStr) {
+        const fechaCompra = normalizarFecha(fechaStr);
+        // Filtrar por últimos 15 días
+        if (fechaCompra >= hace15Dias && fechaCompra <= hoy) {
+          // Calcular el total de la fila
+          let totalFila = 0;
+          if (idxTotal !== -1 && fila[idxTotal]) {
+            totalFila = parseFloat(String(fila[idxTotal])) || 0;
+          } else if (idxCantidad !== -1 && idxPrecioUnitario !== -1) {
+            // Calcular total como cantidad * precio unitario
+            const cantidad = parseFloat(String(fila[idxCantidad])) || 0;
+            const precioUnitario = parseFloat(String(fila[idxPrecioUnitario])) || 0;
+            totalFila = cantidad * precioUnitario;
+          }
+
+          if (!isNaN(totalFila)) {
+            gastoQuincenal += totalFila;
+          }
+        }
+      }
+    }
+    generalLogger.debug('💰 Gasto quincenal desde registro_diario:', gastoQuincenal);
+  } else {
+    // Fallback: usar compras de base_de_datos
+    gastoQuincenal = compras
+      .filter(c => c.fecha >= hace15Dias && c.fecha <= hoy)
+      .reduce((sum, c) => sum + c.total, 0);
+    generalLogger.debug('💰 Gasto quincenal desde base_de_datos (fallback):', gastoQuincenal);
+  }
 
   // Facturas procesadas desde registro_diario (más actualizado)
   const facturasProcesadas = new Set<string>();
