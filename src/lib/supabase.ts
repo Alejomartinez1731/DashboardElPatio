@@ -58,7 +58,7 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
  * ⚠️ NUNCA importar en componentes del cliente
  * ⚠️ Tiene permisos completos, bypass RLS
  *
- * Uso: Importar en src/app/api/**/*.ts
+ * Uso: Importar en src/app/api/route.ts
  * Permisos: Lectura y escritura completas
  *
  * @example
