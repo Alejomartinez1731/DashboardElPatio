@@ -32,14 +32,14 @@ export default function RegistroPage() {
         const result = await response.json();
 
         if (result.success && result.data.registro_diario?.values) {
-          const values = result.data.registro_diario.values as any[][];
+          const values = result.data.registro_diario.values as string[][];
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
               const fila = values[i];
-              const obj: any = {};
+              const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
               // Buscar precio unitario en diferentes posibles nombres de columna
@@ -48,12 +48,12 @@ export default function RegistroPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: new Date(obj.fecha || ''),
-                tienda: obj.tienda || '',
-                producto: obj.descripcion || obj.producto || '',
-                cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(precioUnitarioRaw) || 0,
-                total: parseFloat(obj.total || '0') || 0,
+                fecha: new Date(String(obj.fecha || '')),
+                tienda: String(obj.tienda || ''),
+                producto: String(obj.descripcion || obj.producto || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(precioUnitarioRaw)) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
               };
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
@@ -85,7 +85,7 @@ export default function RegistroPage() {
       return cumpleBusqueda && cumpleTienda;
     })
     .sort((a, b) => {
-      let aVal: any, bVal: any;
+      let aVal: Date | string | number, bVal: Date | string | number;
       switch (sortField) {
         case 'fecha': aVal = a.fecha; bVal = b.fecha; break;
         case 'tienda': aVal = normalizarTienda(a.tienda); bVal = normalizarTienda(b.tienda); break;

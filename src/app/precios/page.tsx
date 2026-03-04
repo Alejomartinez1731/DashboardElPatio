@@ -34,7 +34,7 @@ export default function PreciosPage() {
         const response = await fetch('/api/sheets');
         const result = await response.json();
         if (result.success && result.data.base_de_datos?.values) {
-          const values = result.data.base_de_datos.values as any[][];
+          const values = result.data.base_de_datos.values as string[][];
           generalLogger.debug('Precios - Datos recibidos', { filas: values.length });
 
           if (values.length > 1) {
@@ -44,7 +44,7 @@ export default function PreciosPage() {
 
             for (let i = 1; i < values.length; i++) {
               const fila = values[i];
-              const obj: any = {};
+              const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
               // Buscar precio unitario en diferentes nombres posibles
@@ -52,12 +52,12 @@ export default function PreciosPage() {
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: normalizarFecha(obj.fecha || ''),
-                tienda: obj.tienda || '',
-                producto: obj.descripcion || '',
-                cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(precioRaw) || 0,
-                total: parseFloat(obj.total || '0') || 0,
+                fecha: normalizarFecha(String(obj.fecha || '')),
+                tienda: String(obj.tienda || ''),
+                producto: String(obj.descripcion || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(precioRaw)) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
               };
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
@@ -283,7 +283,7 @@ export default function PreciosPage() {
               <Tooltip
                 contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
                 labelStyle={{ color: '#f1f5f9' }}
-                formatter={(valor: any) => [formatearMoneda(valor), 'Gasto']}
+                formatter={(valor: number | undefined) => [formatearMoneda(valor || 0), 'Gasto']}
               />
               <Area
                 type="monotone"

@@ -31,24 +31,24 @@ export default function FacturasPage() {
         const response = await fetch('/api/sheets');
         const result = await response.json();
         if (result.success && result.data.base_de_datos?.values) {
-          const values = result.data.base_de_datos.values as any[][];
+          const values = result.data.base_de_datos.values as string[][];
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
               const fila = values[i];
-              const obj: any = {};
+              const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: normalizarFecha(obj.fecha || ''),
-                tienda: obj.tienda || '',
-                producto: obj.descripcion || '',
-                cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
-                total: parseFloat(obj.total || '0') || 0,
+                fecha: normalizarFecha(String(obj.fecha || '')),
+                tienda: String(obj.tienda || ''),
+                producto: String(obj.descripcion || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
               };
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {

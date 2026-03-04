@@ -35,28 +35,28 @@ export default function ProveedoresPage() {
         const response = await fetch('/api/sheets');
         const result = await response.json();
         if (result.success && result.data.base_de_datos?.values) {
-          const values = result.data.base_de_datos.values as any[][];
+          const values = result.data.base_de_datos.values as string[][];
           if (values.length > 1) {
             const cabeceras = values[0].map((h: string) => h.toLowerCase().trim());
             const comprasProcesadas: Compra[] = [];
 
             for (let i = 1; i < values.length; i++) {
               const fila = values[i];
-              const obj: any = {};
+              const obj: Record<string, string | number | undefined> = {};
               cabeceras.forEach((cab: string, idx: number) => { obj[cab] = fila[idx]; });
 
-              const tiendaNormalizada = normalizarTienda(obj.tienda || '');
+              const tiendaNormalizada = normalizarTienda(String(obj.tienda || ''));
 
               const compra: Compra = {
                 id: `compra-${i}`,
-                fecha: normalizarFecha(obj.fecha || ''),
+                fecha: normalizarFecha(String(obj.fecha || '')),
                 tienda: tiendaNormalizada,
-                producto: obj.descripcion || '',
-                cantidad: parseFloat(obj.cantidad || '0') || 0,
-                precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
-                total: parseFloat(obj.total || '0') || 0,
-                telefono: obj.telefono,
-                direccion: obj.direccion,
+                producto: String(obj.descripcion || ''),
+                cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+                precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
+                total: parseFloat(String(obj.total || '0')) || 0,
+                telefono: obj.telefono ? String(obj.telefono) : undefined,
+                direccion: obj.direccion ? String(obj.direccion) : undefined,
               };
 
               if (compra.producto && !compra.producto.toLowerCase().includes('total')) {
@@ -199,7 +199,7 @@ export default function ProveedoresPage() {
               </Pie>
               <Tooltip
                 contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
-                formatter={(valor: any) => [formatearMoneda(valor), 'Gasto']}
+                formatter={(valor: number | undefined) => [formatearMoneda(valor || 0), 'Gasto']}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -216,12 +216,12 @@ export default function ProveedoresPage() {
               <YAxis yAxisId="right" orientation="right" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
-                formatter={(valor: any, nombre: any) => {
+                formatter={(valor: number | undefined, nombre: string | undefined) => {
                   if (nombre === 'Gasto Total (€)') {
-                    return [formatearMoneda(Number(valor) || 0), nombre];
+                    return [formatearMoneda(valor || 0), nombre];
                   }
                   if (nombre === 'Número de Compras') {
-                    return [Math.round(Number(valor) || 0).toLocaleString('es-ES'), nombre];
+                    return [Math.round(valor || 0).toLocaleString('es-ES'), nombre];
                   }
                   return [valor, nombre];
                 }}
