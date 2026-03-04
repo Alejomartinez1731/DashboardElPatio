@@ -11,6 +11,7 @@ import {
   Receipt,
   Bell,
   Settings,
+  Bug,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ const navegacion = [
   { titulo: 'Proveedores', href: '/proveedores', icono: Store },
   { titulo: 'Recordatorios', href: '/dashboard/recordatorios', icono: Bell },
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
+  { titulo: 'Diagnóstico API', href: '/diagnostico-api', icono: Bug },
   { titulo: 'Configuración', href: '/settings', icono: Settings },
 ];
 
