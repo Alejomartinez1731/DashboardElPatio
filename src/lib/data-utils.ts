@@ -18,7 +18,7 @@ let kpiCache: KPICache | null = null;
 /**
  * Genera un hash simple de un array para detectar cambios
  */
-function generateHash(data: any[] | undefined): string {
+function generateHash(data: unknown[] | undefined): string {
   if (!data || data.length === 0) return 'empty';
   // Usar longitud + primer/último elemento como fingerprint rápido
   return `${data.length}-${JSON.stringify(data[0])}-${JSON.stringify(data[data.length - 1])}`;

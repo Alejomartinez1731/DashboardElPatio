@@ -93,10 +93,12 @@ export function normalizarCabeceras(cabeceras: string[]): string[] {
  * @param cabeceras - Cabeceras normalizadas
  * @returns Objeto con clave-valor
  */
-export function filaAObjeto(fila: any[], cabeceras: string[]): Record<string, any> {
-  const obj: Record<string, any> = {};
+export function filaAObjeto(fila: unknown[], cabeceras: string[]): Record<string, string | number | undefined> {
+  const obj: Record<string, string | number | undefined> = {};
   cabeceras.forEach((cab: string, idx: number) => {
-    obj[cab] = fila[idx];
+    const valor = fila[idx];
+    // Preserve the value type (string or number from spreadsheet cells)
+    obj[cab] = (typeof valor === 'string' || typeof valor === 'number') ? valor : undefined;
   });
   return obj;
 }

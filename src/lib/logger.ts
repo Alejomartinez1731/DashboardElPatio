@@ -59,7 +59,7 @@ class Logger {
     return LOG_LEVELS[level] >= LOG_LEVELS[config.level];
   }
 
-  private formatMessage(level: LogLevel, message: string, meta?: any): string {
+  private formatMessage(level: LogLevel, message: string, meta?: unknown): string {
     const timestamp = new Date().toISOString();
     const contextStr = `[${this.context.toUpperCase()}]`;
     const levelStr = level.toUpperCase().padEnd(5);
@@ -67,27 +67,27 @@ class Logger {
     return `${timestamp} ${contextStr} ${levelStr} ${message}${metaStr}`;
   }
 
-  debug(message: string, meta?: any): void {
+  debug(message: string, meta?: unknown): void {
     if (this.shouldLog('debug')) {
-      generalLogger.debug(this.formatMessage('debug', message, meta));
+      console.debug(this.formatMessage('debug', message, meta));
     }
   }
 
-  info(message: string, meta?: any): void {
+  info(message: string, meta?: unknown): void {
     if (this.shouldLog('info')) {
       console.info(this.formatMessage('info', message, meta));
     }
   }
 
-  warn(message: string, meta?: any): void {
+  warn(message: string, meta?: unknown): void {
     if (this.shouldLog('warn')) {
-      generalLogger.warn(this.formatMessage('warn', message, meta));
+      console.warn(this.formatMessage('warn', message, meta));
     }
   }
 
-  error(message: string, meta?: any): void {
+  error(message: string, meta?: unknown): void {
     if (this.shouldLog('error')) {
-      generalLogger.error(this.formatMessage('error', message, meta));
+      console.error(this.formatMessage('error', message, meta));
     }
   }
 }
@@ -105,8 +105,8 @@ export const generalLogger = new Logger('general');
  * Shortcut functions para logging rápido
  */
 export const log = {
-  debug: (message: string, meta?: any) => generalLogger.debug(message, meta),
-  info: (message: string, meta?: any) => generalLogger.info(message, meta),
-  warn: (message: string, meta?: any) => generalLogger.warn(message, meta),
-  error: (message: string, meta?: any) => generalLogger.error(message, meta),
+  debug: (message: string, meta?: unknown) => generalLogger.debug(message, meta),
+  info: (message: string, meta?: unknown) => generalLogger.info(message, meta),
+  warn: (message: string, meta?: unknown) => generalLogger.warn(message, meta),
+  error: (message: string, meta?: unknown) => generalLogger.error(message, meta),
 };

@@ -96,14 +96,14 @@ export function useSheetData(tabs: TabConfig[]): UseSheetDataResult {
         // Crear objeto Compra
         const compra: Compra = {
           id: `compra-${i}-${Date.now()}`,
-          fecha: parsearFecha(obj.fecha || ''),
-          tienda: obj.tienda || '',
-          producto: obj.descripcion || '',
-          cantidad: parseFloat(obj.cantidad || '0') || 0,
-          precioUnitario: parseFloat(obj['precio_unitario'] || obj['precio unitario'] || '0') || 0,
-          total: parseFloat(obj.total || '0') || 0,
-          telefono: obj.telefono,
-          direccion: obj.direccion,
+          fecha: parsearFecha(String(obj.fecha || '')),
+          tienda: String(obj.tienda || ''),
+          producto: String(obj.descripcion || ''),
+          cantidad: parseFloat(String(obj.cantidad || '0')) || 0,
+          precioUnitario: parseFloat(String(obj['precio_unitario'] || obj['precio unitario'] || '0')) || 0,
+          total: parseFloat(String(obj.total || '0')) || 0,
+          telefono: obj.telefono ? String(obj.telefono) : undefined,
+          direccion: obj.direccion ? String(obj.direccion) : undefined,
         };
 
         // Excluir filas de resumen

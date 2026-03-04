@@ -28,7 +28,7 @@ export interface ValidationResult {
 /**
  * Valida un string según las opciones
  */
-export function validateString(value: any, options: ValidationOptions = {}): ValidationResult {
+export function validateString(value: unknown, options: ValidationOptions = {}): ValidationResult {
   const errors: string[] = [];
 
   // Verificar tipo
@@ -73,7 +73,7 @@ export function validateString(value: any, options: ValidationOptions = {}): Val
 /**
  * Valida un número según las opciones
  */
-export function validateNumber(value: any, options: ValidationOptions = {}): ValidationResult {
+export function validateNumber(value: unknown, options: ValidationOptions = {}): ValidationResult {
   const errors: string[] = [];
 
   const num = Number(value);
@@ -102,7 +102,7 @@ export function validateNumber(value: any, options: ValidationOptions = {}): Val
 /**
  * Valida un objeto completo usando un schema
  */
-export function validateObject(data: any, schema: Record<string, ValidationOptions>): ValidationResult {
+export function validateObject(data: Record<string, unknown>, schema: Record<string, ValidationOptions>): ValidationResult {
   const errors: string[] = [];
 
   for (const [field, options] of Object.entries(schema)) {
@@ -149,7 +149,7 @@ export function sanitizeString(input: string): string {
 /**
  * Sanitiza un número
  */
-export function sanitizeNumber(input: any): number | null {
+export function sanitizeNumber(input: unknown): number | null {
   const num = Number(input);
   return isNaN(num) ? null : num;
 }
@@ -157,7 +157,7 @@ export function sanitizeNumber(input: any): number | null {
 /**
  * Valida y sanitiza nombre de producto
  */
-export function validateProductoNombre(producto: any): { valid: boolean; sanitized: string | null; errors: string[] } {
+export function validateProductoNombre(producto: unknown): { valid: boolean; sanitized: string | null; errors: string[] } {
   const errors: string[] = [];
 
   if (!producto || typeof producto !== 'string') {
@@ -188,7 +188,7 @@ export function validateProductoNombre(producto: any): { valid: boolean; sanitiz
 /**
  * Valida y sanitiza días (para recordatorios)
  */
-export function validateDias(dias: any): { valid: boolean; sanitized: number | null; errors: string[] } {
+export function validateDias(dias: unknown): { valid: boolean; sanitized: number | null; errors: string[] } {
   const errors: string[] = [];
 
   const num = Number(dias);
