@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { withRateLimit } from '@/lib/rate-limit';
 
 /**
  * Middleware para proteger las rutas del dashboard
@@ -8,90 +7,51 @@ import { withRateLimit } from '@/lib/rate-limit';
  * ⚠️ AUTENTICACIÓN DESACTIVADA
  * El dashboard ahora es de acceso público sin contraseña.
  *
- * Para reactivar la autenticación, descomentar el código de abajo
- * y agregar de nuevo: import { isAuthenticatedFromRequest } from '@/lib/auth';
+ * ⚠️ RATE LIMITING DESHABILADO TEMPORALMENTE
+ * Deshabilitado para evitar errores en deployment
  *
- * ✅ RATE LIMITING ACTIVADO
- * - Auth endpoints: 5 intentos cada 5 minutos
- * - API endpoints: 60 peticiones por minuto
+ * ✅ HEADERS DE SEGURIDAD ACTIVADOS
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Aplicar rate limiting a endpoints de autenticación
-  if (pathname === '/api/auth/login' || pathname === '/api/auth/logout') {
-    const rateLimit = await withRateLimit('auth', request);
+  // Rate limiting deshabilitado temporalmente
+  // TODO: Re-habilitar después de diagnosticar errores de deployment
 
-    if (!rateLimit.success) {
-      const response = NextResponse.json(
-        {
-          success: false,
-          error: 'Demasiados intentos. Por favor espera 5 minutos antes de volver a intentar.',
-          retryAfter: Math.ceil((rateLimit.reset - Date.now()) / 1000),
-        },
-        { status: 429 }
-      );
-
-      // Agregar headers de rate limit
-      response.headers.set('X-RateLimit-Limit', rateLimit.limit.toString());
-      response.headers.set('X-RateLimit-Remaining', '0');
-      response.headers.set('X-RateLimit-Reset', new Date(rateLimit.reset).toISOString());
-      response.headers.set('Retry-After', Math.ceil((rateLimit.reset - Date.now()) / 1000).toString());
-
-      return response;
-    }
-
-    // Rate limit exitoso, agregar headers informativos y continuar
-    const response = NextResponse.next();
-    response.headers.set('X-RateLimit-Limit', rateLimit.limit.toString());
-    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
-    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.reset).toISOString());
-
-    return response;
-  }
-
-  // Aplicar rate limiting a otras APIs (menos estricto)
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
-    // Usar límite general de API para todas las demás rutas
-    const rateLimit = await withRateLimit('api', request);
-
-    if (!rateLimit.success) {
-      const response = NextResponse.json(
-        {
-          success: false,
-          error: 'Demasiadas peticiones. Por favor reduce la frecuencia de solicitudes.',
-          retryAfter: Math.ceil((rateLimit.reset - Date.now()) / 1000),
-        },
-        { status: 429 }
-      );
-
-      response.headers.set('X-RateLimit-Limit', rateLimit.limit.toString());
-      response.headers.set('X-RateLimit-Remaining', '0');
-      response.headers.set('X-RateLimit-Reset', new Date(rateLimit.reset).toISOString());
-      response.headers.set('Retry-After', Math.ceil((rateLimit.reset - Date.now()) / 1000).toString());
-
-      return response;
-    }
-
-    const response = NextResponse.next();
-    response.headers.set('X-RateLimit-Limit', rateLimit.limit.toString());
-    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
-    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.reset).toISOString());
-
-    return response;
-  }
-
-  // Autenticación desactivada - permitir acceso a todas las rutas
+  // Crear respuesta base
   const response = NextResponse.next();
 
   // Agregar headers de seguridad a todas las respuestas
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
   return response;
+
+  /* === CÓDIGO DE RATE LIMITING (DESACTIVADO TEMPORALMENTE) ===
+  // NOTa: Re-habilitar después de diagnosticar errores de Vercel
+
+  if (pathname === '/api/auth/login' || pathname === '/api/auth/logout') {
+    const rateLimit = await withRateLimit('auth', request);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { success: false, error: 'Demasiados intentos. Espera 5 minutos.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
+    const rateLimit = await withRateLimit('api', request);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { success: false, error: 'Demasiadas peticiones.' },
+        { status: 429 }
+      );
+    }
+  }
+  === FIN CÓDIGO DE RATE LIMITING === */
 
   /* === CÓDIGO DE AUTENTICACIÓN (DESACTIVADO) ===
   const { pathname } = request.nextUrl;
