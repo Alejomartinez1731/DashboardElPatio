@@ -1,9 +1,8 @@
 /**
  * Utilidades de validación para API endpoints
  * Sanitiza y valida inputs de usuario para prevenir ataques
+ * Server-side compatible (no DOMPurify en server)
  */
-
-import DOMPurify from 'dompurify';
 
 /**
  * Opciones de validación
@@ -140,30 +139,21 @@ export function validateObject(data: Record<string, unknown>, schema: Record<str
 
 /**
  * Sanitiza un string para prevenir inyección de código y XSS
- * Usa DOMPurify para una sanitización robusta de HTML
+ * Server-side compatible (no DOMPurify)
  */
-export function sanitizeString(input: string, options?: { maxLength?: number; allowHTML?: boolean }): string {
+export function sanitizeString(input: string, options?: { maxLength?: number }): string {
   const maxLength = options?.maxLength || 1000;
-  const allowHTML = options?.allowHTML || false;
 
-  // Primero recortar longitud
+  // Recortar longitud
   let trimmed = input.trim().substring(0, maxLength);
 
-  if (allowHTML) {
-    // Permitir HTML pero sanitizar con DOMPurify
-    trimmed = DOMPurify.sanitize(trimmed, {
-      ALLOWED_TAGS: ['B', 'I', 'EM', 'STRONG', 'A', 'UL', 'OL', 'LI', 'BR', 'P'],
-      ALLOWED_ATTR: ['href', 'title', 'target'],
-      ALLOW_DATA_ATTR: false,
-    });
-  } else {
-    // No permitir HTML, escapar todo
-    trimmed = DOMPurify.sanitize(trimmed, {
-      ALLOWED_TAGS: [], // No permitir ninguna etiqueta HTML
-      ALLOWED_ATTR: [],
-      ALLOW_DATA_ATTR: false,
-    });
-  }
+  // Remover etiquetas HTML/JavaScript potencialmente peligrosas
+  // Reemplaza <script>, </script>, <, >, &, ", '
+  trimmed = trimmed
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '') // Remover cualquier etiqueta HTML
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, ''); // Remover event handlers
 
   return trimmed;
 }
@@ -190,11 +180,8 @@ export function sanitizeUrl(url: string): string {
     return '';
   }
 
-  // Sanitizar cualquier HTML que pueda contener
-  return DOMPurify.sanitize(trimmed, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-  });
+  // Remover cualquier tag o script
+  return trimmed.replace(/<[^>]*>/g, '').replace(/javascript:/gi, '');
 }
 
 /**
@@ -211,8 +198,8 @@ export function validateProductoNombre(producto: unknown): { valid: boolean; san
     };
   }
 
-  // Sanitizar con DOMPurify (no permitir HTML)
-  const sanitized = sanitizeString(producto, { maxLength: 200, allowHTML: false });
+  // Sanitizar (no permitir HTML)
+  const sanitized = sanitizeString(producto, { maxLength: 200 });
 
   if (sanitized.length < 2) {
     errors.push('El producto debe tener al menos 2 caracteres');

@@ -19,6 +19,7 @@ import { normalizarTienda } from '@/lib/data-utils';
 import { Table } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { useSheetData } from '@/hooks/useSheetData';
+import { useSupabaseDashboard } from '@/hooks/useSupabaseDashboard';
 import { useDashboardStore, type SortField } from '@/store/useDashboardStore';
 import { parsearFecha } from '@/lib/parsers';
 import { useToast } from '@/components/ui/toast';
@@ -38,6 +39,7 @@ export default function DashboardPage() {
     [] // TABS es una constante, no necesita dependencias
   );
 
+  // Usar Supabase directamente (migración completada)
   const {
     compras,
     sheetsData,
@@ -48,7 +50,7 @@ export default function DashboardPage() {
     isUsingMock,
     dataSource,
     warning,
-  } = useSheetData(tabsConfig);
+  } = useSupabaseDashboard(tabsConfig);
 
   // Zustand store - ahora incluye comprasFiltradas y ordenamiento
   const {
@@ -321,13 +323,13 @@ export default function DashboardPage() {
       {/* Header */}
       <DashboardHeader
         title="Panel General"
-        description="Tablas de Google Sheets"
+        description="Base de datos Supabase"
         statusBadge={{
           text: showSkeletons
             ? 'Cargando...'
             : isUsingMock
               ? 'Datos de prueba'
-              : `Conectado a ${dataSource === 'n8n' ? 'n8n' : 'API'}`,
+              : 'Conectado a Supabase',
           color: showSkeletons
             ? 'bg-[#f59e0b]/10 border border-primary/30'
             : isUsingMock
