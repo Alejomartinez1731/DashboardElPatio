@@ -11,8 +11,6 @@ import {
   Receipt,
   Bell,
   Settings,
-  Bug,
-  Database,
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,8 +23,6 @@ const navegacion = [
   { titulo: 'Recordatorios', href: '/dashboard/recordatorios', icono: Bell },
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
   { titulo: 'Análisis de Gestión', href: '/analisis-gestion', icono: BarChart3 },
-  { titulo: 'Diagnóstico API', href: '/diagnostico-api', icono: Bug },
-  { titulo: 'Migrar a Supabase', href: '/migrar', icono: Database },
   { titulo: 'Configuración', href: '/settings', icono: Settings },
 ];
 
@@ -84,7 +80,7 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
             Gestión
           </div>
-          {navegacion.slice(3, 8).map((item) => {
+          {navegacion.slice(3, 6).map((item) => {
             const Icono = item.icono;
             const isActive = pathname === item.href;
 
@@ -108,7 +104,7 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
             Sistema
           </div>
-          {navegacion.slice(8).map((item) => {
+          {navegacion.slice(6).map((item) => {
             const Icono = item.icono;
             const isActive = pathname === item.href;
 
