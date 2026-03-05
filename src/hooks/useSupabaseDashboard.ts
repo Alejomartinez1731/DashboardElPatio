@@ -88,6 +88,14 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
       setError(null);
       setWarning(null);
 
+      // Verificar que Supabase está configurado
+      if (!supabase) {
+        throw new Error(
+          'Supabase no está configurado. ' +
+          'Por favor configura NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en las variables de entorno de Vercel.'
+        );
+      }
+
       apiLogger.debug('📊 Iniciando fetch desde Supabase...');
 
       // Fetch paralelo: compras (directo a Supabase) + recordatorios

@@ -28,6 +28,11 @@ export default function ProveedoresPage() {
   useEffect(() => {
     async function fetchDatos() {
       try {
+        // Verificar que Supabase está configurado
+        if (!supabase) {
+          throw new Error('Supabase no está configurado. Por favor verifica las variables de entorno.');
+        }
+
         // Llamada directa a Supabase - sin API route intermedia
         const { data, error } = await supabase
           .from('vista_gasto_por_tienda')

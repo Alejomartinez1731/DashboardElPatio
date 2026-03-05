@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { requireSupabase, requireSupabaseAdmin } from '@/lib/supabase';
 import { sanitizeString } from '@/lib/validation';
 import { apiLogger } from '@/lib/logger';
 import {
@@ -20,6 +20,7 @@ export const runtime = 'nodejs';
 // GET - Obtiene presupuestos con comparación de gasto
 // ============================================================================
 export async function GET(request: NextRequest) {
+    const supabase = requireSupabaseAdmin();
   try {
     apiLogger.info('📡 GET /api/presupuestos');
 
@@ -132,6 +133,7 @@ export async function GET(request: NextRequest) {
 // POST - Crea un nuevo presupuesto por categoría
 // ============================================================================
 export async function POST(request: NextRequest) {
+    const supabase = requireSupabaseAdmin();
   try {
     const body = await request.json();
 
@@ -244,6 +246,7 @@ export async function POST(request: NextRequest) {
 // PATCH - Actualiza un presupuesto existente
 // ============================================================================
 export async function PATCH(request: NextRequest) {
+    const supabase = requireSupabaseAdmin();
   try {
     const body = await request.json();
 
@@ -338,6 +341,7 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Elimina (desactiva) un presupuesto
 // ============================================================================
 export async function DELETE(request: NextRequest) {
+    const supabase = requireSupabaseAdmin();
   try {
     const body = await request.json();
 

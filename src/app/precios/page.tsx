@@ -62,6 +62,11 @@ export default function PreciosPage() {
   useEffect(() => {
     async function fetchDatos() {
       try {
+        // Verificar que Supabase está configurado
+        if (!supabase) {
+          throw new Error('Supabase no está configurado. Por favor verifica las variables de entorno.');
+        }
+
         // Llamadas directas a Supabase - sin API route intermedia
         const [
           costososResult,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { requireSupabase, requireSupabaseAdmin } from '@/lib/supabase';
 import { validateProductoNombre, validateDias, sanitizeString } from '@/lib/validation';
 import { apiLogger } from '@/lib/logger';
 import { crearRecordatorioSchema, recordatorioQuerySchema } from '@/lib/schemas';
@@ -34,6 +34,7 @@ interface Recordatorio {
 async function buscarUltimaCompra(producto: string): Promise<UltimaCompra | null> {
   const productoLower = producto.toLowerCase();
 
+    const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('compras')
     .select('fecha, tienda, precio_unitario')
@@ -57,6 +58,7 @@ async function buscarUltimaCompra(producto: string): Promise<UltimaCompra | null
  * Obtiene todos los productos únicos del historial de compras
  */
 async function obtenerProductosUnicos(): Promise<Set<string>> {
+    const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('compras')
     .select('descripcion');
@@ -80,6 +82,7 @@ async function obtenerProductosUnicos(): Promise<Set<string>> {
 async function calcularFrecuenciaAutomatica(producto: string): Promise<number | null> {
   const productoLower = producto.toLowerCase();
 
+    const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('compras')
     .select('fecha')
@@ -127,6 +130,7 @@ function calcularEstado(diasTranscurridos: number | null, diasConfigurados: numb
  * - incluirAutomaticos: "true" | "false" - Si incluye recordatorios automáticos (default: true)
  */
 export async function GET(request: NextRequest) {
+    const supabase = requireSupabase();
   try {
     apiLogger.info('📡 GET /api/recordatorios');
 
@@ -338,6 +342,7 @@ export async function GET(request: NextRequest) {
  * POST - Añade un nuevo recordatorio
  */
 export async function POST(request: NextRequest) {
+    const supabase = requireSupabase();
   try {
     const body = await request.json();
 
@@ -446,6 +451,7 @@ export async function POST(request: NextRequest) {
  * DELETE - Elimina (desactiva) un recordatorio
  */
 export async function DELETE(request: NextRequest) {
+    const supabase = requireSupabase();
   try {
     const body = await request.json();
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { requireSupabase, requireSupabaseAdmin } from '@/lib/supabase';
 import { apiLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +20,9 @@ export const runtime = 'nodejs';
  * GET /api/test-supabase
  */
 export async function GET(request: Request) {
+  const supabase = requireSupabase();
+  const supabaseAdmin = requireSupabaseAdmin();
+
   const results: any = {
     success: true,
     tests: [] as any[],

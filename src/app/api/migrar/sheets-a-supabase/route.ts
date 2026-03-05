@@ -13,7 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { requireSupabase, requireSupabaseAdmin } from '@/lib/supabase';
 import { apiLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     const { secciones = ['compras', 'facturas', 'proveedores'], limpiar_previo = false } = body;
 
     apiLogger.info('🔄 Iniciando migración de Sheets a Supabase', { secciones, limpiar_previo });
+    const supabase = requireSupabaseAdmin();
 
     // Paso 1: Obtener datos de n8n (Sheets)
     const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
@@ -141,6 +142,7 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 async function migrarCompras(compras: any[]) {
+  const supabase = requireSupabaseAdmin();
   const result = { exitosos: 0, errores: 0, errores_detalle: [] as string[] };
 
   for (const fila of compras) {
@@ -181,6 +183,7 @@ async function migrarCompras(compras: any[]) {
 }
 
 async function migrarFacturas(facturas: any[]) {
+  const supabase = requireSupabaseAdmin();
   const result = { exitosos: 0, errores: 0, errores_detalle: [] as string[] };
 
   // Saltar cabecera si existe
@@ -218,6 +221,7 @@ async function migrarFacturas(facturas: any[]) {
 }
 
 async function migrarProveedores(proveedores: any[]) {
+  const supabase = requireSupabaseAdmin();
   const result = { exitosos: 0, errores: 0, errores_detalle: [] as string[] };
 
   // Saltar cabecera si existe
@@ -253,6 +257,7 @@ async function migrarProveedores(proveedores: any[]) {
 }
 
 async function migrarPrecios(precios: any[]) {
+  const supabase = requireSupabaseAdmin();
   const result = { exitosos: 0, errores: 0, errores_detalle: [] as string[] };
 
   // Saltar cabecera si existe
@@ -292,6 +297,7 @@ async function migrarPrecios(precios: any[]) {
 }
 
 async function migrarRecordatorios(recordatorios: any[]) {
+  const supabase = requireSupabaseAdmin();
   const result = { exitosos: 0, errores: 0, errores_detalle: [] as string[] };
 
   // Saltar cabecera si existe

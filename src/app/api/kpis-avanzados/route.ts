@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { requireSupabase } from '@/lib/supabase';
 import { apiLogger } from '@/lib/logger';
 import { calcularKPIsAvanzados } from '@/lib/calculadoras-financieras';
 import type { Compra, ProveedorStats } from '@/lib/calculadoras-financieras';
@@ -13,6 +13,9 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     apiLogger.info('📡 GET /api/kpis-avanzados');
+
+    // Validar que Supabase está configurado
+    const supabase = requireSupabase();
 
     const { searchParams } = new URL(request.url);
     const restauranteId = searchParams.get('restaurante_id');

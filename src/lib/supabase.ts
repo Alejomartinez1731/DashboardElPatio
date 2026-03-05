@@ -17,39 +17,52 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Configuración desde variables de entorno
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Faltan variables de entorno de Supabase. ' +
-    'Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local'
-  );
+// Solo verificar en server-side, en cliente retornar undefined
+if (typeof window === 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
+  console.error('Faltan variables de entorno de Supabase. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY');
+}
+
+// Crear cliente solo si tenemos las variables necesarias
+export const supabase: SupabaseClient | null = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false, // No usamos auth en este dashboard
+        autoRefreshToken: false,
+      },
+    })
+  : null;
+
+/**
+ * Helper para validar que Supabase está configurado
+ * Lanza un error si no lo está
+ */
+export function requireSupabase(): SupabaseClient {
+  if (!supabase) {
+    throw new Error(
+      'Supabase no está configurado. ' +
+      'Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en las variables de entorno.'
+    );
+  }
+  return supabase;
 }
 
 /**
- * Cliente público de Supabase
- *
- * Uso: Importar en componentes del cliente o Server Components
- * Permisos: Solo lectura (definido por RLS en Supabase)
- *
- * @example
- * ```typescript
- * import { supabase } from '@/lib/supabase';
- *
- * const { data } = await supabase
- *   .from('compras')
- *   .select('*')
- *   .limit(10);
- * ```
+ * Helper para validar que Supabase Admin está configurado
+ * Lanza un error si no lo está
  */
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false, // No usamos auth en este dashboard
-    autoRefreshToken: false,
-  },
-});
+export function requireSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdmin) {
+    throw new Error(
+      'Supabase Admin no está configurado. ' +
+      'Verifica NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en las variables de entorno.'
+    );
+  }
+  return supabaseAdmin;
+}
 
 /**
  * Cliente administrativo de Supabase
@@ -75,16 +88,18 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
  * // Esto expondrá la service role key en el browser!
  * ```
  */
-export const supabaseAdmin: SupabaseClient = createClient(
-  supabaseUrl,
-  supabaseServiceKey,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  }
-);
+export const supabaseAdmin: SupabaseClient | null = (supabaseUrl && supabaseServiceKey)
+  ? createClient(
+      supabaseUrl,
+      supabaseServiceKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    )
+  : null;
 
 /**
  * Tipos de TypeScript para las tablas de Supabase
