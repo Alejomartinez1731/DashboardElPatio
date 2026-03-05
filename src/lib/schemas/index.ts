@@ -6,3 +6,4 @@
 export * from './auth.schema';
 export * from './compra.schema';
 export * from './recordatorio.schema';
+export * from './presupuesto.schema';

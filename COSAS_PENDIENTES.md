@@ -1,7 +1,7 @@
 # 📋 Cosas Pendientes - El Patio Dashboard
 
-> **Estado Actual:** Migración a Supabase 100% completada ✅
-> **Última actualización:** 2026-03-05
+> **Estado Actual:** Migración a Supabase 100% ✅ | Tareas 1 y 2 completadas ✅
+> **Última actualización:** 2026-03-05 (KPIs Avanzados + Presupuestos por categoría)
 > **URL Producción:** https://elpatio-dashboard-xi.vercel.app
 
 ---
@@ -15,58 +15,73 @@
 - [x] `/facturas` - Historial de facturas
 - [x] `/dashboard` - Panel general
 - [x] `/recordatorios` - Sistema de recordatorios de reposición
+- [x] **`/presupuestos` - Presupuestos por categoría** ✨ NUEVO (2026-03-05)
 
 ---
 
 ## 🔴 PRIORIDAD ALTA - Mejoras Financieras
 
-### 1. KPIs Financieros Avanzados
+### 1. ✅ KPIs Financieros Avanzados (COMPLETADO 2026-03-05)
 **Impacto:** ★★★★★ | **Complejidad:** Media | **Tiempo:** 6-8h
 
-Crear nuevos indicadores financieros en el dashboard:
+✅ **Implementado:**
 
-- **Margen de Ahorro:** (Presupuesto - Gasto) / Presupuesto × 100
-- **Velocidad de Gasto:** Gasto diario promedio × días restantes del mes
-- **Índice de Inflación:** Variación porcentual de precios de productos recurrentes
-- **Score de Proveedor:** Calificación (1-5) basada en precio + frecuencia + disponibilidad
-- **Tasa de Compras:** Número de compras por día/semana/mes
+**KPIs creados:**
+- ✅ **Margen de Ahorro:** (Presupuesto - Gasto) / Presupuesto × 100
+- ✅ **Velocidad de Gasto:** Gasto diario promedio × días restantes del mes
+- ✅ **Índice de Inflación:** Variación porcentual de precios de productos recurrentes
+- ✅ **Score de Proveedor:** Calificación (1-5) basada en precio + frecuencia + disponibilidad
+- ✅ **Tasa de Compras:** Número de compras por día/semana/mes
 
-**Archivos a crear:**
-- `src/app/api/kpis-avanzados/route.ts`
-- `src/lib/calculadoras-financieras.ts`
-- Actualizar `src/app/dashboard/page.tsx` para mostrar nuevos KPIs
+**Archivos creados:**
+- `src/lib/calculadoras-financieras.ts` ✅
+- `src/app/api/kpis-avanzados/route.ts` ✅
+- `src/components/dashboard/kpis-avanzados/` ✅
+  - `margen-ahorro-kpi.tsx`
+  - `velocidad-gasto-kpi.tsx`
+  - `inflacion-kpi.tsx`
+  - `scores-proveedores-kpi.tsx`
+  - `tasa-compras-kpi.tsx`
+  - `kpis-avanzados-container.tsx` (contenedor principal)
+
+**Uso:**
+```tsx
+import { KPIsAvanzadosContainer } from '@/components/dashboard/kpis-avanzados';
+
+// En el dashboard:
+<KPIsAvanzadosContainer presupuesto={3000} anio={2026} mes={3} />
+```
 
 ---
 
-### 2. Presupuestos por Categoría
+### 2. ✅ Presupuestos por Categoría (COMPLETADO 2026-03-05)
 **Impacto:** ★★★★★ | **Complejidad:** Media | **Tiempo:** 8-10h
 
-Implementar control de gastos por categoría de producto:
+✅ **Implementado:**
 
 **Base de datos:**
-```sql
-CREATE TABLE presupuestos_categoria (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  restaurante_id UUID REFERENCES restaurantes(id),
-  categoria VARCHAR(50), -- 'Lácteos', 'Carnes', 'Verduras', etc.
-  monto_decimal DECIMAL(10,2),
-  periodo_mes INT,
-  periodo_anio INT,
-  UNIQUE(restaurante_id, categoria, periodo_mes, periodo_anio)
-);
-```
+- Tabla `presupuestos_categoria` con índices y triggers
+- Vista `vista_presupuesto_vs_gasto` para comparaciones
+- Función `gasto_actual_por_categoria()` para cálculos
+
+**Archivos creados:**
+- `scripts/create-presupuestos-categoria.sql` ✅
+- `src/lib/schemas/presupuesto.schema.ts` ✅
+- `src/app/api/presupuestos/route.ts` ✅ (GET, POST, PATCH, DELETE)
+- `src/app/presupuestos/page.tsx` ✅
+- `src/components/presupuestos/` ✅
+  - `presupuesto-progress-bar.tsx`
+  - `presupuesto-comparison-chart.tsx`
+  - `presupuesto-alert-card.tsx`
 
 **Funcionalidades:**
-- Definir presupuesto mensual por categoría
-- Alerta visual cuando se excede 80% del presupuesto
-- Gráfico de barras comparando gastos vs presupuesto
-- Historial de presupuestos por mes
-
-**Archivos a crear:**
-- `scripts/create-presupuestos-categoria.sql`
-- `src/app/api/presupuestos/route.ts`
-- `src/app/presupuestos/page.tsx`
-- Componente de gráfico de comparación
+- ✅ Definir presupuesto mensual por categoría
+- ✅ Alerta visual con colores (verde < 60%, amarillo < 80%, naranja < 100%, rojo >= 100%)
+- ✅ Gráfico de barras comparando gastos vs presupuesto
+- ✅ CRUD completo de presupuestos
+- ✅ Resumen general con totales y porcentajes
+- ✅ Filtro por mes/año
+- ✅ Estados de alerta: ok, advertencia, peligro, excedido
 
 ---
 
