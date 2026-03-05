@@ -1,14 +1,12 @@
 'use client';
-import { generalLogger } from '@/lib/logger';
 
-import { useEffect, useState, useMemo } from 'react';
-import { Compra } from '@/types';
+import { useEffect, useState } from 'react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { normalizarTienda, COLORES_TIENDA, normalizarFecha } from '@/lib/data-utils';
-import { Store, MapPin, Phone, ShoppingCart, TrendingUp, Calendar, Award } from 'lucide-react';
+import { COLORES_TIENDA } from '@/lib/data-utils';
+import { Store, TrendingUp, Calendar, Award } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { fetchWithCache } from '@/lib/cache';
+import { supabase } from '@/lib/supabase';
 
 interface InfoTienda {
   tienda: string;
@@ -30,17 +28,16 @@ export default function ProveedoresPage() {
   useEffect(() => {
     async function fetchDatos() {
       try {
-        const response = await fetch('/api/proveedores');
-        if (!response.ok) throw new Error('Error al obtener datos');
+        // Llamada directa a Supabase - sin API route intermedia
+        const { data, error } = await supabase
+          .from('vista_gasto_por_tienda')
+          .select('*')
+          .order('gasto_total', { ascending: false });
 
-        const result = await response.json();
+        if (error) throw new Error(error.message);
 
-        if (!result.success) {
-          throw new Error(result.error || 'Error desconocido');
-        }
-
-        // Transformar datos de Supabase para incluir colores
-        const tiendasConColor = (result.data || []).map((t: InfoTienda) => ({
+        // Transformar datos para incluir colores
+        const tiendasConColor = (data || []).map((t: InfoTienda) => ({
           ...t,
           color: COLORES_TIENDA[t.tienda] || COLORES_TIENDA['Otros']
         }));
@@ -48,7 +45,6 @@ export default function ProveedoresPage() {
         setInfoTiendas(tiendasConColor);
 
       } catch (err) {
-        generalLogger.error('Error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setCargando(false);

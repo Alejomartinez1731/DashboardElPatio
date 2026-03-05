@@ -1,11 +1,11 @@
 'use client';
-import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
 import { Receipt, Calendar, Store, ShoppingCart, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
 
 interface FacturaConDetalle {
   id: string;
@@ -34,19 +34,28 @@ export default function FacturasPage() {
   useEffect(() => {
     async function fetchDatos() {
       try {
-        const response = await fetch('/api/facturas');
-        if (!response.ok) throw new Error('Error al obtener datos');
+        // Llamada directa a Supabase - sin API route intermedia
+        const { data, error } = await supabase
+          .from('facturas')
+          .select(`
+            *,
+            compras (
+              id,
+              fecha,
+              descripcion,
+              cantidad,
+              precio_unitario,
+              total
+            )
+          `)
+          .order('fecha', { ascending: false })
+          .order('created_at', { ascending: false });
 
-        const result = await response.json();
+        if (error) throw new Error(error.message);
 
-        if (!result.success) {
-          throw new Error(result.error || 'Error desconocido');
-        }
-
-        setFacturas(result.data || []);
+        setFacturas(data || []);
 
       } catch (err) {
-        generalLogger.error('Error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setCargando(false);

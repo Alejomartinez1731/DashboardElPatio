@@ -1,5 +1,4 @@
 'use client';
-import { generalLogger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
@@ -8,6 +7,7 @@ import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { InflacionKPI } from '@/components/dashboard/kpis-avanzados';
+import { supabase } from '@/lib/supabase';
 
 interface ProductoCostoso {
   producto: string;
@@ -62,19 +62,41 @@ export default function PreciosPage() {
   useEffect(() => {
     async function fetchDatos() {
       try {
-        // Cargar datos principales
-        const response = await fetch('/api/precios');
-        if (!response.ok) throw new Error('Error al obtener datos');
+        // Llamadas directas a Supabase - sin API route intermedia
+        const [
+          costososResult,
+          evolucionResult,
+          categoriasResult
+        ] = await Promise.all([
+          // Productos más costosos (vista pre-calculada)
+          supabase
+            .from('vista_productos_costosos')
+            .select('*')
+            .order('gasto_total', { ascending: false })
+            .limit(20),
 
-        const result = await response.json();
+          // Evolución de precios
+          supabase
+            .from('vista_evolucion_precios')
+            .select('*')
+            .order('fecha', { ascending: false })
+            .limit(100),
 
-        if (!result.success) {
-          throw new Error(result.error || 'Error desconocido');
-        }
+          // Gasto por categoría
+          supabase
+            .from('vista_gasto_por_categoria')
+            .select('*')
+            .order('gasto_total', { ascending: false })
+        ]);
 
-        setProductosCostosos(result.data.productos_costosos || []);
-        setEvolucionPrecios(result.data.evolucion_precios || []);
-        setCategorias(result.data.gasto_por_categoria || []);
+        // Verificar errores
+        if (costososResult.error) throw new Error(costososResult.error.message);
+        if (evolucionResult.error) throw new Error(evolucionResult.error.message);
+        if (categoriasResult.error) throw new Error(categoriasResult.error.message);
+
+        setProductosCostosos(costososResult.data || []);
+        setEvolucionPrecios(evolucionResult.data || []);
+        setCategorias(categoriasResult.data || []);
 
         // Cargar KPI de inflación
         const kpisResponse = await fetch('/api/kpis-avanzados');
@@ -85,7 +107,6 @@ export default function PreciosPage() {
         }
 
       } catch (err) {
-        generalLogger.error('Error en precios:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setCargando(false);
