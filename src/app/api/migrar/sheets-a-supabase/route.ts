@@ -40,13 +40,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(n8nWebhookUrl, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    apiLogger.info('Conectando a n8n:', { url: n8nWebhookUrl });
+
+    let response;
+    try {
+      response = await fetch(n8nWebhookUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        // Aumentar timeout para conexiones lentas
+        signal: AbortSignal.timeout(30000), // 30 segundos
+      });
+    } catch (fetchError) {
+      apiLogger.error('Error de conexión con n8n:', fetchError);
+      throw new Error(
+        'No se puede conectar con n8n. ' +
+        'Verifica que el servicio esté funcionando: ' + n8nWebhookUrl +
+        '. Error: ' + (fetchError instanceof Error ? fetchError.message : 'Conexión fallida')
+      );
+    }
+
+    apiLogger.info('Respuesta de n8n:', { status: response.status, ok: response.ok });
 
     if (!response.ok) {
-      throw new Error(`Error obteniendo datos de n8n: ${response.statusText}`);
+      const errorText = await response.text().catch(() => 'No se pudo obtener el error');
+      throw new Error(
+        `Error del servidor n8n (${response.status}): ${response.statusText}. ` +
+        `Respuesta: ${errorText.substring(0, 200)}`
+      );
     }
 
     const sheetsData = await response.json();

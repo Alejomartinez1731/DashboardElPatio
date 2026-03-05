@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Database, ArrowRight, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Database, ArrowRight, CheckCircle, XCircle, Loader2, AlertCircle, Check } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 type Seccion = 'compras' | 'facturas' | 'proveedores' | 'precios' | 'recordatorios';
@@ -29,6 +29,8 @@ export default function MigrarPage() {
   const [migrando, setMigrando] = useState(false);
   const [resultados, setResultados] = useState<Record<string, ResultadoMigracion> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [verificandoConexion, setVerificandoConexion] = useState(false);
+  const [conexionOk, setConexionOk] = useState<boolean | null>(null);
 
   const toggleSeccion = (seccion: Seccion) => {
     setSecciones(prev =>
@@ -36,6 +38,29 @@ export default function MigrarPage() {
         ? prev.filter(s => s !== seccion)
         : [...prev, seccion]
     );
+  };
+
+  const verificarConexion = async () => {
+    setVerificandoConexion(true);
+    setConexionOk(null);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/test-connection');
+      const data = await response.json();
+
+      if (data.success && data.n8nConnection?.status === 'ok') {
+        setConexionOk(true);
+      } else {
+        setConexionOk(false);
+        setError('No se puede conectar con n8n. Verifica que el servicio esté funcionando.');
+      }
+    } catch (err) {
+      setConexionOk(false);
+      setError('Error al verificar la conexión con n8n');
+    } finally {
+      setVerificandoConexion(false);
+    }
   };
 
   const ejecutarMigracion = async () => {
@@ -157,10 +182,28 @@ export default function MigrarPage() {
       </Card>
 
       {/* Botón de acción */}
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={verificarConexion}
+          disabled={verificandoConexion}
+          className="flex items-center gap-2 px-6 py-3 border border-border rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-50"
+        >
+          {verificandoConexion ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Verificando...
+            </>
+          ) : (
+            <>
+              {conexionOk === true ? <Check className="w-5 h-5 text-green-500" /> : <CheckCircle className="w-5 h-5" />}
+              Verificar Conexión
+            </>
+          )}
+        </button>
+
         <button
           onClick={ejecutarMigracion}
-          disabled={migrando || secciones.length === 0}
+          disabled={migrando || secciones.length === 0 || conexionOk === false}
           className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
         >
           {migrando ? (
@@ -176,6 +219,36 @@ export default function MigrarPage() {
           )}
         </button>
       </div>
+
+      {/* Estado de conexión */}
+      {conexionOk === true && !error && (
+        <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-500 rounded-lg">
+          <div className="flex items-center gap-3 text-green-500">
+            <CheckCircle className="w-5 h-5" />
+            <div className="flex-1">
+              <p className="font-medium">Conexión con n8n verificada</p>
+              <p className="text-sm text-green-600">Listo para migrar</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {conexionOk === false && !error && (
+        <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-500 rounded-lg">
+          <div className="flex items-center gap-3 text-red-500">
+            <AlertCircle className="w-5 h-5" />
+            <div className="flex-1">
+              <p className="font-medium">Error de conexión con n8n</p>
+              <p className="text-sm text-red-600">
+                Verifica que el servidor esté funcionando:{" "}
+                <code className="bg-white dark:bg-gray-800 px-1 rounded">
+                  https://n8n-alejomartinez-n8n.aejhww.easypanel.host
+                </code>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
