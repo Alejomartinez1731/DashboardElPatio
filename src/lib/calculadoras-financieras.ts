@@ -9,7 +9,7 @@ import { formatearMoneda } from '@/lib/formatters';
 // TIPOS
 // ============================================================================
 
-interface Compra {
+export interface Compra {
   fecha: Date;
   total: number;
   descripcion: string;
@@ -17,7 +17,7 @@ interface Compra {
   precio_unitario: number;
 }
 
-interface ProveedorStats {
+export interface ProveedorStats {
   proveedor: string;
   total_gastado: number;
   num_compras: number;
@@ -32,7 +32,7 @@ interface ProductoPrecioHistorico {
   fecha: Date;
 }
 
-interface KPIsAvanzados {
+export interface KPIsAvanzados {
   // Margen de ahorro
   margen_ahorro: {
     presupuesto: number;

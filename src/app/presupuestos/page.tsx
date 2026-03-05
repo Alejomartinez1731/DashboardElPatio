@@ -9,12 +9,12 @@ import { generalLogger } from '@/lib/logger';
 import { formatearMoneda } from '@/lib/formatters';
 import { CATEGORIAS_INFO, type CategoriaProducto } from '@/types';
 import { useToast } from '@/components/ui/toast';
-import type { PresupuestoVsGosto, CrearPresupuestoInput } from '@/lib/schemas';
+import type { PresupuestoVsGasto, CrearPresupuestoInput } from '@/lib/schemas';
 
 // Tipos
 type EstadoAlerta = 'ok' | 'advertencia' | 'peligro' | 'excedido';
 
-interface PresupuestoConEstado extends PresupuestoVsGosto {
+interface PresupuestoConEstado extends PresupuestoVsGasto {
   estado_alerta: EstadoAlerta;
 }
 
@@ -79,7 +79,7 @@ export default function PresupuestosPage() {
     } catch (err) {
       const error = err as Error;
       setError(error.message);
-      toast.show({ message: error.message, type: 'error' });
+      toast.error(error.message);
       generalLogger.error('Error cargando presupuestos:', error);
     } finally {
       setLoading(false);
@@ -114,13 +114,13 @@ export default function PresupuestosPage() {
         throw new Error(data.error || 'Error al crear presupuesto');
       }
 
-      toast.show({ message: 'Presupuesto creado correctamente', type: 'success' });
+      toast.success('Presupuesto creado correctamente');
       setMostrarFormulario(false);
       setFormulario(formularioVacio);
       fetchPresupuestos();
     } catch (err) {
       const error = err as Error;
-      toast.show({ message: error.message, type: 'error' });
+      toast.error(error.message);
       generalLogger.error('Error creando presupuesto:', error);
     }
   };
@@ -140,13 +140,13 @@ export default function PresupuestosPage() {
         throw new Error(data.error || 'Error al actualizar presupuesto');
       }
 
-      toast.show({ message: 'Presupuesto actualizado correctamente', type: 'success' });
+      toast.success('Presupuesto actualizado correctamente');
       setEditandoId(null);
       setFormulario(formularioVacio);
       fetchPresupuestos();
     } catch (err) {
       const error = err as Error;
-      toast.show({ message: error.message, type: 'error' });
+      toast.error(error.message);
       generalLogger.error('Error actualizando presupuesto:', error);
     }
   };
@@ -168,11 +168,11 @@ export default function PresupuestosPage() {
         throw new Error(data.error || 'Error al eliminar presupuesto');
       }
 
-      toast.show({ message: 'Presupuesto eliminado correctamente', type: 'success' });
+      toast.success('Presupuesto eliminado correctamente');
       fetchPresupuestos();
     } catch (err) {
       const error = err as Error;
-      toast.show({ message: error.message, type: 'error' });
+      toast.error(error.message);
       generalLogger.error('Error eliminando presupuesto:', error);
     }
   };

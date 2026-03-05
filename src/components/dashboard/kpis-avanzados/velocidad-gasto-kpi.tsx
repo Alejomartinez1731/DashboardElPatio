@@ -65,7 +65,7 @@ export function VelocidadGastoKPI({
           {alerta_exceso && (
             <div className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg text-orange-500 text-xs">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              <span>Proyección supera el gasto actual en >20%</span>
+              <span>Proyección supera el gasto actual en más del 20%</span>
             </div>
           )}
         </div>

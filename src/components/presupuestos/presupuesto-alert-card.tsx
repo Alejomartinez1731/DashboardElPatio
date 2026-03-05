@@ -28,8 +28,8 @@ interface PresupuestoAlertCardProps {
 export function PresupuestoAlertCard({ alertas, onVerDetalles, className = '' }: PresupuestoAlertCardProps) {
   if (alertas.length === 0) return null;
 
-  // Ordenar por severidad (excedido > peligro > advertencia)
-  const severidadOrder = { excedido: 0, peligro: 1, advertencia: 2 };
+  // Ordenar por severidad (excedido > peligro > advertencia > ok)
+  const severidadOrder = { excedido: 0, peligro: 1, advertencia: 2, ok: 3 };
   const alertasOrdenadas = [...alertas].sort((a, b) => severidadOrder[a.estado] - severidadOrder[b.estado]);
 
   // Obtener color según estado
