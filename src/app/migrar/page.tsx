@@ -61,6 +61,14 @@ export default function MigrarPage() {
       const data: MigracionResponse = await response.json();
 
       if (!response.ok || !data.success) {
+        // Error específico cuando n8n no está configurado
+        if (data.error?.includes('NEXT_PUBLIC_N8N_WEBHOOK_URL')) {
+          throw new Error(
+            'La integración con Google Sheets (n8n) no está configurada. ' +
+            'Si ya migraste tus datos a Supabase, puedes usar el dashboard directamente. ' +
+            'Para configurar n8n, agrega NEXT_PUBLIC_N8N_WEBHOOK_URL en las variables de entorno de Vercel.'
+          );
+        }
         throw new Error(data.error || 'Error durante la migración');
       }
 

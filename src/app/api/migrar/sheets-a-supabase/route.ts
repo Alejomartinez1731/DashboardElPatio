@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
     const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
 
     if (!n8nWebhookUrl) {
-      throw new Error('NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada');
+      throw new Error(
+        'La variable NEXT_PUBLIC_N8N_WEBHOOK_URL no está configurada. ' +
+        'Si ya migraste tus datos a Supabase, ya no necesitas esta herramienta. ' +
+        'Para configurar n8n en Vercel, ve a: Settings → Environment Variables → Add New'
+      );
     }
 
     const response = await fetch(n8nWebhookUrl, {
