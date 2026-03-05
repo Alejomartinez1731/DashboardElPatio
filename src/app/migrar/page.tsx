@@ -31,7 +31,6 @@ export default function MigrarPage() {
   const [error, setError] = useState<string | null>(null);
   const [verificandoConexion, setVerificandoConexion] = useState(false);
   const [conexionOk, setConexionOk] = useState<boolean | null>(null);
-  const [diagnostico, setDiagnostico] = useState<any>(null);
 
   const toggleSeccion = (seccion: Seccion) => {
     setSecciones(prev =>
@@ -45,25 +44,20 @@ export default function MigrarPage() {
     setVerificandoConexion(true);
     setConexionOk(null);
     setError(null);
-    setDiagnostico(null);
 
     try {
       const response = await fetch('/api/test-connection');
       const data = await response.json();
 
-      setDiagnostico(data);
-
-      if (data.webhookTest?.status === 'HTTP 200' || data.webhookTest?.status?.includes('200')) {
+      if (data.success && data.n8nConnection?.status === 'ok') {
         setConexionOk(true);
       } else {
         setConexionOk(false);
-        setError(`Error de conexión: ${data.webhookTest?.error || 'Desconocido'}`);
+        setError('No se puede conectar con n8n. Verifica que el servicio esté funcionando.');
       }
     } catch (err) {
       setConexionOk(false);
-      const error = err as Error;
       setError('Error al verificar la conexión con n8n');
-      console.error('Error completo:', error);
     } finally {
       setVerificandoConexion(false);
     }
@@ -240,42 +234,20 @@ export default function MigrarPage() {
       )}
 
       {conexionOk === false && !error && (
-        <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-red-500 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
-              Error de conexión con n8n
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-red-700">
-              <p className="font-medium mb-2">No se puede conectar con n8n. Verifica:</p>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>
-                  El servidor está funcionando:{" "}
-                  <a href="https://n8n-alejomartinez-n8n.aejhww.easypanel.host" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">
-                    https://n8n-alejomartinez-n8n.aejhww.easypanel.host
-                  </a>
-                </li>
-                <li>La URL del webhook es correcta</li>
-                <li>No hay firewall bloqueando la conexión</li>
-              </ol>
+        <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-500 rounded-lg">
+          <div className="flex items-center gap-3 text-red-500">
+            <AlertCircle className="w-5 h-5" />
+            <div className="flex-1">
+              <p className="font-medium">Error de conexión con n8n</p>
+              <p className="text-sm text-red-600">
+                Verifica que el servidor esté funcionando:{" "}
+                <code className="bg-white dark:bg-gray-800 px-1 rounded">
+                  https://n8n-alejomartinez-n8n.aejhww.easypanel.host
+                </code>
+              </p>
             </div>
-
-            {diagnostico && (
-              <details className="text-xs">
-                <summary className="cursor-pointer text-red-600 hover:underline font-medium mb-2">
-                  Ver diagnóstico técnico
-                </summary>
-                <div className="mt-2 p-3 bg-red-100 dark:bg-red-900/30 rounded font-mono">
-                  <pre className="text-xs overflow-x-auto">
-                    {JSON.stringify(diagnostico, null, 2)}
-                  </pre>
-                </div>
-              </details>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Error */}

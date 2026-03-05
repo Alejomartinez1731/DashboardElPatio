@@ -26,8 +26,8 @@ const navegacion = [
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
   { titulo: 'Análisis de Gestión', href: '/analisis-gestion', icono: BarChart3 },
   { titulo: 'Diagnóstico API', href: '/diagnostico-api', icono: Bug },
-  { titulo: 'Configuración', href: '/settings', icono: Settings },
   { titulo: 'Migrar a Supabase', href: '/migrar', icono: Database },
+  { titulo: 'Configuración', href: '/settings', icono: Settings },
 ];
 
 export function Sidebar() {
