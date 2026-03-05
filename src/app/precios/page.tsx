@@ -7,6 +7,7 @@ import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
+import { InflacionKPI } from '@/components/dashboard/kpis-avanzados';
 
 interface ProductoCostoso {
   producto: string;
@@ -38,16 +39,30 @@ interface GastoCategoria {
   precio_promedio: number;
 }
 
+interface InflacionData {
+  variacion_promedio: number;
+  productos_con_aumento: number;
+  productos_analizados: number;
+  productos_top_inflacion: Array<{
+    producto: string;
+    variacion_porcentaje: number;
+    precio_actual: number;
+    precio_anterior: number;
+  }>;
+}
+
 export default function PreciosPage() {
   const [productosCostosos, setProductosCostosos] = useState<ProductoCostoso[]>([]);
   const [evolucionPrecios, setEvolucionPrecios] = useState<EvolucionPrecio[]>([]);
   const [categorias, setCategorias] = useState<GastoCategoria[]>([]);
+  const [inflacionData, setInflacionData] = useState<InflacionData | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDatos() {
       try {
+        // Cargar datos principales
         const response = await fetch('/api/precios');
         if (!response.ok) throw new Error('Error al obtener datos');
 
@@ -60,6 +75,14 @@ export default function PreciosPage() {
         setProductosCostosos(result.data.productos_costosos || []);
         setEvolucionPrecios(result.data.evolucion_precios || []);
         setCategorias(result.data.gasto_por_categoria || []);
+
+        // Cargar KPI de inflación
+        const kpisResponse = await fetch('/api/kpis-avanzados');
+        const kpisResult = await kpisResponse.json();
+
+        if (kpisResult.success && kpisResult.data?.inflacion) {
+          setInflacionData(kpisResult.data.inflacion);
+        }
 
       } catch (err) {
         generalLogger.error('Error en precios:', err);
@@ -129,30 +152,43 @@ export default function PreciosPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Productos Analizados</p>
-          <p className="text-2xl font-bold text-white">{productosCostosos.length}</p>
-        </Card>
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Precio Promedio</p>
-          <p className="text-2xl font-bold text-[#10b981]">
-            {formatearMoneda(productosCostosos.length > 0 ? productosCostosos.reduce((sum, p) => sum + p.precio_promedio, 0) / productosCostosos.length : 0)}
-          </p>
-        </Card>
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Total Compras</p>
-          <p className="text-2xl font-bold text-[#f59e0b]">
-            {productosCostosos.reduce((sum, p) => sum + p.veces_comprado, 0)}
-          </p>
-        </Card>
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Producto Más Comprado</p>
-          <p className="text-lg font-bold text-[#3b82f6] truncate">
-            {topProductos[0]?.producto || '-'}
-          </p>
-          <p className="text-xs text-muted-foreground">{topProductos[0]?.veces_comprado || 0} veces</p>
-        </Card>
+      <div className="space-y-4">
+        {/* KPI de Inflación - Nueva integración */}
+        {inflacionData && (
+          <InflacionKPI
+            variacion_promedio={inflacionData.variacion_promedio}
+            productos_con_aumento={inflacionData.productos_con_aumento}
+            productos_analizados={inflacionData.productos_analizados}
+            productos_top_inflacion={inflacionData.productos_top_inflacion}
+          />
+        )}
+
+        {/* KPIs tradicionales */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="p-4 bg-card border-border">
+            <p className="text-muted-foreground text-sm mb-1">Productos Analizados</p>
+            <p className="text-2xl font-bold text-white">{productosCostosos.length}</p>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <p className="text-muted-foreground text-sm mb-1">Precio Promedio</p>
+            <p className="text-2xl font-bold text-[#10b981]">
+              {formatearMoneda(productosCostosos.length > 0 ? productosCostosos.reduce((sum, p) => sum + p.precio_promedio, 0) / productosCostosos.length : 0)}
+            </p>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <p className="text-muted-foreground text-sm mb-1">Total Compras</p>
+            <p className="text-2xl font-bold text-[#f59e0b]">
+              {productosCostosos.reduce((sum, p) => sum + p.veces_comprado, 0)}
+            </p>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <p className="text-muted-foreground text-sm mb-1">Producto Más Comprado</p>
+            <p className="text-lg font-bold text-[#3b82f6] truncate">
+              {topProductos[0]?.producto || '-'}
+            </p>
+            <p className="text-xs text-muted-foreground">{topProductos[0]?.veces_comprado || 0} veces</p>
+          </Card>
+        </div>
       </div>
 
       {/* Gráficos principales */}

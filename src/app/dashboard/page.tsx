@@ -9,7 +9,7 @@ import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardKPIs } from '@/components/dashboard/dashboard-kpis';
-import { KPIsAvanzadosContainer } from '@/components/dashboard/kpis-avanzados';
+import { KPIsPrincipales } from '@/components/dashboard/dashboard-kpis-principales';
 import { DashboardTabs, TABS } from '@/components/dashboard/dashboard-tabs';
 import { DataTable, DataTableWrapper } from '@/components/dashboard/data-table';
 import { KPIsSkeleton, BudgetSkeleton, TableSkeleton, QuickActionsSkeleton } from '@/components/dashboard/dashboard-skeletons';
@@ -340,11 +340,17 @@ export default function DashboardPage() {
         warning={warning}
       />
 
-      {/* KPIs Básicos - Compactos */}
-      {showSkeletons ? <KPIsSkeleton /> : <DashboardKPIs kpiData={kpiData} />}
-
-      {/* KPIs Avanzados - Nueva sección */}
-      <KPIsAvanzadosContainer presupuesto={3000} />
+      {/* KPIs Principales - Solo 4 KPIs importantes */}
+      {showSkeletons ? (
+        <KPIsSkeleton />
+      ) : (
+        <KPIsPrincipales
+          presupuesto={3000}
+          gastoQuincenal={kpiData?.gastoQuincenal}
+          facturasProcesadas={kpiData?.facturasProcesadas}
+          recordatorios={kpiData?.numeroDeRecordatorios}
+        />
+      )}
 
       {/* Presupuesto Mensual */}
       {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} presupuestoInicial={3000} />}
