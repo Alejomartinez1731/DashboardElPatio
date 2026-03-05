@@ -27,10 +27,10 @@ export async function GET(request: Request) {
   };
 
   try {
-    // Test 1: Conexión básica
+    // Test 1: Conexión básica - Test simple SELECT 1
     apiLogger.info('Test 1: Conexión básica');
     try {
-      const { data, error } = await supabase.rpc('version'); // o cualquier query simple
+      const { error } = await supabase.from('compras').select('id').limit(1);
       results.tests.push({
         name: 'Conexión básica',
         status: error ? 'error' : 'ok',
