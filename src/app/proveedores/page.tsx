@@ -30,7 +30,7 @@ export default function ProveedoresPage() {
       try {
         // Verificar que Supabase está configurado
         if (!supabase) {
-          throw new Error('Supabase no está configurado. Por favor verifica las variables de entorno.');
+          throw new Error('Supabase no está configurado. Verifica las variables de entorno NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.');
         }
 
         // Llamada directa a Supabase - sin API route intermedia

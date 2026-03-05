@@ -90,13 +90,17 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       // Verificar que Supabase está configurado
       if (!supabase) {
-        throw new Error(
-          'Supabase no está configurado. ' +
-          'Por favor configura NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en las variables de entorno de Vercel.'
-        );
+        const errorMsg = 'Supabase no está configurado. Verifica las variables NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.';
+        console.error('❌', errorMsg);
+        console.error('Variables configuradas:', {
+          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        });
+        throw new Error(errorMsg);
       }
 
       apiLogger.debug('📊 Iniciando fetch desde Supabase...');
+      console.log('✅ Supabase cliente creado correctamente');
 
       // Fetch paralelo: compras (directo a Supabase) + recordatorios
       const [comprasResult, recordatoriosCount] = await Promise.all([

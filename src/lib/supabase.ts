@@ -21,12 +21,16 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Solo verificar en server-side, en cliente retornar undefined
-if (typeof window === 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
-  console.error('Faltan variables de entorno de Supabase. Verifica NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY');
+// Log para debugging
+if (typeof window !== 'undefined') {
+  console.log('🔧 Supabase config:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    url: supabaseUrl?.substring(0, 20) + '...',
+  });
 }
 
-// Crear cliente solo si tenemos las variables necesarias
+// Crear cliente - intentar crear siempre para detectar errores
 export const supabase: SupabaseClient | null = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
