@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Compra, KPIData } from '@/types';
 import { normalizarFecha } from '@/lib/data-utils';
 import { apiLogger } from '@/lib/logger';
+import { supabase } from '@/lib/supabase';
 
 export interface UseSupabaseDashboardResult {
   compras: Compra[];
@@ -89,21 +90,20 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       apiLogger.debug('📊 Iniciando fetch desde Supabase...');
 
-      // Fetch paralelo: compras + recordatorios
-      const [comprasResponse, recordatoriosCount] = await Promise.all([
-        fetch('/api/compras?limit=1000'),
+      // Fetch paralelo: compras (directo a Supabase) + recordatorios
+      const [comprasResult, recordatoriosCount] = await Promise.all([
+        // Llamada directa a Supabase - sin API route intermedia
+        supabase
+          .from('compras')
+          .select('*')
+          .order('fecha', { ascending: false })
+          .limit(1000),
         fetchNumeroDeRecordatorios(),
       ]);
 
-      // Verificar respuesta de compras
-      if (!comprasResponse.ok) {
-        throw new Error(`Error HTTP ${comprasResponse.status}: ${comprasResponse.statusText}`);
-      }
-
-      const comprasResult = await comprasResponse.json();
-
-      if (!comprasResult.success) {
-        throw new Error(comprasResult.error || 'Error desconocido al obtener compras');
+      // Verificar error de compras
+      if (comprasResult.error) {
+        throw new Error(comprasResult.error.message);
       }
 
       // Procesar compras desde Supabase a formato Compra
