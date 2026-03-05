@@ -12,6 +12,8 @@ import {
   Bell,
   Settings,
   Bug,
+  Database,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,8 +24,10 @@ const navegacion = [
   { titulo: 'Proveedores', href: '/proveedores', icono: Store },
   { titulo: 'Recordatorios', href: '/dashboard/recordatorios', icono: Bell },
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
+  { titulo: 'Análisis de Gestión', href: '/analisis-gestion', icono: BarChart3 },
   { titulo: 'Diagnóstico API', href: '/diagnostico-api', icono: Bug },
   { titulo: 'Configuración', href: '/settings', icono: Settings },
+  { titulo: 'Migrar a Supabase', href: '/migrar', icono: Database },
 ];
 
 export function Sidebar() {
@@ -80,7 +84,31 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
             Gestión
           </div>
-          {navegacion.slice(3).map((item) => {
+          {navegacion.slice(3, 8).map((item) => {
+            const Icono = item.icono;
+            const isActive = pathname === item.href;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
+                  isActive
+                    ? 'bg-[#f59e0b]/15 text-[#f59e0b] font-semibold border-l-3 border-[#f59e0b]'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-white'
+                )}
+              >
+                <Icono className="w-5 h-5" strokeWidth={2} />
+                <span>{item.titulo}</span>
+              </Link>
+            );
+          })}
+
+          <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
+            Sistema
+          </div>
+          {navegacion.slice(8).map((item) => {
             const Icono = item.icono;
             const isActive = pathname === item.href;
 
