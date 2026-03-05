@@ -372,63 +372,26 @@ button:not(:disabled):active {
 }
 
 /* ═════════════════════════════════════════════════════════
-   TEMAS - Light y Dark mode
+   TEMA CLARO - Light mode
 ══════════════════════════════════════════════════════════ */
 
-/* Tema CLARO (Light) */
 .light {
-  --background: 0 0% 100%;      /* Blanco puro */
-  --foreground: 222 47% 11%;     /* #0F172A - Azul oscuro */
-
-  --card: 210 40% 98%;           /* Blanco puro */
-  --card-foreground: 222 47% 11%; /* #0F172A */
-
-  --popover: 210 40% 98%;        /* Blanco */
-  --popover-foreground: 222 47% 11%; /* #0F172A */
-
-  --primary: 38 92% 50%;         /* #F59E0B - Dorado */
-  --primary-foreground: 0 0% 100%; /* Blanco */
-
-  --secondary: 210 40% 96%;      /* Gris claro */
-  --secondary-foreground: 222 47% 11%; /* #0F172A */
-
-  --muted: 210 40% 96%;           /* Gris muy claro */
-  --muted-foreground: 215 16% 47%;  /* #64748B - Gris medio */
-
-  --accent: 38 92% 50%;          /* #F59E0B - Dorado */
-  --accent-foreground: 0 0% 100%; /* Blanco */
-
-  --destructive: 0 84% 60%;      /* #EF4444 - Rojo */
-  --border: 214 32% 91%;         /* Gris claro */
-  --input: 210 40% 98%;           /* Blanco */
-  --ring: 38 92% 50%;            /* #F59E0B - Dorado */
-}
-
-/* Tema OSCURO (Dark) */
-.dark {
-  --background: 222 47% 11%;     /* #0F172A - Azul muy oscuro */
-  --foreground: 210 40% 98%;     /* #F8FAFC - Blanco azulado */
-
-  --card: 215 25% 23%;           /* #1E293B - Gris azulado */
-  --card-foreground: 210 40% 98%; /* #F8FAFC */
-
-  --popover: 215 25% 23%;        /* #1E293B */
-  --popover-foreground: 210 40% 98%; /* #F8FAFC */
-
-  --primary: 38 92% 50%;         /* #F59E0B - Dorado */
-  --primary-foreground: 222 47% 11%; /* #0F172A */
-
-  --secondary: 215 25% 23%;      /* #1E293B */
-  --secondary-foreground: 210 40% 98%; /* #F8FAFC */
-
-  --muted: 215 25% 23%;          /* #1E293B */
-  --muted-foreground: 215 20% 65%;  /* #94A3B8 - Gris azulado */
-
-  --accent: 38 92% 50%;          /* #F59E0B - Dorado */
-  --accent-foreground: 222 47% 11%; /* #0F172A */
-
-  --destructive: 0 84% 60%;      /* #EF4444 - Rojo */
-  --border: 215 25% 23%;         /* #1E293B */
-  --input: 215 25% 23%;          /* #1E293B */
-  --ring: 38 92% 50%;            /* #F59E0B - Dorado */
+  --background: 0 0% 100% !important;      /* Blanco puro */
+  --foreground: 222 47% 11% !important;     /* #0F172A - Azul oscuro */
+  --card: 0 0% 100% !important;           /* Blanco puro */
+  --card-foreground: 222 47% 11% !important; /* #0F172A */
+  --popover: 0 0% 100% !important;        /* Blanco */
+  --popover-foreground: 222 47% 11% !important; /* #0F172A */
+  --primary: 38 92% 50% !important;         /* #F59E0B - Dorado */
+  --primary-foreground: 0 0% 100% !important; /* Blanco */
+  --secondary: 210 40% 96% !important;      /* Gris claro */
+  --secondary-foreground: 222 47% 11% !important; /* #0F172A */
+  --muted: 210 40% 96% !important;           /* Gris muy claro */
+  --muted-foreground: 215 16% 47% !important;  /* #64748B - Gris medio */
+  --accent: 38 92% 50% !important;          /* #F59E0B - Dorado */
+  --accent-foreground: 0 0% 100% !important; /* Blanco */
+  --destructive: 0 84% 60% !important;      /* #EF4444 - Rojo */
+  --border: 214 32% 91% !important;         /* Gris claro */
+  --input: 0 0% 100% !important;           /* Blanco */
+  --ring: 38 92% 50% !important;            /* #F59E0B - Dorado */
 }
