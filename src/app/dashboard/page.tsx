@@ -353,7 +353,7 @@ export default function DashboardPage() {
       )}
 
       {/* Presupuesto Mensual */}
-      {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} presupuestoInicial={3000} />}
+      {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} />}
 
       {/* Quick Actions */}
       {showSkeletons ? (

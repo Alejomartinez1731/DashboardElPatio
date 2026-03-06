@@ -6,17 +6,44 @@ import { formatearFechaHora } from '@/lib/formatters';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { generalLogger } from '@/lib/logger';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { GlobalSearchTrigger } from '@/components/search/global-search';
 import { apiCache } from '@/lib/cache';
+import { NotificationTrigger, NotificationCenter } from '@/components/notifications/notification-center';
+import { useAlerts } from '@/hooks/useAlerts';
 
 export function Header() {
   const router = useRouter();
   const [fechaActual, setFechaActual] = useState<Date | null>(null);
   const [cargando, setCargando] = useState(false);
-  const [notificaciones, setNotificaciones] = useState(3);
   const [mounted, setMounted] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [presupuestoMensual, setPresupuestoMensual] = useState<number>(3000);
+
+  // Cargar presupuesto desde Supabase
+  useEffect(() => {
+    async function cargarPresupuesto() {
+      try {
+        const response = await fetch('/api/presupuesto-mensual');
+        const result = await response.json();
+        if (result.success && result.data.monto > 0) {
+          setPresupuestoMensual(result.data.monto);
+        }
+      } catch (error) {
+        console.error('Error cargando presupuesto:', error);
+      }
+    }
+    if (mounted) {
+      cargarPresupuesto();
+    }
+  }, [mounted]);
+
+  // Sistema de alertas
+  const { alertas, totalNuevas, verificarAhora, marcarTodasLeidas } = useAlerts({
+    intervalo: 30, // 30 segundos
+    presupuestoMensual,
+    enabled: mounted,
+  });
 
   // Evitar error de hidratación - solo ejecutar en el cliente
   useEffect(() => {
@@ -86,16 +113,34 @@ export function Header() {
         {/* Búsqueda global */}
         <GlobalSearchTrigger />
 
-        {/* Toggle de tema */}
-        <ThemeToggle />
+        {/* Notificaciones - Sistema de alertas */}
+        <div className="relative">
+          <NotificationTrigger
+            totalNuevas={totalNuevas}
+            onClick={() => setShowNotifications(!showNotifications)}
+          />
 
-        {/* Notificaciones */}
-        <button className="relative p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200">
-          <Bell className="w-5 h-5" />
-          {notificaciones > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-pulse"></span>
+          {/* Dropdown de notificaciones */}
+          {showNotifications && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowNotifications(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 z-50">
+                <NotificationCenter
+                  alertas={alertas}
+                  totalNuevas={totalNuevas}
+                  onMarcarTodasLeidas={() => {
+                    marcarTodasLeidas();
+                    setShowNotifications(false);
+                  }}
+                  onCerrar={() => setShowNotifications(false)}
+                />
+              </div>
+            </>
           )}
-        </button>
+        </div>
 
         {/* Botón de refresh */}
         <Button

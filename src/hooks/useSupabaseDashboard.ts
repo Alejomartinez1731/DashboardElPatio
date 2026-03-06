@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Compra, KPIData } from '@/types';
 import { normalizarFecha } from '@/lib/data-utils';
 import { apiLogger } from '@/lib/logger';
@@ -35,13 +35,22 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
   const [isUsingMock, setIsUsingMock] = useState(false);
   const [dataSource, setDataSource] = useState<'supabase' | 'mock'>('supabase');
   const [warning, setWarning] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isFetchingRef = useRef(false);
 
   /**
    * Obtiene el número de recordatorios
    */
   const fetchNumeroDeRecordatorios = useCallback(async (): Promise<number> => {
     try {
-      const response = await fetch('/api/recordatorios?incluirAutomaticos=true');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch('/api/recordatorios?incluirAutomaticos=true', {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
       if (!response.ok) throw new Error('Error fetching recordatorios');
       const result = await response.json();
 
@@ -53,6 +62,7 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
       }
     } catch (error) {
       apiLogger.warn('No se pudieron obtener recordatorios:', error);
+      // No lanzar error - solo log warning y retornar 0
     }
     return 0;
   }, []);
@@ -83,6 +93,14 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
    * Obtiene datos desde Supabase
    */
   const fetchDatos = useCallback(async () => {
+    // Prevenir múltiples llamadas simultáneas usando ref
+    if (isFetchingRef.current) {
+      apiLogger.warn('⏸️ Ya hay una petición en curso, ignorando...');
+      return;
+    }
+
+    isFetchingRef.current = true;
+
     try {
       setLoading(true);
       setError(null);
@@ -90,36 +108,70 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       // Verificar que Supabase está configurado
       if (!supabase) {
-        const errorMsg = 'Supabase no está configurado. Verifica las variables NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.';
+        const errorMsg = 'Supabase no está configurado. Verifica las variables NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.';
         console.error('❌', errorMsg);
-        console.error('Variables configuradas:', {
-          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        });
-        throw new Error(errorMsg);
+        setError(errorMsg);
+        setWarning('El dashboard funcionará en modo limitado sin conexión a Supabase.');
+        return; // Retornar en lugar de lanzar error
       }
 
       apiLogger.debug('📊 Iniciando fetch desde Supabase...');
-      console.log('✅ Supabase cliente creado correctamente');
 
-      // Fetch paralelo: compras (directo a Supabase) + recordatorios
-      const [comprasResult, recordatoriosCount] = await Promise.all([
-        // Llamada directa a Supabase - sin API route intermedia
-        supabase
-          .from('compras')
-          .select('*')
-          .order('fecha', { ascending: false })
-          .limit(1000),
+      // Fetch paralelo con timeout y error handling
+      const [comprasResult, recordatoriosCount] = await Promise.allSettled([
+        // Llamada directa a Supabase con timeout
+        (async () => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+          try {
+            const result = await supabase
+              .from('compras')
+              .select('*')
+              .order('fecha', { ascending: false })
+              .limit(1000);
+            clearTimeout(timeoutId);
+            return result;
+          } catch (err) {
+            clearTimeout(timeoutId);
+            throw err;
+          }
+        })(),
         fetchNumeroDeRecordatorios(),
       ]);
 
-      // Verificar error de compras
-      if (comprasResult.error) {
-        throw new Error(comprasResult.error.message);
+      // Manejar resultados con Promise.allSettled
+      let comprasData: any[] = [];
+      let comprasError: string | null = null;
+
+      if (comprasResult.status === 'fulfilled') {
+        if (comprasResult.value.error) {
+          comprasError = comprasResult.value.error.message;
+          apiLogger.error('❌ Error fetching compras:', comprasError);
+        } else {
+          comprasData = comprasResult.value.data || [];
+        }
+      } else {
+        comprasError = comprasResult.reason?.message || 'Error desconocido';
+        apiLogger.error('❌ Error fetching compras:', comprasError);
+      }
+
+      // Si hay error de Supabase, mostrar warning pero continuar
+      if (comprasError) {
+        const authError = comprasError.includes('Invalid authentication') || comprasError.includes('JWT');
+        if (authError) {
+          setError('Error de autenticación con Supabase. Por favor verifica tus credenciales JWT.');
+          setWarning('Variables NEXT_PUBLIC_SUPABASE_ANON_KEY o JWT_SECRET pueden ser incorrectas.');
+          apiLogger.error('❌ Error de autenticación Supabase:', {
+            error: comprasError,
+            hint: 'Verifica que JWT_SECRET es correcto y ANON_KEY está firmado con esa clave'
+          });
+          return; // Detener ejecución si hay error de auth
+        }
       }
 
       // Procesar compras desde Supabase a formato Compra
-      const comprasProcesadas: Compra[] = (comprasResult.data || []).map((item: any, index: number) => ({
+      const comprasProcesadas: Compra[] = comprasData.map((item: any, index: number) => ({
         id: item.id || `compra-${index}-${Date.now()}`,
         fecha: normalizarFecha(item.fecha),
         tienda: item.tienda || '',
@@ -162,10 +214,14 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
         facturasUnicas.add(`${fechaStr}-${c.tienda}`);
       });
 
+      // Obtener recordatorios count del resultado de Promise.allSettled
+      const recordatoriosCountFinal =
+        recordatoriosCount.status === 'fulfilled' ? recordatoriosCount.value : 0;
+
       const kpis: KPIData = {
         gastoQuincenal,
         facturasProcesadas: facturasUnicas.size,
-        numeroDeRecordatorios: recordatoriosCount,
+        numeroDeRecordatorios: recordatoriosCountFinal,
       };
 
       // Actualizar estado
@@ -174,35 +230,45 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
       setKpiData(kpis);
       setIsUsingMock(false);
       setDataSource('supabase');
+      setHasLoadedOnce(true);
 
       apiLogger.info('✅ Datos cargados desde Supabase:', {
         compras: comprasProcesadas.length,
         gastoQuincenal,
         facturas: facturasUnicas.size,
-        recordatorios: recordatoriosCount,
+        recordatorios: recordatoriosCountFinal,
       });
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       apiLogger.error('❌ Error en useSupabaseDashboard:', errorMessage);
       setError(errorMessage);
+      setHasLoadedOnce(true); // Marcar como cargado aunque haya error
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [tabs, fetchNumeroDeRecordatorios, convertirComprasATabla]);
+  }, [fetchNumeroDeRecordatorios, convertirComprasATabla]);
 
   /**
    * Función para refrescar datos manualmente
    */
   const refetch = useCallback(async () => {
     apiLogger.debug('🔄 Refrescando datos...');
+    isFetchingRef.current = false; // Resetear para permitir refresco
     await fetchDatos();
   }, [fetchDatos]);
 
-  // Efecto principal: cargar datos al montar
+  // Efecto principal: cargar datos al montar (solo una vez)
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
-    fetchDatos();
-  }, [fetchDatos]);
+    if (!hasInitialized.current) {
+      apiLogger.debug('🚀 Inicializando useSupabaseDashboard...');
+      hasInitialized.current = true;
+      fetchDatos();
+    }
+  }, []); // Empty dependency array - solo ejecutar al montar
 
   return {
     compras,

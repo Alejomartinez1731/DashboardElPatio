@@ -56,12 +56,24 @@ export default function FacturasPage() {
           .order('fecha', { ascending: false })
           .order('created_at', { ascending: false });
 
-        if (error) throw new Error(error.message);
+        if (error) {
+          // Si la tabla no existe, mostrar mensaje amigable
+          if (error.message.includes('does not exist') || error.code === '42P01') {
+            setFacturas([]); // No hay facturas todavía
+            return;
+          }
+          throw new Error(error.message);
+        }
 
         setFacturas(data || []);
 
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+        // Si es un error de tabla no encontrada, no mostrar error
+        if (!errorMsg.includes('does not exist') && errorMsg !== '42P01') {
+          setError(errorMsg);
+        }
+        setFacturas([]);
       } finally {
         setCargando(false);
       }
