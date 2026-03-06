@@ -3,7 +3,7 @@
  * Detecta condiciones de alerta basadas en presupuestos y precios
  */
 
-import { supabase } from './supabase';
+import { requireSupabase } from './supabase';
 
 export interface Alert {
   id: string;
@@ -49,6 +49,7 @@ function generarAlertId(): string {
  * Obtiene el gasto actual del mes
  */
 async function obtenerGastoMesActual(anio: number, mes: number): Promise<number> {
+  const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('compras')
     .select('total')
@@ -64,6 +65,7 @@ async function obtenerGastoMesActual(anio: number, mes: number): Promise<number>
  * Obtiene el gasto por categoría del mes
  */
 async function obtenerGastoPorCategoria(anio: number, mes: number): Promise<Record<string, number>> {
+  const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('vista_gasto_por_categoria')
     .select('*')
@@ -87,6 +89,8 @@ async function obtenerPresupuestos(anio: number, mes: number): Promise<{
   mensual: number;
   porCategoria: Record<string, number>;
 }> {
+  const supabase = requireSupabase();
+
   // Presupuesto mensual general
   const { data: presupuestoMensual } = await supabase
     .from('presupuestos')
@@ -116,6 +120,7 @@ async function obtenerPresupuestos(anio: number, mes: number): Promise<{
  * Detecta aumentos de precio significativos
  */
 async function detectarAumentosPrecio(): Promise<Alert[]> {
+  const supabase = requireSupabase();
   const alertas: Alert[] = [];
 
   // Obtener productos que se compran ≥ 3 veces
