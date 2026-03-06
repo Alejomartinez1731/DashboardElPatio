@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { useSettings } from '@/store/useSettings';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { ErrorBoundary } from '@/components/error/error-boundary';
 import { generalLogger } from '@/lib/logger';
 import type { ErrorInfo } from 'react';
@@ -42,104 +41,6 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">Personaliza tu experiencia en el dashboard</p>
         </div>
       </div>
-
-      {/* Sección: Apariencia */}
-      <section className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">Apariencia</h2>
-          <p className="text-sm text-muted-foreground">Personaliza el tema visual de la aplicación</p>
-        </div>
-        <div className="p-6 space-y-6">
-          {/* Tema */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium text-foreground">Tema</label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Selecciona el tema que prefieras para la aplicación
-              </p>
-            </div>
-            <ThemeToggle />
-          </div>
-
-          {/* Vista por defecto */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium text-foreground">Vista por defecto</label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Cómo se muestran los datos por defecto
-              </p>
-            </div>
-            <select
-              value={settings.defaultView}
-              onChange={(e) => {
-                settings.setDefaultView(e.target.value as 'tablas' | 'tarjetas');
-                setHasChanges(true);
-              }}
-              className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="tablas">Tablas</option>
-              <option value="tarjetas">Tarjetas</option>
-            </select>
-          </div>
-
-          {/* Items por página */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium text-foreground">Filas por página</label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Cantidad de filas a mostrar en las tablas
-              </p>
-            </div>
-            <input
-              type="number"
-              min={10}
-              max={100}
-              step={5}
-              value={settings.itemsPerPage}
-              onChange={(e) => {
-                const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 25));
-                settings.setItemsPerPage(value);
-                setHasChanges(true);
-              }}
-              className="w-20 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Sección: Datos */}
-      <section className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">Datos</h2>
-          <p className="text-sm text-muted-foreground">Configuración de fuentes de datos y recordatorios</p>
-        </div>
-        <div className="p-6 space-y-6">
-          {/* Incluir recordatorios automáticos */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium text-foreground">Recordatorios automáticos</label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Incluir recordatorios calculados automáticamente en las alertas
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                settings.setIncludeRecordatorios(!settings.includeRecordatorios);
-                setHasChanges(true);
-              }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.includeRecordatorios ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.includeRecordatorios ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* Sección: Notificaciones */}
       <section className="bg-card border border-border rounded-xl overflow-hidden">
