@@ -150,6 +150,11 @@ export default function DashboardPage() {
   // Obtener tiendas únicas
   const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda)))).sort();
 
+  // Debug: log tiendas únicas
+  console.log('🏪 Tiendas únicas encontradas:', tiendasUnicas);
+  console.log('🏪 Total compras:', compras.length);
+  console.log('🏪 Tiendas originales (primeras 10):', compras.slice(0, 10).map(c => c.tienda));
+
   // Función para ordenar - usa acciones del store
   const handleSort = (field: SortField) => {
     if (sortField === field) {

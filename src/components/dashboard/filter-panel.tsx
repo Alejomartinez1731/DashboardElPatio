@@ -1,7 +1,7 @@
 'use client';
 import { componentLogger } from '@/lib/logger';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { X, Calendar, Store, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Compra } from '@/types';
@@ -26,15 +26,20 @@ interface FilterPanelProps {
 
 export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
   const [expandido, setExpandido] = useState(true);
+  const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Calcular estadísticas para los sliders
-  const precios = compras.flatMap(c => {
-    const precio = typeof c.precioUnitario === 'number' ? c.precioUnitario : parseFloat(c.precioUnitario || '0');
-    return isNaN(precio) ? [] : precio;
-  }).filter(p => p > 0);
+  // Memoizar cálculo de precios para evitar recalcular en cada render
+  const { precioMinGlobal, precioMaxGlobal } = useMemo(() => {
+    const precios = compras.flatMap(c => {
+      const precio = typeof c.precioUnitario === 'number' ? c.precioUnitario : parseFloat(c.precioUnitario || '0');
+      return isNaN(precio) ? [] : precio;
+    }).filter(p => p > 0);
 
-  const precioMinGlobal = precios.length > 0 ? Math.min(...precios) : 0;
-  const precioMaxGlobal = precios.length > 0 ? Math.max(...precios) : 100;
+    return {
+      precioMinGlobal: precios.length > 0 ? Math.min(...precios) : 0,
+      precioMaxGlobal: precios.length > 0 ? Math.max(...precios) : 100,
+    };
+  }, [compras]);
 
   const handleRangoFechaChange = (rango: typeof filtros.rangoFecha) => {
     componentLogger.debug('📅 Cambiando rango de fecha:', rango);
@@ -71,13 +76,38 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     onFiltrosChange(nuevosFiltros);
   };
 
-  const handleTiendaToggle = (tienda: string) => {
+  const handleTiendaToggle = useCallback((tienda: string) => {
     const nuevasTiendas = filtros.tiendas.includes(tienda)
       ? filtros.tiendas.filter(t => t !== tienda)
       : [...filtros.tiendas, tienda];
     componentLogger.debug('Toggle tienda', { tienda, resultado: nuevasTiendas });
     onFiltrosChange({ ...filtros, tiendas: nuevasTiendas });
-  };
+  }, [filtros.tiendas, filtros, onFiltrosChange]);
+
+  // Debounce para búsqueda de producto
+  const handleBusquedaChange = useCallback((value: string) => {
+    // Limpiar timeout anterior
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Actualizar inmediatamente el input visualmente (sin filtrar)
+    onFiltrosChange({ ...filtros, busqueda: value });
+
+    // Esperar 300ms antes de aplicar el filtro real
+    debounceRef.current = setTimeout(() => {
+      componentLogger.debug('🔍 Búsqueda debounce aplicada:', value);
+    }, 300);
+  }, [filtros, onFiltrosChange]);
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
 
   const limpiarFiltros = () => {
     onFiltrosChange({
@@ -197,14 +227,17 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
               <input
                 type="text"
                 value={filtros.busqueda}
-                onChange={(e) => onFiltrosChange({ ...filtros, busqueda: e.target.value })}
+                onChange={(e) => handleBusquedaChange(e.target.value)}
                 placeholder="Escribe para buscar..."
                 data-testid="search-input"
                 className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
               {filtros.busqueda && (
                 <button
-                  onClick={() => onFiltrosChange({ ...filtros, busqueda: '' })}
+                  onClick={() => {
+                    if (debounceRef.current) clearTimeout(debounceRef.current);
+                    onFiltrosChange({ ...filtros, busqueda: '' });
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                 >
                   <X className="w-4 h-4" />
