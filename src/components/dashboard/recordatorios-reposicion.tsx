@@ -173,6 +173,45 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
     }
   };
 
+  const handlePromoverAManual = async (recordatorio: Recordatorio) => {
+    setMensaje(null);
+
+    // Confirmar con el usuario mostrando los detalles
+    const confirmado = confirm(
+      `¿Convertir "${recordatorio.producto}" en recordatorio manual?\n\n` +
+      `Configuración actual:\n` +
+      `• Días: ${recordatorio.diasConfigurados}\n` +
+      `• Última compra: hace ${recordatorio.diasTranscurridos ?? '?'} días\n` +
+      `• Estado: ${recordatorio.estado}\n\n` +
+      `Esto guardará esta configuración en Supabase y prevalecerá sobre el cálculo automático.`
+    );
+
+    if (!confirmado) return;
+
+    try {
+      const response = await fetch('/api/recordatorios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          producto: recordatorio.producto,
+          dias: recordatorio.diasConfigurados,
+          notas: recordatorio.notas || `Creado desde automático - ${new Date().toLocaleDateString('es-ES')}`,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setMensaje({ tipo: 'exito', texto: `"${recordatorio.producto}" ahora es un recordatorio manual` });
+        fetchRecordatorios();
+      } else {
+        setMensaje({ tipo: 'error', texto: result.error || 'Error al crear recordatorio manual' });
+      }
+    } catch (err) {
+      setMensaje({ tipo: 'error', texto: 'Error de conexión' });
+    }
+  };
+
   const getEstiloRecordatorio = (estado: string, tipo: 'manual' | 'automatico') => {
     // Base: colores según estado
     const baseEstilo = (() => {
@@ -561,6 +600,18 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
                       title="Eliminar recordatorio manual"
                     >
                       <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+
+                  {rec.tipo === 'automatico' && (
+                    <Button
+                      onClick={() => handlePromoverAManual(rec)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10"
+                      title="Convertir a recordatorio manual"
+                    >
+                      <Plus className="w-4 h-4" />
                     </Button>
                   )}
                 </div>

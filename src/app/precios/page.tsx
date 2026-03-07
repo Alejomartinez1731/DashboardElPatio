@@ -5,8 +5,9 @@ import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { InflacionKPI } from '@/components/dashboard/kpis-avanzados';
+import { QuincenaChart } from '@/components/dashboard/quincena-chart';
 import { supabase } from '@/lib/supabase';
 
 interface ProductoCostoso {
@@ -19,16 +20,6 @@ interface ProductoCostoso {
   gasto_total: number;
   veces_comprado: number;
   ultima_compra: string;
-}
-
-interface EvolucionPrecio {
-  producto: string;
-  tienda: string;
-  precio: number;
-  precio_anterior: number | null;
-  variacion_porcentaje: number | null;
-  fecha: string;
-  restaurante_id: string | null;
 }
 
 interface GastoCategoria {
@@ -53,9 +44,9 @@ interface InflacionData {
 
 export default function PreciosPage() {
   const [productosCostosos, setProductosCostosos] = useState<ProductoCostoso[]>([]);
-  const [evolucionPrecios, setEvolucionPrecios] = useState<EvolucionPrecio[]>([]);
   const [categorias, setCategorias] = useState<GastoCategoria[]>([]);
   const [inflacionData, setInflacionData] = useState<InflacionData | null>(null);
+  const [compras, setCompras] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,8 +61,8 @@ export default function PreciosPage() {
         // Llamadas directas a Supabase - sin API route intermedia
         const [
           costososResult,
-          evolucionResult,
-          categoriasResult
+          categoriasResult,
+          comprasResult
         ] = await Promise.all([
           // Productos más costosos (vista pre-calculada)
           supabase
@@ -80,28 +71,34 @@ export default function PreciosPage() {
             .order('gasto_total', { ascending: false })
             .limit(20),
 
-          // Evolución de precios
-          supabase
-            .from('vista_evolucion_precios')
-            .select('*')
-            .order('fecha', { ascending: false })
-            .limit(100),
-
           // Gasto por categoría
           supabase
             .from('vista_gasto_por_categoria')
             .select('*')
-            .order('gasto_total', { ascending: false })
+            .order('gasto_total', { ascending: false }),
+
+          // Todas las compras para el gráfico de quincenas
+          supabase
+            .from('compras')
+            .select('fecha, total, descripcion')
+            .order('fecha', { ascending: true })
         ]);
 
         // Verificar errores
         if (costososResult.error) throw new Error(costososResult.error.message);
-        if (evolucionResult.error) throw new Error(evolucionResult.error.message);
         if (categoriasResult.error) throw new Error(categoriasResult.error.message);
+        if (comprasResult.error) throw new Error(comprasResult.error.message);
 
         setProductosCostosos(costososResult.data || []);
-        setEvolucionPrecios(evolucionResult.data || []);
         setCategorias(categoriasResult.data || []);
+
+        // Convertir compras al formato esperado por QuincenaChart
+        const comprasFormateadas = (comprasResult.data || []).map((c: any) => ({
+          fecha: new Date(c.fecha),
+          total: c.total,
+          producto: c.descripcion,
+        }));
+        setCompras(comprasFormateadas);
 
         // Cargar KPI de inflación
         const kpisResponse = await fetch('/api/kpis-avanzados');
@@ -122,17 +119,6 @@ export default function PreciosPage() {
 
   // Top 10 productos más comprados
   const topProductos = productosCostosos.slice(0, 10);
-
-  // Datos para gráfico de evolución de precios
-  const datosGraficoEvolucion = evolucionPrecios
-    .filter(e => e.variacion_porcentaje !== null)
-    .slice(0, 50)
-    .map(e => ({
-      fecha: new Date(e.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
-      precio: e.precio,
-      variacion: e.variacion_porcentaje || 0,
-      producto: e.producto
-    }));
 
   // Distribución por rango de precios (calculado en cliente)
   const distribucionPrecios = productosCostosos.reduce((acc, p) => {
@@ -219,30 +205,8 @@ export default function PreciosPage() {
 
       {/* Gráficos principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Evolución de precios */}
-        <Card className="p-6 bg-card border-border">
-          <h3 className="text-lg font-semibold text-white mb-4">Evolución de Precios</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={datosGraficoEvolucion}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-              <XAxis dataKey="fecha" stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
-              <YAxis stroke="#94A3B8" tick={{ fill: '#94A3B8' }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #475569', borderRadius: '8px' }}
-                labelStyle={{ color: '#f1f5f9' }}
-                formatter={(valor: number | undefined) => [formatearMoneda(valor || 0), 'Precio']}
-              />
-              <Area
-                type="monotone"
-                dataKey="precio"
-                stroke="#f59e0b"
-                fill="#f59e0b"
-                fillOpacity={0.3}
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </Card>
+        {/* Evolución Quincenal */}
+        <QuincenaChart datos={compras} titulo="Evolución Quincenal" numQuincenas={6} />
 
         {/* Distribución por rango de precios */}
         <Card className="p-6 bg-card border-border">

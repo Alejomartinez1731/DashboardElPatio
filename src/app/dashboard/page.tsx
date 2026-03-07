@@ -7,7 +7,7 @@ import { ErrorBoundary } from '@/components/error/error-boundary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
-import { ComparacionPeriodoCard } from '@/components/dashboard/comparacion-periodo-card';
+import { QuincenaChart } from '@/components/dashboard/quincena-chart';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardKPIs } from '@/components/dashboard/dashboard-kpis';
 import { KPIsPrincipales } from '@/components/dashboard/dashboard-kpis-principales';
@@ -76,6 +76,7 @@ export default function DashboardPage() {
   // Estado del presupuesto calculado dinámicamente
   const [presupuestoDinamico, setPresupuestoDinamico] = useState<number>(3000);
   const [presupuestoMetadata, setPresupuestoMetadata] = useState<any>(null);
+  const [presupuestoCargado, setPresupuestoCargado] = useState(false); // Track if presupuesto is loaded
 
   // Estado para productos costosos
   const [productosCostosos, setProductosCostosos] = useState<any[]>([]);
@@ -92,20 +93,33 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchPresupuesto = async () => {
       try {
+        generalLogger.info('🔄 Fetching presupuesto from /api/presupuesto-calculado...');
         const response = await fetch('/api/presupuesto-calculado?meses_a_considerar=3');
         const result = await response.json();
 
+        generalLogger.info('📊 Presupuesto response:', {
+          success: result.success,
+          data: result.data,
+          fullResult: result
+        });
+
         if (result.success && result.data) {
+          generalLogger.info('✅ Setting presupuestoDinamico to:', result.data.monto, '(was:', presupuestoDinamico, ')');
           setPresupuestoDinamico(result.data.monto);
           setPresupuestoMetadata({
             fuente: result.data.fuente,
             descripcion: result.data.descripcion,
             metadata: result.data.metadata,
           });
+          setPresupuestoCargado(true); // Mark as loaded
           generalLogger.info('Presupuesto cargado:', result.data);
+        } else {
+          generalLogger.error('❌ Presupuesto fetch failed:', result);
+          setPresupuestoCargado(true); // Still mark as loaded (even if failed)
         }
       } catch (error) {
         generalLogger.error('Error cargando presupuesto:', error);
+        setPresupuestoCargado(true); // Still mark as loaded (even if failed)
       }
     };
 
@@ -608,6 +622,7 @@ export default function DashboardPage() {
         <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
           <KPIsPrincipales
             presupuesto={presupuestoDinamico}
+            presupuestoCargado={presupuestoCargado}
             gastoQuincenal={kpiData?.gastoQuincenal}
             fechaInicioQuincena={kpiData?.fechaInicioQuincena}
             fechaFinQuincena={kpiData?.fechaFinQuincena}
@@ -622,9 +637,9 @@ export default function DashboardPage() {
         {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} />}
       </ErrorBoundary>
 
-      {/* Comparación de Período */}
+      {/* Evolución Quincenal */}
       <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
-        <ComparacionPeriodoCard />
+        <QuincenaChart datos={compras} titulo="Evolución Quincenal" numQuincenas={6} />
       </ErrorBoundary>
 
       {/* Quick Actions */}

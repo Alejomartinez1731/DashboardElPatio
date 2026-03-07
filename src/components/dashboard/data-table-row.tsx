@@ -34,13 +34,28 @@ export function DataTableRow({ row, rowIdx, headers, sortField, sortOrder, onSor
         }
 
         const cellStr = String(cellValue).trim();
+
+        // PRIMERO: Detectar si el valor YA está formateado
+        const yaFormateadoComoMoneda = cellStr.includes('€') || cellStr.includes('EUR');
+        const yaFormateadoComoFecha = cellStr.match(/^\d{2}\/\d{2}\/\d{4}$/);
+
+        // Si ya está formateado, usarlo tal cual sin procesar más
+        if (yaFormateadoComoMoneda || yaFormateadoComoFecha) {
+          return (
+            <td key={cellIdx} className="px-4 py-3 whitespace-nowrap text-left">
+              <span className="text-white font-mono">{cellStr}</span>
+            </td>
+          );
+        }
+
+        // SI NO está formateado, procesar normalmente
         const numValue = parseFloat(cellStr);
         const isNumber = !isNaN(numValue) && cellStr !== '' && cellValue !== null;
 
         const cabeceraLower = String(cabecera).toLowerCase();
-        const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo') || cabeceraLower.match(/^\d{2}\/\d{2}\/\d{4}$/);
+        const esPrecio = cabeceraLower.includes('precio') || cabeceraLower.includes('total') || cabeceraLower.includes('suma') || cabeceraLower.includes('costo');
 
-        const esColumnaFecha = cabeceraLower.includes('fecha') || cabeceraLower === 'fech' || cabeceraLower === 'date';
+        const esColumnaFecha = cabeceraLower.includes('fecha') || cabeceraLower.includes('compra') || cabeceraLower === 'fech' || cabeceraLower === 'date';
 
         const esFechaPorContenido = !isNumber && (
           cellStr.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/) ||

@@ -21,6 +21,7 @@ interface KPIsPrincipalesProps {
   facturasProcesadas?: number;
   recordatorios?: number;
   className?: string;
+  presupuestoCargado?: boolean; // NEW: indicates if presupuesto is loaded
 }
 
 interface KPIData {
@@ -42,13 +43,21 @@ export function KPIsPrincipales({
   facturasProcesadas = 0,
   recordatorios = 0,
   className = '',
+  presupuestoCargado = false, // NEW prop
 }: KPIsPrincipalesProps) {
   const [kpisAvanzados, setKPIsAvanzados] = useState<KPIsAvanzados | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Don't fetch until presupuesto is properly loaded (not the initial 3000)
+    if (!presupuestoCargado) {
+      console.log('⏳ Waiting for presupuesto to load...');
+      return;
+    }
+
     const fetchKPIs = async () => {
       try {
+        console.log('🔄 Fetching KPIs with presupuesto:', presupuesto);
         const params = new URLSearchParams();
         if (presupuesto) params.append('presupuesto', String(presupuesto));
         if (anio) params.append('anio', String(anio));
@@ -58,6 +67,7 @@ export function KPIsPrincipales({
         const data = await response.json();
 
         if (data.success) {
+          console.log('✅ KPIs loaded:', data.data);
           setKPIsAvanzados(data.data);
         }
       } catch (error) {
@@ -68,7 +78,7 @@ export function KPIsPrincipales({
     };
 
     fetchKPIs();
-  }, [presupuesto, anio, mes]);
+  }, [presupuesto, anio, mes, presupuestoCargado]);
 
   // KPI 1: Gasto Quincenal (existente)
   const kpi1: KPIData = {
