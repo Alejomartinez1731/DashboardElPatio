@@ -197,7 +197,7 @@ export default function RegistroPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Registro de Compras</h1>
@@ -205,22 +205,22 @@ export default function RegistroPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Total Compras</p>
-          <p className="text-2xl font-bold text-white">{compras.length}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 bg-card border-border">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1 truncate">Total Compras</p>
+          <p className="text-xl sm:text-2xl font-bold text-white">{compras.length}</p>
         </Card>
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Gasto Total</p>
-          <p className="text-2xl font-bold text-[#10b981]">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
+        <Card className="p-3 sm:p-4 bg-card border-border">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1 truncate">Gasto Total</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#10b981]">{formatearMoneda(compras.reduce((sum, c) => sum + c.total, 0))}</p>
         </Card>
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Tiendas</p>
-          <p className="text-2xl font-bold text-[#f59e0b]">{tiendasUnicas.length}</p>
+        <Card className="p-3 sm:p-4 bg-card border-border">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1 truncate">Tiendas</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#f59e0b]">{tiendasUnicas.length}</p>
         </Card>
-        <Card className="p-4 bg-card border-border">
-          <p className="text-muted-foreground text-sm mb-1">Filtrando</p>
-          <p className="text-2xl font-bold text-[#3b82f6]">{totalCompras}</p>
+        <Card className="p-3 sm:p-4 bg-card border-border">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-1 truncate">Filtrando</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#3b82f6]">{totalCompras}</p>
         </Card>
       </div>
 
@@ -228,12 +228,12 @@ export default function RegistroPage() {
       <Card className="p-4 bg-card border-border">
         <div className="flex flex-wrap gap-4">
           {/* Búsqueda */}
-          <div className="flex-1 min-w-[300px] flex gap-2">
+          <div className="flex-1 min-w-[200px] sm:min-w-[250px] flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar por producto o tienda... (Enter)"
+                placeholder="Buscar... (Enter)"
                 value={busquedaInput}
                 onChange={(e) => handleBusquedaChange(e.target.value)}
                 onKeyDown={(e) => {
@@ -241,25 +241,25 @@ export default function RegistroPage() {
                     ejecutarBusqueda();
                   }
                 }}
-                className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
+                className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-white placeholder:text-xs sm:placeholder:text-sm placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
             </div>
             <button
               onClick={ejecutarBusqueda}
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-all flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm"
             >
               <Search className="w-4 h-4" />
-              Buscar
+              <span className="hidden sm:inline">Buscar</span>
             </button>
           </div>
 
           {/* Filtro por tienda */}
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <select
               value={filtroTienda}
               onChange={(e) => { setFiltroTienda(e.target.value); setPagina(1); }}
-              className="pl-10 pr-8 py-2 bg-muted border border-border rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:border-primary"
+              className="w-full sm:w-auto pl-10 pr-8 py-2 bg-muted border border-border rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:border-primary"
             >
               <option value="todas">Todas las tiendas</option>
               {tiendasUnicas.map(tienda => (
@@ -273,8 +273,8 @@ export default function RegistroPage() {
 
       {/* Tabla */}
       <Card className="overflow-hidden bg-card border-border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-muted border-b border-border">
               <tr>
                 <th className="px-4 py-3 text-left">
@@ -341,25 +341,25 @@ export default function RegistroPage() {
 
         {/* Paginación */}
         {totalPaginas > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 bg-muted border-t border-border">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 bg-muted border-t border-border">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
               Mostrando {(pagina - 1) * ITEMS_POR_PAGINA + 1} - {Math.min(pagina * ITEMS_POR_PAGINA, totalCompras)} de {totalCompras} compras
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPagina(p => Math.max(1, p - 1))}
                 disabled={pagina === 1}
-                className="px-3 py-1 text-sm bg-card text-white rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-card text-white rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
-              <span className="text-sm text-muted-foreground px-2">
-                Página {pagina} de {totalPaginas}
+              <span className="text-xs sm:text-sm text-muted-foreground px-1 sm:px-2">
+                {pagina}/{totalPaginas}
               </span>
               <button
                 onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
                 disabled={pagina === totalPaginas}
-                className="px-3 py-1 text-sm bg-card text-white rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-card text-white rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Siguiente
               </button>
