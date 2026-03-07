@@ -249,7 +249,35 @@ export default function DashboardPage() {
   });
 
   // Usar comprasFiltradas para base_datos (ya filtrado y ordenado por el store)
-  const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradas : compras;
+  let comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradas : compras;
+
+  // Para base_datos, filtrar adicionalmente por la última fecha disponible
+  if (activeTab === 'base_datos' && comprasParaTabla.length > 0) {
+    // Encontrar la última fecha (máxima) entre las compras
+    const ultimaFecha = comprasParaTabla.reduce((max, compra) => {
+      const fechaCompra = new Date(compra.fecha);
+      return fechaCompra > max ? fechaCompra : max;
+    }, new Date(0));
+
+    // Filtrar para mostrar solo compras de esa fecha (ignorando hora)
+    const inicioDia = new Date(ultimaFecha);
+    inicioDia.setHours(0, 0, 0, 0);
+    const finDia = new Date(ultimaFecha);
+    finDia.setHours(23, 59, 59, 999);
+
+    comprasParaTabla = comprasParaTabla.filter(compra => {
+      const fechaCompra = new Date(compra.fecha);
+      return fechaCompra >= inicioDia && fechaCompra <= finDia;
+    });
+
+    generalLogger.debug('📅 Filtrando base_datos por última fecha:', {
+      ultimaFecha: ultimaFecha.toISOString(),
+      inicioDia: inicioDia.toISOString(),
+      finDia: finDia.toISOString(),
+      comprasAntes: comprasFiltradas.length,
+      comprasDespues: comprasParaTabla.length
+    });
+  }
 
   // DEBUG LOG CRÍTICO
   generalLogger.debug('📊 ESTADO CRÍTICO:', {
@@ -404,7 +432,7 @@ export default function DashboardPage() {
       onError={handleDashboardError}
       showDetails={process.env.NODE_ENV === 'development'}
     >
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6 animate-fade-in overflow-x-hidden">
       {/* Header */}
       <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
         <DashboardHeader

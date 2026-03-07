@@ -28,7 +28,7 @@ interface DashboardTabsProps {
 
 export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
   return (
-    <div className="grid grid-cols-4 border-b border-border">
+    <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-border">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -37,7 +37,7 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
         const buttonContent = (
           <>
             <Icon className="w-5 h-5 flex-shrink-0" />
-            <span className="font-medium text-sm text-center">{tab.label}</span>
+            <span className="font-medium text-xs sm:text-sm text-center hidden sm:inline">{tab.label}</span>
             {isActive && !isExternal && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
           </>
         );
