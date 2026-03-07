@@ -182,6 +182,7 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       // Crear sheetsData para compatibilidad con componentes existentes
       const allData: Record<string, string[][]> = {
+        base_de_datos: tablaCompras,
         base_datos: tablaCompras,
         historico: tablaCompras,
       };
