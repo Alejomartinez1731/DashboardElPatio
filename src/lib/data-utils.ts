@@ -48,15 +48,23 @@ export function normalizarTienda(tienda: string): string {
     .replace(/[\u0300-\u036f]/g, '')  // Quitar acentos
     .trim();
 
-  // Mapeo explícito según requisitos - mejorado con más variaciones
+  // Mapeo explícito según requisitos - ordenados por especificidad
+  // Corporación Alimentaria debe verificarse ANTES que las tiendas individuales
+  if (nombre.includes('corporacion') && nombre.includes('alimentaria')) {
+    // Detectar variaciones de Guisona/Guissona
+    if (nombre.includes('guison') || nombre.includes('guis')) {
+      return 'Corporación Alimentaria Guissona';
+    }
+    return 'Corporación Alimentaria';
+  }
+
   if (nombre.includes('mercadona')) return 'Mercadona';
   if (nombre.includes('bonarea') || nombre.includes('bon area') || nombre.includes('bonificación')) return 'BonArea';
   if (nombre.includes('lidl')) return 'Lidl';
   if (nombre.includes('carrefour')) return 'Carrefour';
   if (nombre.includes('aldi')) return 'Aldi';
   if (nombre.includes('consum')) return 'Consum';
-  // Corregido: ahora busca "guison" o "guiss" para cubrir ambas variaciones
-  if (nombre.includes('guison') || nombre.includes('corporacion') && nombre.includes('alimentaria')) {
+  if (nombre.includes('guison') || nombre.includes('guis')) {
     return 'Corporación Alimentaria Guissona';
   }
   if (nombre.includes('eroski')) return 'Eroski';

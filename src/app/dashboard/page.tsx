@@ -141,13 +141,7 @@ export default function DashboardPage() {
     setShowFilters(!showFilters);
   };
 
-  // Actualizar el store cuando cambian las compras
-  useEffect(() => {
-    useDashboardStore.getState().setCompras(compras);
-    useDashboardStore.getState().setComprasFiltradas(comprasFiltradas);
-  }, [compras, comprasFiltradas]);
-
-  // Obtener tiendas únicas
+  // Obtener tiendas únicas (sin dependencia de comprasFiltradas)
   const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda)))).sort();
 
   // Debug: log tiendas únicas
