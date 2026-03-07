@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
 
     apiLogger.info('Obteniendo gasto por tienda:', { limit });
 
-    // Obtener todos los datos sin límite primero para poder agrupar y normalizar
+    // Obtener compras directamente para tener control total sobre los datos
     const { data, error } = await supabase
-      .from('vista_gasto_por_tienda')
-      .select('*')
-      .order('gasto_total', { ascending: false });
+      .from('compras')
+      .select('tienda, total, fecha, precio_unitario, cantidad')
+      .order('fecha', { ascending: false });
 
     if (error) {
       apiLogger.error('Error obteniendo gasto por tienda:', error);
@@ -42,36 +42,47 @@ export async function GET(request: NextRequest) {
     // Agrupar por tienda normalizada para evitar duplicados
     const mapaTiendas = new Map<string, any>();
 
-    (data || []).forEach((item: any) => {
-      const tiendaNormalizada = normalizarTienda(item.tienda);
+    apiLogger.info('📊 Datos crudos de compras:', {
+      count: data?.length,
+      muestra: data?.slice(0, 3)
+    });
+
+    (data || []).forEach((compra: any) => {
+      const tiendaNormalizada = normalizarTienda(compra.tienda);
+
+      // Valores de la tabla compras
+      const totalCompra = Number(compra.total) || 0;
+      const precioUnitario = Number(compra.precio_unitario) || 0;
+      const fechaCompra = compra.fecha;
 
       if (mapaTiendas.has(tiendaNormalizada)) {
         // Ya existe, acumular valores
         const existente = mapaTiendas.get(tiendaNormalizada);
-        existente.gasto_total += item.gasto_total;
-        existente.total_compras += item.total_compras;
+        existente.gasto_total += totalCompra;
+        existente.total_compras += 1; // Contar compras
 
-        // Acumular suma de precios para promedio correcto
-        // precio_promedio ya viene calculado en la vista, pero necesitamos promediarlos
-        existente.suma_precios_promedios = (existente.suma_precios_promedios || 0) + (item.precio_promedio || 0);
+        // Acumular precios unitarios para promedio
+        existente.suma_precios_unitarios = (existente.suma_precios_unitarios || 0) + precioUnitario;
         existente.contador_precios = (existente.contador_precios || 0) + 1;
 
         // Mantener la fecha más reciente
-        const fechaExistente = new Date(existente.ultima_compra);
-        const fechaNueva = new Date(item.ultima_compra);
-        if (fechaNueva > fechaExistente) {
-          existente.ultima_compra = item.ultima_compra;
+        if (fechaCompra) {
+          const fechaExistente = new Date(existente.ultima_compra || 0);
+          const fechaNueva = new Date(fechaCompra);
+          if (fechaNueva > fechaExistente) {
+            existente.ultima_compra = fechaCompra;
+          }
         }
       } else {
         // Nueva tienda, agregar al mapa
         mapaTiendas.set(tiendaNormalizada, {
-          tienda_original: item.tienda,
+          tienda_original: compra.tienda,
           tienda_normalizada: tiendaNormalizada,
-          gasto_total: item.gasto_total,
-          total_compras: item.total_compras,
-          suma_precios_promedios: item.precio_promedio || 0,
+          gasto_total: totalCompra,
+          total_compras: 1,
+          suma_precios_unitarios: precioUnitario,
           contador_precios: 1,
-          ultima_compra: item.ultima_compra,
+          ultima_compra: fechaCompra,
         });
       }
     });
@@ -80,35 +91,55 @@ export async function GET(request: NextRequest) {
     const gastoPorTienda = Array.from(mapaTiendas.values())
       .sort((a, b) => b.gasto_total - a.gasto_total)
       .slice(0, limit)
-      .map((item) => ({
-        ranking: 0, // Se asigna después
-        tienda: item.tienda_normalizada,
-        tienda_original: item.tienda_original, // Para debug
-        gasto_total: item.gasto_total,
-        total_compras: item.total_compras,
-        precio_promedio: item.suma_precios_promedios / item.contador_precios, // Promedio correcto
-        ultima_compra: item.ultima_compra,
-      }))
+      .map((item) => {
+        // Calcular precio promedio real: suma de precios unitarios / número de compras
+        const precioPromedioCalculado = item.suma_precios_unitarios / item.contador_precios;
+
+        apiLogger.info('🏪 Tienda procesada:', {
+          tienda: item.tienda_normalizada,
+          gasto_total: item.gasto_total,
+          suma_precios_unitarios: item.suma_precios_unitarios,
+          contador_precios: item.contador_precios,
+          precio_promedio_resultado: precioPromedioCalculado,
+          ultima_compra: item.ultima_compra,
+        });
+
+        return {
+          ranking: 0, // Se asigna después
+          tienda: item.tienda_normalizada,
+          tienda_original: item.tienda_original, // Para debug
+          gasto_total: item.gasto_total,
+          total_compras: item.total_compras,
+          precio_promedio: precioPromedioCalculado,
+          ultima_compra: item.ultima_compra,
+        };
+      })
       .map((item, idx) => ({ ...item, ranking: idx + 1 }));
 
     apiLogger.info('✅ Gasto por tienda obtenido y normalizado:', {
-      total_antes: data?.length || 0,
-      total_despues: gastoPorTienda.length,
+      total_compras: data?.length || 0,
+      total_antes_normalizar: gastoPorTienda.length,
       tiendas_unicas: gastoPorTienda.length,
       limit,
+      muestra_tiendas: gastoPorTienda.map(t => ({
+        tienda: t.tienda,
+        gasto_total: t.gasto_total,
+        precio_promedio: t.precio_promedio,
+        ultima_compra: t.ultima_compra,
+      }))
     });
 
     return NextResponse.json({
       success: true,
       data: gastoPorTienda,
       metadata: {
-        total_antes_normalizar: data?.length || 0,
-        total_despues_normalizar: gastoPorTienda.length,
+        total_compras_procesadas: data?.length || 0,
+        tiendas_unicas: gastoPorTienda.length,
         limit,
       },
       timestamp: new Date().toISOString(),
       _source: 'supabase',
-      _view: 'vista_gasto_por_tienda',
+      _table: 'compras',
       _normalized: true,
     });
   } catch (error) {
