@@ -2,17 +2,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Middleware para proteger las rutas del dashboard
+ * Proxy para proteger las rutas del dashboard
  *
  * ⚠️ AUTENTICACIÓN DESACTIVADA
  * El dashboard ahora es de acceso público sin contraseña.
  *
- * ⚠️ RATE LIMITING DESHABILADO TEMPORALMENTE
+ * ⚠️ RATE LIMITING DESHABILIDO TEMPORALMENTE
  * Deshabilitado para evitar errores en deployment
  *
  * ✅ HEADERS DE SEGURIDAD ACTIVADOS
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rate limiting deshabilitado temporalmente

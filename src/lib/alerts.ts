@@ -1,6 +1,7 @@
 /**
  * Sistema de Alertas de Gasto
  * Detecta condiciones de alerta basadas en presupuestos y precios
+ * Incluye caché de 5 minutos para reducir invocaciones a APIs
  */
 
 import { requireSupabase } from './supabase';
@@ -19,6 +20,56 @@ export interface Alert {
 export interface AlertCheckResult {
   alertas: Alert[];
   totalNuevas: number;
+}
+
+/**
+ * Caché en memoria para resultados de alertas
+ * TTL: 5 minutos (300,000 ms)
+ */
+interface CacheEntry {
+  data: AlertCheckResult;
+  timestamp: number;
+}
+
+const ALERTS_CACHE = new Map<string, CacheEntry>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const RECORDATORIOS_CACHE_TTL = 5 * 60 * 1000; // 5 minutos para recordatorios
+
+/**
+ * Verifica si una entrada de caché es válida
+ */
+function isCacheValid(entry: CacheEntry): boolean {
+  return Date.now() - entry.timestamp < CACHE_TTL;
+}
+
+/**
+ * Obtiene resultado desde caché o null si expiró/no existe
+ */
+function getFromCache(presupuestoMensual: number): AlertCheckResult | null {
+  const cacheKey = `alerts-${presupuestoMensual}`;
+  const entry = ALERTS_CACHE.get(cacheKey);
+
+  if (entry && isCacheValid(entry)) {
+    return entry.data;
+  }
+
+  // Eliminar entrada expirada
+  if (entry) {
+    ALERTS_CACHE.delete(cacheKey);
+  }
+
+  return null;
+}
+
+/**
+ * Guarda resultado en caché
+ */
+function saveToCache(presupuestoMensual: number, data: AlertCheckResult): void {
+  const cacheKey = `alerts-${presupuestoMensual}`;
+  ALERTS_CACHE.set(cacheKey, {
+    data,
+    timestamp: Date.now(),
+  });
 }
 
 /**
@@ -179,45 +230,91 @@ async function detectarAumentosPrecio(): Promise<Alert[]> {
 }
 
 /**
- * Obtiene recordatorios vencidos
+ * Obtiene recordatorios vencidos con caché de 5 minutos
  */
+const recordatoriosCache: { data: any[]; timestamp: number } | null = null;
+
 async function obtenerRecordatoriosVencidos(): Promise<Alert[]> {
   const alertas: Alert[] = [];
 
-  const response = await fetch('/api/recordatorios?incluirAutomaticos=true');
-  const result = await response.json();
+  // Verificar caché de recordatorios
+  const now = Date.now();
+  if (recordatoriosCache && (now - recordatoriosCache.timestamp) < RECORDATORIOS_CACHE_TTL) {
+    // Usar datos cacheados
+    const recordatoriosVencidos = (recordatoriosCache.data || []).filter(
+      (r: any) => r.estado === 'vencido'
+    );
 
-  if (!result.success) return alertas;
-
-  const recordatoriosVencidos = (result.data || []).filter(
-    (r: any) => r.estado === 'vencido'
-  );
-
-  recordatoriosVencidos.forEach((r: any) => {
-    alertas.push({
-      id: generarAlertId(),
-      tipo: 'recordatorio_vencido',
-      severidad: 'danger',
-      titulo: 'Recordatorio vencido',
-      mensaje: `${r.producto} necesita reposición (hace ${r.diasTranscurridos || 0} días)`,
-      timestamp: new Date(),
-      leida: false,
-      metadata: {
-        producto: r.producto,
-        diasTranscurridos: r.diasTranscurridos,
-      },
+    recordatoriosVencidos.forEach((r: any) => {
+      alertas.push({
+        id: generarAlertId(),
+        tipo: 'recordatorio_vencido',
+        severidad: 'danger',
+        titulo: 'Recordatorio vencido',
+        mensaje: `${r.producto} necesita reposición (hace ${r.diasTranscurridos || 0} días)`,
+        timestamp: new Date(),
+        leida: false,
+        metadata: {
+          producto: r.producto,
+          diasTranscurridos: r.diasTranscurridos,
+        },
+      });
     });
-  });
+
+    return alertas;
+  }
+
+  // Caché expirado o no existe - hacer fetch
+  try {
+    const response = await fetch('/api/recordatorios?incluirAutomaticos=true');
+    const result = await response.json();
+
+    if (!result.success) return alertas;
+
+    // Guardar en caché
+    (recordatoriosCache as any) = {
+      data: result.data || [],
+      timestamp: now,
+    };
+
+    const recordatoriosVencidos = (result.data || []).filter(
+      (r: any) => r.estado === 'vencido'
+    );
+
+    recordatoriosVencidos.forEach((r: any) => {
+      alertas.push({
+        id: generarAlertId(),
+        tipo: 'recordatorio_vencido',
+        severidad: 'danger',
+        titulo: 'Recordatorio vencido',
+        mensaje: `${r.producto} necesita reposición (hace ${r.diasTranscurridos || 0} días)`,
+        timestamp: new Date(),
+        leida: false,
+        metadata: {
+          producto: r.producto,
+          diasTranscurridos: r.diasTranscurridos,
+        },
+      });
+    });
+  } catch (error) {
+    console.error('Error obteniendo recordatorios vencidos:', error);
+  }
 
   return alertas;
 }
 
 /**
- * Verifica todas las alertas
+ * Verifica todas las alertas con caché de 5 minutos
  */
 export async function verificarAlertas(
   presupuestoMensual: number = 3000
 ): Promise<AlertCheckResult> {
+  // Verificar caché primero
+  const cached = getFromCache(presupuestoMensual);
+  if (cached) {
+    return cached;
+  }
+
   const alertas: Alert[] = [];
 
   try {
@@ -225,8 +322,15 @@ export async function verificarAlertas(
     const anio = hoy.getFullYear();
     const mes = hoy.getMonth() + 1;
 
+    // Agrupar todas las consultas de Supabase en un solo Promise.all para optimización
+    const [gastoMes, gastosPorCategoria, presupuestos, alertasPrecio] = await Promise.all([
+      obtenerGastoMesActual(anio, mes),
+      obtenerGastoPorCategoria(anio, mes),
+      obtenerPresupuestos(anio, mes),
+      detectarAumentosPrecio(),
+    ]);
+
     // 1. Verificar presupuesto mensual
-    const gastoMes = await obtenerGastoMesActual(anio, mes);
     const porcentajeMes = calcularPorcentajeUsado(gastoMes, presupuestoMensual);
 
     if (verificarExcesoPresupuesto(gastoMes, presupuestoMensual, 80)) {
@@ -243,11 +347,6 @@ export async function verificarAlertas(
     }
 
     // 2. Verificar presupuestos por categoría
-    const [gastosPorCategoria, presupuestos] = await Promise.all([
-      obtenerGastoPorCategoria(anio, mes),
-      obtenerPresupuestos(anio, mes),
-    ]);
-
     Object.entries(presupuestos.porCategoria).forEach(([categoria, presupuestoCat]) => {
       const gastoCat = gastosPorCategoria[categoria] || 0;
       const porcentajeCat = calcularPorcentajeUsado(gastoCat, presupuestoCat);
@@ -266,11 +365,10 @@ export async function verificarAlertas(
       }
     });
 
-    // 3. Detectar aumentos de precio
-    const alertasPrecio = await detectarAumentosPrecio();
+    // 3. Añadir alertas de precio (ya obtenidas en Promise.all)
     alertas.push(...alertasPrecio);
 
-    // 4. Recordatorios vencidos
+    // 4. Recordatorios vencidos (usa su propia caché interna)
     const alertasRecordatorios = await obtenerRecordatoriosVencidos();
     alertas.push(...alertasRecordatorios);
 
@@ -283,10 +381,15 @@ export async function verificarAlertas(
       return b.timestamp.getTime() - a.timestamp.getTime();
     });
 
-    return {
+    const result = {
       alertas,
       totalNuevas: alertas.filter(a => !a.leida).length,
     };
+
+    // Guardar en caché
+    saveToCache(presupuestoMensual, result);
+
+    return result;
 
   } catch (error) {
     console.error('Error verificando alertas:', error);

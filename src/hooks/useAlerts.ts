@@ -1,6 +1,7 @@
 /**
  * Hook para verificar alertas periódicas
- * Usa polling cada 30 segundos por defecto
+ * Usa polling cada 5 minutos por defecto (optimizado)
+ * Pausa el polling cuando el tab no está visible
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -9,7 +10,7 @@ import { verificarAlertas, Alert } from '@/lib/alerts';
 const LEIDAS_STORAGE_KEY = 'alertas-leidas';
 
 interface UseAlertsOptions {
-  intervalo?: number; // Segundos entre verificaciones (default: 30)
+  intervalo?: number; // Segundos entre verificaciones (default: 300 = 5 minutos)
   presupuestoMensual?: number;
   enabled?: boolean;
 }
@@ -106,7 +107,7 @@ function filtrarAlertasNuevas(alertas: Alert[]): Alert[] {
  */
 export function useAlerts(options: UseAlertsOptions = {}): UseAlertsResult {
   const {
-    intervalo = 30,
+    intervalo = 300, // 5 minutos por defecto (optimizado desde 30s)
     presupuestoMensual = 3000,
     enabled = true,
   } = options;
@@ -117,6 +118,7 @@ export function useAlerts(options: UseAlertsOptions = {}): UseAlertsResult {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isVerifyingRef = useRef(false);
+  const visibilityHandlerRef = useRef<(() => void) | null>(null);
 
   /**
    * Verifica alertas inmediatamente
@@ -159,7 +161,7 @@ export function useAlerts(options: UseAlertsOptions = {}): UseAlertsResult {
   }, [alertas]);
 
   /**
-   * Configurar polling
+   * Configurar polling con optimización de visibility API
    */
   useEffect(() => {
     if (!enabled) {
@@ -168,21 +170,45 @@ export function useAlerts(options: UseAlertsOptions = {}): UseAlertsResult {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      if (visibilityHandlerRef.current) {
+        document.removeEventListener('visibilitychange', visibilityHandlerRef.current);
+        visibilityHandlerRef.current = null;
+      }
       return;
     }
 
     // Verificar inmediatamente al montar
     verificarAhora();
 
-    // Configurar intervalo
+    // Configurar intervalo de polling (5 minutos por defecto)
     intervalRef.current = setInterval(() => {
-      verificarAhora();
+      // Solo verificar si el tab está visible
+      if (document.visibilityState === 'visible') {
+        verificarAhora();
+      }
     }, intervalo * 1000);
 
-    // Cleanup
+    // Manejar cambios de visibilidad del tab
+    visibilityHandlerRef.current = () => {
+      if (document.visibilityState === 'visible') {
+        // El usuario volvió al tab: verificar inmediatamente
+        verificarAhora();
+      }
+      // Si el tab se oculta, no hacemos nada - el intervalo seguirá corriendo
+      // pero no hará peticiones gracias al check de visibilityState arriba
+    };
+
+    document.addEventListener('visibilitychange', visibilityHandlerRef.current);
+
+    // Cleanup: remover intervalo y event listener
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (visibilityHandlerRef.current) {
+        document.removeEventListener('visibilitychange', visibilityHandlerRef.current);
+        visibilityHandlerRef.current = null;
       }
     };
   }, [enabled, intervalo, verificarAhora]);

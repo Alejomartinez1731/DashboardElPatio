@@ -26,6 +26,7 @@ interface FilterPanelProps {
 
 export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
   const [expandido, setExpandido] = useState(true);
+  const [busquedaLocal, setBusquedaLocal] = useState(filtros.busqueda); // Estado local para input inmediato
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Memoizar cálculo de precios para evitar recalcular en cada render
@@ -84,21 +85,27 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     onFiltrosChange({ ...filtros, tiendas: nuevasTiendas });
   }, [filtros.tiendas, filtros, onFiltrosChange]);
 
-  // Debounce para búsqueda de producto
+  // Debounce para búsqueda de producto - CORREGIDO
   const handleBusquedaChange = useCallback((value: string) => {
+    // Actualizar estado local inmediatamente para feedback visual
+    setBusquedaLocal(value);
+
     // Limpiar timeout anterior
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
-    // Actualizar inmediatamente el input visualmente (sin filtrar)
-    onFiltrosChange({ ...filtros, busqueda: value });
-
-    // Esperar 300ms antes de aplicar el filtro real
+    // Esperar 300ms antes de propagar el cambio al store
     debounceRef.current = setTimeout(() => {
       componentLogger.debug('🔍 Búsqueda debounce aplicada:', value);
+      onFiltrosChange({ ...filtros, busqueda: value });
     }, 300);
   }, [filtros, onFiltrosChange]);
+
+  // Sincronizar busquedaLocal cuando filtros.busqueda cambia externamente
+  useEffect(() => {
+    setBusquedaLocal(filtros.busqueda);
+  }, [filtros.busqueda]);
 
   // Limpiar timeout al desmontar
   useEffect(() => {
@@ -110,6 +117,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   }, []);
 
   const limpiarFiltros = () => {
+    setBusquedaLocal(''); // Limpiar también el estado local
     onFiltrosChange({
       fechaInicio: null,
       fechaFin: null,
@@ -226,16 +234,17 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
             <div className="relative">
               <input
                 type="text"
-                value={filtros.busqueda}
+                value={busquedaLocal}
                 onChange={(e) => handleBusquedaChange(e.target.value)}
                 placeholder="Escribe para buscar..."
                 data-testid="search-input"
                 className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
-              {filtros.busqueda && (
+              {busquedaLocal && (
                 <button
                   onClick={() => {
                     if (debounceRef.current) clearTimeout(debounceRef.current);
+                    setBusquedaLocal('');
                     onFiltrosChange({ ...filtros, busqueda: '' });
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"

@@ -40,7 +40,7 @@ export function Header() {
 
   // Sistema de alertas
   const { alertas, totalNuevas, verificarAhora, marcarTodasLeidas } = useAlerts({
-    intervalo: 30, // 30 segundos
+    intervalo: 300, // 5 minutos (optimizado para reducir invocaciones a Vercel)
     presupuestoMensual,
     enabled: mounted,
   });

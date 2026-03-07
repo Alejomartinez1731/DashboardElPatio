@@ -371,101 +371,115 @@ export default function DashboardPage() {
     >
       <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <DashboardHeader
-        title="Panel General"
-        description="Base de datos Supabase"
-        statusBadge={{
-          text: showSkeletons
-            ? 'Cargando...'
-            : isUsingMock
-              ? 'Datos de prueba'
-              : 'Conectado a Supabase',
-          color: showSkeletons
-            ? 'bg-[#f59e0b]/10 border border-primary/30'
-            : isUsingMock
-              ? 'bg-amber-500/10 border border-amber-500/30'
-              : 'bg-[#10b981]/10 border border-[#10b981]/30'
-        }}
-        warning={warning}
-      />
+      <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+        <DashboardHeader
+          title="Panel General"
+          description="Base de datos Supabase"
+          statusBadge={{
+            text: showSkeletons
+              ? 'Cargando...'
+              : isUsingMock
+                ? 'Datos de prueba'
+                : 'Conectado a Supabase',
+            color: showSkeletons
+              ? 'bg-[#f59e0b]/10 border border-primary/30'
+              : isUsingMock
+                ? 'bg-amber-500/10 border border-amber-500/30'
+                : 'bg-[#10b981]/10 border border-[#10b981]/30'
+          }}
+          warning={warning}
+        />
+      </ErrorBoundary>
 
       {/* KPIs Principales - Solo 4 KPIs importantes */}
       {showSkeletons ? (
         <KPIsSkeleton />
       ) : (
-        <KPIsPrincipales
-          presupuesto={3000}
-          gastoQuincenal={kpiData?.gastoQuincenal}
-          facturasProcesadas={kpiData?.facturasProcesadas}
-          recordatorios={kpiData?.numeroDeRecordatorios}
-        />
+        <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+          <KPIsPrincipales
+            presupuesto={3000}
+            gastoQuincenal={kpiData?.gastoQuincenal}
+            facturasProcesadas={kpiData?.facturasProcesadas}
+            recordatorios={kpiData?.numeroDeRecordatorios}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Presupuesto Mensual */}
-      {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} />}
+      <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+        {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} />}
+      </ErrorBoundary>
 
       {/* Comparación de Período */}
-      <ComparacionPeriodoCard />
+      <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+        <ComparacionPeriodoCard />
+      </ErrorBoundary>
 
       {/* Quick Actions */}
       {showSkeletons ? (
         <QuickActionsSkeleton />
       ) : (
-        <QuickActions
-          onRefresh={handleRefresh}
-          onExport={handleExport}
-          onFilter={handleFilter}
-          cargando={isRefreshing || cargando}
-          exportando={isExporting}
-          filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
-        />
+        <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+          <QuickActions
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onFilter={handleFilter}
+            cargando={isRefreshing || cargando}
+            exportando={isExporting}
+            filtrosActivos={filtros.busqueda !== '' || filtros.tiendas.length > 0 || filtros.rangoFecha !== 'todo' || filtros.precioMin !== null || filtros.precioMax !== null}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Panel de Filtros - Mostrar para base_datos también */}
       {showFilters && (
-        <FilterPanel
-          filtros={filtros}
-          onFiltrosChange={setFiltros}
-          onReset={() => {
-            const { resetFiltros } = useDashboardStore.getState();
-            resetFiltros();
-          }}
-          tiendasUnicas={tiendasUnicas}
-          compras={compras}
-        />
+        <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+          <FilterPanel
+            filtros={filtros}
+            onFiltrosChange={setFiltros}
+            onReset={() => {
+              const { resetFiltros } = useDashboardStore.getState();
+              resetFiltros();
+            }}
+            tiendasUnicas={tiendasUnicas}
+            compras={compras}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Tabs Navigation */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <DataTableWrapper
-          activeTab={activeTab}
-          activeTabDescription={TABS.find(t => t.id === activeTab)?.description}
-          activeTabIcon={(() => {
-            const IconComponent = TABS.find(t => t.id === activeTab)?.icon || Table;
-            return <IconComponent className="w-5 h-5" />;
-          })()}
-          comprasParaTablaLength={comprasParaTabla.length}
-          comprasLength={compras.length}
-        >
-          {showSkeletons ? (
-            <TableSkeleton />
-          ) : (
-            <DataTable
-              activeTab={activeTab}
-              datosTabla={datosTabla}
-              numRows={numRows}
-              numFilasBaseDatos={numFilasBaseDatos}
-              comprasParaTabla={comprasParaTabla}
-              compras={compras}
-              sortField={sortField}
-              sortOrder={sortOrder}
-              onSort={handleSort}
-            />
-          )}
-        </DataTableWrapper>
-      </div>
+          <DataTableWrapper
+            activeTab={activeTab}
+            activeTabDescription={TABS.find(t => t.id === activeTab)?.description}
+            activeTabIcon={(() => {
+              const IconComponent = TABS.find(t => t.id === activeTab)?.icon || Table;
+              return <IconComponent className="w-5 h-5" />;
+            })()}
+            comprasParaTablaLength={comprasParaTabla.length}
+            comprasLength={compras.length}
+          >
+            {showSkeletons ? (
+              <TableSkeleton />
+            ) : (
+              <DataTable
+                activeTab={activeTab}
+                datosTabla={datosTabla}
+                numRows={numRows}
+                numFilasBaseDatos={numFilasBaseDatos}
+                comprasParaTabla={comprasParaTabla}
+                compras={compras}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+              />
+            )}
+          </DataTableWrapper>
+        </div>
+      </ErrorBoundary>
     </div>
     </ErrorBoundary>
   );

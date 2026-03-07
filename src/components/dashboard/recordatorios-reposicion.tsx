@@ -2,7 +2,7 @@
 import { generalLogger } from '@/lib/logger';
 import { componentLogger } from '@/lib/logger';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,12 +61,23 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
 
   const contador = () => productos.length;
 
+  // fetchRecordatorios como función estable sin dependencias de estado
+  // Usa ref para leer el valor actual de automaticosActivados
+  const automaticosRef = useRef(automaticosActivados);
+
+  // Sincronizar el ref cuando cambia el estado
+  useEffect(() => {
+    automaticosRef.current = automaticosActivados;
+  }, [automaticosActivados]);
+
+  // Función estable que no se recrea cuando cambia automaticosActivados
   const fetchRecordatorios = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      // Pasar parámetro para incluir/excluir automáticos
-      const response = await fetch(`/api/recordatorios?incluirAutomaticos=${automaticosActivados}`);
+      // Leer valor actual desde el ref en lugar del closure
+      const incluirAutomaticos = automaticosRef.current;
+      const response = await fetch(`/api/recordatorios?incluirAutomaticos=${incluirAutomaticos}`);
       const result = await response.json();
 
       if (result.success) {
@@ -84,11 +95,12 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
     } finally {
       setLoading(false);
     }
-  }, [automaticosActivados]);
+  }, []); // Sin dependencias - función estable
 
+  // useEffect depende directamente de automaticosActivados
   useEffect(() => {
     fetchRecordatorios();
-  }, [fetchRecordatorios]);
+  }, [automaticosActivados, fetchRecordatorios]);
 
   const handleGuardar = async () => {
     setMensaje(null);

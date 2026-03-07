@@ -1,0 +1,465 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* ═════════════════════════════════════════════════════════
+     DASHBOARD EL PATIO - Paleta de colores moderna
+     Estilo: Azul oscuro elegante con acentos dorados
+  ═════════════════════════════════════════════════════════ */
+
+  /* Fondos */
+  --color-background: hsl(222 47% 11%);  /* #0F172A - Azul muy oscuro */
+  --color-foreground: hsl(210 40% 98%); /* #F8FAFC - Blanco azulado */
+
+  --color-card: hsl(215 25% 23%);       /* #1E293B - Gris azulado */
+  --color-card-foreground: hsl(210 40% 98%); /* #F8FAFC */
+
+  --color-popover: hsl(215 25% 23%);    /* #1E293B */
+  --color-popover-foreground: hsl(210 40% 98%); /* #F8FAFC */
+
+  /* Primary - Dorado moderno */
+  --color-primary: hsl(38 92% 50%);    /* #F59E0B - Dorado */
+  --color-primary-foreground: hsl(222 47% 11%); /* #0F172A */
+
+  --color-secondary: hsl(215 25% 23%);  /* #1E293B */
+  --color-secondary-foreground: hsl(210 40% 98%); /* #F8FAFC */
+
+  --color-muted: hsl(215 25% 23%);      /* #1E293B */
+  --color-muted-foreground: hsl(215 20% 65%); /* #94A3B8 - Gris azulado */
+
+  --color-accent: hsl(38 92% 50%);     /* #F59E0B - Dorado */
+  --color-accent-foreground: hsl(222 47% 11%); /* #0F172A */
+
+  /* Destructive */
+  --color-destructive: hsl(0 84% 60%); /* #EF4444 - Rojo */
+  --color-border: hsl(215 25% 23% / 0.5); /* Borde sutil */
+  --color-input: hsl(215 25% 23%);      /* #1E293B */
+  --color-ring: hsl(38 92% 50%);       /* #F59E0B - Dorado */
+
+  /* Colores de gráficos */
+  --color-chart-1: hsl(159 84% 39%); /* #10B981 - Verde */
+  --color-chart-2: hsl(217 91% 60%); /* #3B82F6 - Azul */
+  --color-chart-3: hsl(38 92% 50%);  /* #F59E0B - Dorado */
+  --color-chart-4: hsl(0 84% 60%);   /* #EF4444 - Rojo */
+  --color-chart-5: hsl(271 81% 56%); /* A855F7 - Púrpura */
+
+  /* Sidebar */
+  --color-sidebar: hsl(222 84% 5%);    /* #020617 - Azul casi negro */
+  --color-sidebar-foreground: hsl(215 20% 65%); /* #94A3B8 */
+  --color-sidebar-primary: hsl(38 92% 50%); /* #F59E0B - Dorado */
+  --color-sidebar-primary-foreground: hsl(222 47% 11%); /* #0F172A */
+  --color-sidebar-accent: hsl(38 92% 50%); /* #F59E0B */
+  --color-sidebar-accent-foreground: hsl(222 47% 11%); /* #0F172A */
+  --color-sidebar-border: hsl(215 25% 23% / 0.5);
+  --color-sidebar-ring: hsl(38 92% 50%); /* #F59E0B */
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* ═════════════════════════════════════════════════════════
+     DASHBOARD EL PATIO - Paleta de colores moderna
+     Estilo: Azul oscuro elegante con acentos dorados
+  ═════════════════════════════════════════════════════════ */
+
+  /* Fondos - Azules oscuros elegantes */
+  --background: 222 47% 11%;  /* #0F172A - Azul muy oscuro */
+  --foreground: 210 40% 98%; /* #F8FAFC - Blanco azulado */
+
+  --card: 215 25% 23%;       /* #1E293B - Gris azulado */
+  --card-foreground: 210 40% 98%; /* #F8FAFC */
+
+  --popover: 215 25% 23%;    /* #1E293B */
+  --popover-foreground: 210 40% 98%; /* #F8FAFC */
+
+  /* Primary - Dorado moderno */
+  --primary: 38 92% 50%;    /* #F59E0B - Dorado */
+  --primary-foreground: 222 47% 11%; /* #0F172A */
+
+  /* Secondary */
+  --secondary: 215 25% 23%;  /* #1E293B */
+  --secondary-foreground: 210 40% 98%; /* #F8FAFC */
+
+  /* Muted */
+  --muted: 215 25% 23%;      /* #1E293B */
+  --muted-foreground: 215 20% 65%; /* #94A3B8 - Gris azulado */
+
+  /* Accent */
+  --accent: 38 92% 50%;     /* #F59E0B - Dorado */
+  --accent-foreground: 222 47% 11%; /* #0F172A */
+
+  /* Destructive */
+  --destructive: 0 84% 60%; /* #EF4444 - Rojo */
+  --border: 215 25% 23% / 0.5; /* Borde sutil */
+  --input: 215 25% 23%;      /* #1E293B */
+  --ring: 38 92% 50%;       /* #F59E0B - Dorado */
+
+  /* Colores de gráficos */
+  --chart-1: 159 84% 39%; /* #10B981 - Verde */
+  --chart-2: 217 91% 60%; /* #3B82F6 - Azul */
+  --chart-3: 38 92% 50%;  /* #F59E0B - Dorado */
+  --chart-4: 0 84% 60%;   /* #EF4444 - Rojo */
+  --chart-5: 271 81% 56%; /* A855F7 - Púrpura */
+
+  /* Sidebar */
+  --sidebar: 222 84% 5%;     /* #020617 - Azul casi negro */
+  --sidebar-foreground: 215 20% 65%; /* #94A3B8 */
+  --sidebar-primary: 38 92% 50%; /* #F59E0B - Dorado */
+  --sidebar-primary-foreground: 222 47% 11%; /* #0F172A */
+  --sidebar-accent: 38 92% 50%; /* #F59E0B */
+  --sidebar-accent-foreground: 222 47% 11%; /* #0F172A */
+  --sidebar-border: 215 25% 23% / 0.5;
+  --sidebar-ring: 38 92% 50%; /* #F59E0B */
+
+  /* Colores de tiendas específicos */
+  --color-mercadona: #10b981;
+  --color-bonarea: #3b82f6;
+  --color-lidl: #f59e0b;      /* Dorado moderno */
+  --color-carrefour: #ef4444;
+  --color-aldi: #a855f7;
+  --color-consum: #ec4899;
+  --color-otros: #64748b;
+}
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Animaciones personalizadas */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+}
+
+/* Clases de utilidad para animaciones */
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Stagger animations para listas */
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+
+/* ═════════════════════════════════════════════════════════
+   MEJORAS UI/UX - EL PATIO VILA-SECA
+══════════════════════════════════════════════════════════ */
+
+/* Scrollbar personalizado con colores de marca */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Mejoras de transición para elementos interactivos */
+button, a, [role="button"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cards con sombra sutil y hover mejorado */
+[class*="bg-card"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[class*="bg-card"]:hover {
+  box-shadow: 0 4px 20px hsla(var(--primary) / 0.15);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Focus visible mejorado */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Text selection con color de marca */
+::selection {
+  background-color: hsla(var(--primary) / 0.3);
+  color: hsl(var(--primary-foreground));
+}
+
+/* Links con hover dorado elegante */
+a {
+  color: hsl(var(--muted-foreground));
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: hsl(var(--primary));
+}
+
+/* Mejoras para inputs */
+input, textarea, select {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsla(var(--primary) / 0.1);
+}
+
+/* Badge/indicadores con bordes suaves */
+.badge, [class*="badge"] {
+  transition: all 0.2s ease;
+}
+
+/* Toast/notificaciones con animación suave */
+.toast {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* Tablas con hover suave */
+table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+/* Loading states más elegantes */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsla(var(--muted-foreground) / 0.5) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mejoras para botones */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* ═════════════════════════════════════════════════════════
+   TEMA CLARO - Light mode
+══════════════════════════════════════════════════════════ */
+
+:root.light {
+  --background: 0 0% 100%;      /* Blanco puro */
+  --foreground: 222 47% 11%;     /* #0F172A - Azul oscuro */
+  --card: 0 0% 100%;           /* Blanco puro */
+  --card-foreground: 222 47% 11%; /* #0F172A */
+  --popover: 0 0% 100%;        /* Blanco */
+  --popover-foreground: 222 47% 11%; /* #0F172A */
+  --primary: 38 92% 50%;         /* #F59E0B - Dorado */
+  --primary-foreground: 0 0% 100%; /* Blanco */
+  --secondary: 210 40% 96%;      /* Gris claro */
+  --secondary-foreground: 222 47% 11%; /* #0F172A */
+  --muted: 210 40% 96%;           /* Gris muy claro */
+  --muted-foreground: 215 16% 47%;  /* #64748B - Gris medio */
+  --accent: 38 92% 50%;          /* #F59E0B - Dorado */
+  --accent-foreground: 0 0% 100%; /* Blanco */
+  --destructive: 0 84% 60%;      /* #EF4444 - Rojo */
+  --border: 214 32% 91%;         /* Gris claro */
+  --input: 0 0% 100%;           /* Blanco */
+  --ring: 38 92% 50%;            /* #F59E0B - Dorado */
+}
+
+/* Clase de respaldo para cuando se aplique directamente al elemento */
+.light {
+  --background: 0 0% 100% !important;
+  --foreground: 222 47% 11% !important;
+  --card: 0 0% 100% !important;
+  --card-foreground: 222 47% 11% !important;
+  --popover: 0 0% 100% !important;
+  --popover-foreground: 222 47% 11% !important;
+  --primary: 38 92% 50% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --secondary: 210 40% 96% !important;
+  --secondary-foreground: 222 47% 11% !important;
+  --muted: 210 40% 96% !important;
+  --muted-foreground: 215 16% 47% !important;
+  --accent: 38 92% 50% !important;
+  --accent-foreground: 0 0% 100% !important;
+  --destructive: 0 84% 60% !important;
+  --border: 214 32% 91% !important;
+  --input: 0 0% 100% !important;
+  --ring: 38 92% 50% !important;
+}
+
+/* ═════════════════════════════════════════════════════════
+   TEMA OSCURO EXPLÍCITO - Dark mode (para cuando se selecciona manualmente)
+══════════════════════════════════════════════════════════ */
+
+:root.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 215 25% 23%;
+  --card-foreground: 210 40% 98%;
+  --popover: 215 25% 23%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 38 92% 50%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 215 25% 23%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 215 25% 23%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 38 92% 50%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --border: 215 25% 23% / 0.5;
+  --input: 215 25% 23%;
+  --ring: 38 92% 50%;
+}
+
+.dark {
+  --background: 222 47% 11% !important;
+  --foreground: 210 40% 98% !important;
+  --card: 215 25% 23% !important;
+  --card-foreground: 210 40% 98% !important;
+  --popover: 215 25% 23% !important;
+  --popover-foreground: 210 40% 98% !important;
+  --primary: 38 92% 50% !important;
+  --primary-foreground: 222 47% 11% !important;
+  --secondary: 215 25% 23% !important;
+  --secondary-foreground: 210 40% 98% !important;
+  --muted: 215 25% 23% !important;
+  --muted-foreground: 215 20% 65% !important;
+  --accent: 38 92% 50% !important;
+  --accent-foreground: 222 47% 11% !important;
+  --destructive: 0 84% 60% !important;
+  --border: 215 25% 23% / 0.5 !important;
+  --input: 215 25% 23% !important;
+  --ring: 38 92% 50% !important;
+}

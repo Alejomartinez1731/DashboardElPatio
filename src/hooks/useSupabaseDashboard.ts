@@ -39,32 +39,43 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
   const isFetchingRef = useRef(false);
 
   /**
-   * Obtiene el número de recordatorios
+   * Calcula el número de recordatorios importantes directamente desde datos de compras
+   * Evita llamada a /api/recordatorios para reducir invocaciones a Vercel
    */
-  const fetchNumeroDeRecordatorios = useCallback(async (): Promise<number> => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+  const calcularRecordatoriosDesdeCompras = useCallback((comprasData: any[]): number => {
+    // Agrupar compras por producto para encontrar la última compra de cada uno
+    const productosMap = new Map<string, { ultimaFecha: Date; tienda: string; }>();
 
-      const response = await fetch('/api/recordatorios?incluirAutomaticos=true', {
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+    comprasData.forEach((compra) => {
+      const producto = (compra.descripcion || '').toLowerCase().trim();
+      if (!producto) return;
 
-      if (!response.ok) throw new Error('Error fetching recordatorios');
-      const result = await response.json();
+      const fechaCompra = new Date(compra.fecha);
+      const existente = productosMap.get(producto);
 
-      if (result.success) {
-        const importantes = result.data.filter((r: any) =>
-          r.estado === 'vencido' || r.estado === 'proximo' || r.estado === 'sin_datos'
-        );
-        return importantes.length;
+      if (!existente || fechaCompra > existente.ultimaFecha) {
+        productosMap.set(producto, {
+          ultimaFecha: fechaCompra,
+          tienda: compra.tienda || '',
+        });
       }
-    } catch (error) {
-      apiLogger.warn('No se pudieron obtener recordatorios:', error);
-      // No lanzar error - solo log warning y retornar 0
-    }
-    return 0;
+    });
+
+    // Calcular días desde última compra y contar los que necesitan atención
+    const hoy = new Date();
+    let recordatoriosImportantes = 0;
+
+    productosMap.forEach((info, producto) => {
+      const diasTranscurridos = Math.floor((hoy.getTime() - info.ultimaFecha.getTime()) / (1000 * 60 * 60 * 24));
+
+      // Lógica simplificada: si pasaron más de 21 días sin comprar, es un recordatorio importante
+      // (alineado con la lógica de /api/recordatorios)
+      if (diasTranscurridos > 21) {
+        recordatoriosImportantes++;
+      }
+    });
+
+    return recordatoriosImportantes;
   }, []);
 
   /**
@@ -111,43 +122,33 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       apiLogger.debug('📊 Iniciando fetch desde Supabase...');
 
-      // Fetch paralelo con timeout y error handling
-      const [comprasResult, recordatoriosCount] = await Promise.allSettled([
-        // Llamada directa a Supabase con timeout
-        (async () => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      // Fetch directamente a Supabase con timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-          try {
-            const result = await supabase
-              .from('compras')
-              .select('*')
-              .order('fecha', { ascending: false })
-              .limit(1000);
-            clearTimeout(timeoutId);
-            return result;
-          } catch (err) {
-            clearTimeout(timeoutId);
-            throw err;
-          }
-        })(),
-        fetchNumeroDeRecordatorios(),
-      ]);
+      let comprasResult;
+      try {
+        comprasResult = await supabase
+          .from('compras')
+          .select('*')
+          .order('fecha', { ascending: false })
+          .limit(1000);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        throw err;
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
-      // Manejar resultados con Promise.allSettled
+      // Manejar resultado de Supabase
       let comprasData: any[] = [];
       let comprasError: string | null = null;
 
-      if (comprasResult.status === 'fulfilled') {
-        if (comprasResult.value.error) {
-          comprasError = comprasResult.value.error.message;
-          apiLogger.error('❌ Error fetching compras:', comprasError);
-        } else {
-          comprasData = comprasResult.value.data || [];
-        }
-      } else {
-        comprasError = comprasResult.reason?.message || 'Error desconocido';
+      if (comprasResult.error) {
+        comprasError = comprasResult.error.message;
         apiLogger.error('❌ Error fetching compras:', comprasError);
+      } else {
+        comprasData = comprasResult.data || [];
       }
 
       // Si hay error de Supabase, mostrar warning pero continuar
@@ -209,9 +210,8 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
         facturasUnicas.add(`${fechaStr}-${c.tienda}`);
       });
 
-      // Obtener recordatorios count del resultado de Promise.allSettled
-      const recordatoriosCountFinal =
-        recordatoriosCount.status === 'fulfilled' ? recordatoriosCount.value : 0;
+      // Calcular recordatorios directamente desde compras (sin llamar a /api/recordatorios)
+      const recordatoriosCountFinal = calcularRecordatoriosDesdeCompras(comprasData);
 
       const kpis: KPIData = {
         gastoQuincenal,
@@ -243,7 +243,7 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [fetchNumeroDeRecordatorios, convertirComprasATabla]);
+  }, [calcularRecordatoriosDesdeCompras, convertirComprasATabla]);
 
   /**
    * Función para refrescar datos manualmente
