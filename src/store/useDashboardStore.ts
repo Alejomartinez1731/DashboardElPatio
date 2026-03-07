@@ -79,7 +79,7 @@ const initialState = {
   },
   sortField: 'fecha' as SortField,
   sortOrder: 'desc' as 'asc' | 'desc',
-  activeTab: 'historico_precios',
+  activeTab: 'base_datos', // Cambiado de 'historico_precios'
   showFilters: false,
   loading: true,
   error: null,
@@ -170,6 +170,11 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
   // Acciones - Datos
   setCompras: (compras) => {
+    console.log('📊 [STORE] setCompras llamado:', {
+      comprasLength: compras.length,
+      activeTab: get().activeTab,
+    });
+
     set({ compras });
     // Recalcular compras filtradas cuando cambian las compras
     get().aplicarFiltros();
@@ -206,6 +211,15 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       state.sortField,
       state.sortOrder
     );
+
+    // DEBUG LOG
+    console.log('📊 [STORE] aplicarFiltros llamado:', {
+      comprasLength: state.compras.length,
+      filtradasLength: filtradas.length,
+      activeTab: state.activeTab,
+      filtros: state.filtros,
+    });
+
     set({ comprasFiltradas: filtradas });
   },
 

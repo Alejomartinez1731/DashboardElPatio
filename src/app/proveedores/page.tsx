@@ -6,7 +6,6 @@ import { COLORES_TIENDA } from '@/lib/data-utils';
 import { Store, TrendingUp, Calendar, Award } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { supabase } from '@/lib/supabase';
 
 interface InfoTienda {
   tienda: string;
@@ -28,21 +27,21 @@ export default function ProveedoresPage() {
   useEffect(() => {
     async function fetchDatos() {
       try {
-        // Verificar que Supabase está configurado
-        if (!supabase) {
-          throw new Error('Supabase no está configurado. Verifica las variables de entorno NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.');
+        // Llamada a API route
+        const response = await fetch('/api/proveedores');
+
+        if (!response.ok) {
+          throw new Error('Error al obtener datos');
         }
 
-        // Llamada directa a Supabase - sin API route intermedia
-        const { data, error } = await supabase
-          .from('vista_gasto_por_tienda')
-          .select('*')
-          .order('gasto_total', { ascending: false });
+        const result = await response.json();
 
-        if (error) throw new Error(error.message);
+        if (!result.success) {
+          throw new Error(result.error || 'Error desconocido');
+        }
 
         // Transformar datos para incluir colores
-        const tiendasConColor = (data || []).map((t: InfoTienda) => ({
+        const tiendasConColor = (result.data || []).map((t: InfoTienda) => ({
           ...t,
           color: COLORES_TIENDA[t.tienda] || COLORES_TIENDA['Otros']
         }));

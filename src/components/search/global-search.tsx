@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, X, FileText, Store, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useSheetData } from '@/hooks/useSheetData';
-import { searchSimple, getUniqueTiendas } from '@/lib/search';
+import { useSupabaseDashboard } from '@/hooks/useSupabaseDashboard';
+import { searchSimple } from '@/lib/search';
 import { SearchResult } from '@/lib/search';
 import { cn } from '@/lib/utils';
 
@@ -15,9 +15,9 @@ interface GlobalSearchProps {
 
 export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const router = useRouter();
-  const { compras } = useSheetData(
-    [{ id: 'base_datos', sheetName: 'base_datos' as const, dataKey: 'base_de_datos' }]
-  );
+  // Usar Supabase directamente en lugar de useSheetData
+  const tabsConfig = [{ id: 'base_datos', sheetName: 'base_datos' as const, dataKey: 'base_de_datos' }];
+  const { compras, loading, error } = useSupabaseDashboard(tabsConfig);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -119,6 +119,35 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   };
 
   if (!isOpen) return null;
+
+  // Mostrar error si hay problemas cargando datos
+  if (error) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-8 text-center">
+          <p className="text-destructive mb-2">Error de búsqueda</p>
+          <p className="text-sm text-muted-foreground mb-4">{error}</p>
+          <button onClick={onClose} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar loading mientras se cargan los datos
+  if (loading && compras.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-8 text-center">
+          <div className="w-8 h-8 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground">Cargando datos de búsqueda...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">

@@ -15,16 +15,64 @@ interface RecordatoriosConfigStore {
 export const useRecordatoriosConfig = create<RecordatoriosConfigStore>()(
   persist(
     (set) => ({
-      automaticosActivados: false, // Por defecto desactivados
+      // Inicializar desde useSettings si existe, si no false
+      automaticosActivados: (() => {
+        if (typeof window !== 'undefined') {
+          const settings = localStorage.getItem('settings-storage');
+          if (settings) {
+            try {
+              const parsed = JSON.parse(settings);
+              return parsed.state.includeRecordatorios ?? false;
+            } catch {
+              return false;
+            }
+          }
+        }
+        return false;
+      })(),
 
       toggleAutomaticos: () =>
-        set((state) => ({
-          automaticosActivados: !state.automaticosActivados,
-        })),
+        set((state) => {
+          const newValue = !state.automaticosActivados;
+
+          // También actualizar en useSettings
+          if (typeof window !== 'undefined') {
+            const settings = localStorage.getItem('settings-storage');
+            if (settings) {
+              try {
+                const parsed = JSON.parse(settings);
+                parsed.state.includeRecordatorios = newValue;
+                localStorage.setItem('settings-storage', JSON.stringify(parsed));
+                // Disparar evento para que otros componentes se actualicen
+                window.dispatchEvent(new Event('settings-changed'));
+              } catch (e) {
+                console.warn('No se pudo sincronizar con settings:', e);
+              }
+            }
+          }
+
+          return { automaticosActivados: newValue };
+        }),
 
       setAutomaticosActivados: (activado) =>
-        set({
-          automaticosActivados: activado,
+        set(() => {
+          // También actualizar en useSettings
+          if (typeof window !== 'undefined') {
+            const settings = localStorage.getItem('settings-storage');
+            if (settings) {
+              try {
+                const parsed = JSON.parse(settings);
+                parsed.state.includeRecordatorios = activado;
+                localStorage.setItem('settings-storage', JSON.stringify(parsed));
+                // Disparar evento para que otros componentes se actualicen
+                window.dispatchEvent(new Event('settings-changed'));
+              } catch (e) {
+                console.warn('No se pudo sincronizar con settings:', e);
+              }
+            }
+          }
+
+          return { automaticosActivados: activado };
         }),
     }),
     {

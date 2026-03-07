@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { generalLogger } from '@/lib/logger';
 import { persist } from 'zustand/middleware';
 
 export interface ProductoListaCompra {
@@ -42,29 +41,22 @@ export const useListaCompra = create<ListaCompraStore>()(
       productos: [],
 
       agregarProducto: (producto) => {
-        generalLogger.debug('agregarProducto', { producto });
         set((state) => {
           // Verificar si ya existe
           const existe = state.productos.some((p) => p.producto === producto.producto);
-          generalLogger.debug('¿Ya existe?', { existe });
           if (existe) {
-            generalLogger.debug('Producto ya existe, no se añade');
             return state;
           }
 
-          const nuevos = [...state.productos, producto];
-          generalLogger.debug('Producto añadido', { total: nuevos.length });
           return {
-            productos: nuevos,
+            productos: [...state.productos, producto],
           };
         });
       },
 
       eliminarProducto: (productoNombre) => {
-        generalLogger.debug('eliminarProducto', { producto: productoNombre });
         set((state) => {
           const nuevos = state.productos.filter((p) => p.producto !== productoNombre);
-          generalLogger.debug('Producto eliminado', { antes: state.productos.length, ahora: nuevos.length });
           return {
             productos: nuevos,
           };
@@ -72,19 +64,14 @@ export const useListaCompra = create<ListaCompraStore>()(
       },
 
       toggleProducto: (producto) => {
-        generalLogger.debug('toggleProducto llamado', { producto });
         const { estaEnLista, agregarProducto, eliminarProducto } = get();
         const esta = estaEnLista(producto.producto);
-        generalLogger.debug('¿Está en lista?', { esta });
 
         if (esta) {
-          generalLogger.debug('Eliminando producto', { producto: producto.producto });
           eliminarProducto(producto.producto);
         } else {
-          generalLogger.debug('Añadiendo producto', { producto: producto.producto });
           agregarProducto(producto);
         }
-        generalLogger.debug('Toggle completado');
       },
 
       estaEnLista: (productoNombre) => {

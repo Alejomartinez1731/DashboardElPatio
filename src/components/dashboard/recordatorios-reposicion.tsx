@@ -32,16 +32,31 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
 
   // Stores
   const { toggleProducto, productos } = useListaCompra();
-  const { automaticosActivados, toggleAutomaticos } = useRecordatoriosConfig();
+  const { automaticosActivados, toggleAutomaticos, setAutomaticosActivados } = useRecordatoriosConfig();
 
-  // Debug: log estado cada vez que cambia
-  generalLogger.debug('🔄 Render Recordatorios - Productos en lista:', productos.length);
+  // Escuchar cambios desde Configuración
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      const settings = localStorage.getItem('settings-storage');
+      if (settings) {
+        try {
+          const parsed = JSON.parse(settings);
+          if (parsed.state.includeRecordatorios !== undefined) {
+            setAutomaticosActivados(parsed.state.includeRecordatorios);
+          }
+        } catch (e) {
+          console.warn('Error al leer settings:', e);
+        }
+      }
+    };
+
+    window.addEventListener('settings-changed', handleSettingsChange);
+    return () => window.removeEventListener('settings-changed', handleSettingsChange);
+  }, [setAutomaticosActivados]);
 
   // Funciones locales que dependen de productos
   const estaEnLista = (productoNombre: string) => {
-    const resultado = productos.some(p => p.producto === productoNombre);
-    generalLogger.debug(`   ¿"${productoNombre}" en lista?`, resultado);
-    return resultado;
+    return productos.some(p => p.producto === productoNombre);
   };
 
   const contador = () => productos.length;
@@ -463,51 +478,35 @@ export function RecordatoriosReposicion({ className }: RecordatoriosReposicionPr
               >
                 <div className="flex items-center gap-3">
                   {/* Checkbox para añadir a lista de compra */}
-                  {(() => {
-                    generalLogger.debug(`✅ Creando elemento checkbox para: ${rec.producto}`);
-                    return (
-                      <div className="relative" style={{ zIndex: 10 }}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            generalLogger.debug('🛒 Click en checkbox:', rec.producto);
-                            generalLogger.debug('   Estado actual:', estaEnLista(rec.producto) ? 'EN LISTA' : 'NO EN LISTA');
-                            generalLogger.debug('   Productos en lista:', productos.length);
+                  <div className="relative" style={{ zIndex: 10 }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
 
-                            const productoData = {
-                              producto: rec.producto,
-                              notas: rec.notas || '',
-                              ultimaCompra: rec.ultimaCompra || undefined,
-                              tienda: rec.tiendaUltimaCompra || undefined,
-                              precio: rec.precioUltimaCompra || undefined,
-                              agregadoEn: new Date().toISOString(),
-                            };
+                        const productoData = {
+                          producto: rec.producto,
+                          notas: rec.notas || '',
+                          ultimaCompra: rec.ultimaCompra || undefined,
+                          tienda: rec.tiendaUltimaCompra || undefined,
+                          precio: rec.precioUltimaCompra || undefined,
+                          agregadoEn: new Date().toISOString(),
+                        };
 
-                            generalLogger.debug('   Datos a enviar:', productoData);
-                            toggleProducto(productoData);
-                            generalLogger.debug('   ✅ Toggle ejecutado');
-                          }}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            generalLogger.debug('🖱️ MouseDown en checkbox:', rec.producto);
-                          }}
-                          onMouseEnter={() => generalLogger.debug('📍 Mouse ENTER checkbox:', rec.producto)}
-                          className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
-                            estaEnLista(rec.producto)
-                              ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/30'
-                              : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10 active:scale-95'
-                          }`}
-                          title={estaEnLista(rec.producto) ? 'Quitar de la lista' : 'Añadir a la lista'}
-                          style={{ touchAction: 'manipulation' }}
-                        >
-                          {estaEnLista(rec.producto) && <Check className="w-4 h-4" strokeWidth={3} />}
-                        </button>
-                      </div>
-                    );
-                  })()}
+                        toggleProducto(productoData);
+                      }}
+                      className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all cursor-pointer select-none ${
+                        estaEnLista(rec.producto)
+                          ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/30'
+                          : 'border-border hover:border-purple-500/50 hover:bg-purple-500/10 active:scale-95'
+                      }`}
+                      title={estaEnLista(rec.producto) ? 'Quitar de la lista' : 'Añadir a la lista'}
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      {estaEnLista(rec.producto) && <Check className="w-4 h-4" strokeWidth={3} />}
+                    </button>
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">

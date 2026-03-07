@@ -53,7 +53,27 @@ export const useSettings = create<SettingsState>()(
       setAutoRefreshInterval: (autoRefreshInterval) => set({ autoRefreshInterval }),
       setDefaultView: (defaultView) => set({ defaultView }),
       setItemsPerPage: (itemsPerPage) => set({ itemsPerPage }),
-      setIncludeRecordatorios: (includeRecordatorios) => set({ includeRecordatorios }),
+
+      setIncludeRecordatorios: (includeRecordatorios) =>
+        set(() => {
+          // También actualizar en useRecordatoriosConfig
+          if (typeof window !== 'undefined') {
+            const recordatoriosConfig = localStorage.getItem('recordatorios-config-storage');
+            if (recordatoriosConfig) {
+              try {
+                const parsed = JSON.parse(recordatoriosConfig);
+                parsed.state.automaticosActivados = includeRecordatorios;
+                localStorage.setItem('recordatorios-config-storage', JSON.stringify(parsed));
+                // Disparar evento para que otros componentes se actualicen
+                window.dispatchEvent(new Event('recordatorios-changed'));
+              } catch (e) {
+                console.warn('No se pudo sincronizar con recordatorios-config:', e);
+              }
+            }
+          }
+
+          return { includeRecordatorios };
+        }),
 
       // Reset a valores por defecto
       resetSettings: () => set(defaultSettings),

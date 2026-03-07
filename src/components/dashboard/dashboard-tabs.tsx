@@ -1,9 +1,9 @@
-import { Table, TrendingUp, PieChart, ShoppingBag, Bell } from 'lucide-react';
+import { Table, PieChart, ShoppingBag, Bell } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { SheetName } from '@/types';
 import Link from 'next/link';
 
-type TabId = 'base_datos' | 'historico_precios' | 'producto_costoso' | 'gasto_tienda' | 'recordatorios';
+type TabId = 'base_datos' | 'producto_costoso' | 'gasto_tienda' | 'recordatorios';
 
 export interface Tab {
   id: TabId;
@@ -15,11 +15,10 @@ export interface Tab {
 }
 
 export const TABS: Tab[] = [
-  { id: 'historico_precios', label: 'Histórico de Precios', sheetName: 'historico_precios' as SheetName, icon: TrendingUp, description: 'Evolución de precios por producto' },
-  { id: 'producto_costoso', label: 'Producto más Costoso', sheetName: 'costosos' as SheetName, icon: ShoppingBag, description: 'Ranking de productos por precio' },
+  { id: 'base_datos', label: 'Registro Diario', sheetName: 'base_datos' as SheetName, icon: Table, description: 'Tabla completa de historial de compras' },
+  { id: 'producto_costoso', label: 'Productos más Costosos', sheetName: 'costosos' as SheetName, icon: ShoppingBag, description: 'Ranking de productos por precio' },
   { id: 'gasto_tienda', label: 'Gasto por Tienda', sheetName: 'gasto_tienda' as SheetName, icon: PieChart, description: 'Gastos acumulados por proveedor/tienda' },
   { id: 'recordatorios', label: 'Recordatorios', icon: Bell, description: 'Alertas de reposición de productos', href: '/dashboard/recordatorios' },
-  { id: 'base_datos', label: 'Base de Datos', sheetName: 'base_datos' as SheetName, icon: Table, description: 'Tabla completa de historial de compras' },
 ];
 
 interface DashboardTabsProps {
@@ -29,7 +28,7 @@ interface DashboardTabsProps {
 
 export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
   return (
-    <div className="grid grid-cols-5 border-b border-border">
+    <div className="grid grid-cols-4 border-b border-border">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;

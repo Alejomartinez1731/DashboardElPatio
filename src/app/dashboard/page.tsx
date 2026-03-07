@@ -16,20 +16,17 @@ import { DataTable, DataTableWrapper } from '@/components/dashboard/data-table';
 import { KPIsSkeleton, BudgetSkeleton, TableSkeleton, QuickActionsSkeleton } from '@/components/dashboard/dashboard-skeletons';
 import { exportToExcel, crearHojaExcel } from '@/lib/export-excel';
 import { categorizarProducto } from '@/lib/categorias';
-import { Compra, KPIData, SheetName, CATEGORIAS_INFO } from '@/types';
+import { Compra, KPIData, CATEGORIAS_INFO } from '@/types';
 import { normalizarTienda } from '@/lib/data-utils';
 import { Table } from 'lucide-react';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
-import { useSheetData } from '@/hooks/useSheetData';
 import { useSupabaseDashboard } from '@/hooks/useSupabaseDashboard';
 import { useDashboardStore, type SortField } from '@/store/useDashboardStore';
 import { parsearFecha } from '@/lib/parsers';
 import { useToast } from '@/components/ui/toast';
 
 export default function DashboardPage() {
-  // Hook personalizado para obtener datos de Sheets
-  // Filtramos tabs que tienen sheetName (excluimos recordatorios que es navegable)
-  // Memoizamos para evitar re-creación en cada render (causaría infinite loop en useSheetData)
+  // Configuración de tabs para compatibilidad con useSupabaseDashboard
   const tabsConfig = useMemo(() =>
     TABS
       .filter(tab => tab.sheetName)
@@ -41,7 +38,7 @@ export default function DashboardPage() {
     [] // TABS es una constante, no necesita dependencias
   );
 
-  // Usar Supabase directamente (migración completada)
+  // Obtener datos desde Supabase
   const {
     compras,
     sheetsData,
@@ -214,6 +211,18 @@ export default function DashboardPage() {
   // Usar comprasFiltradas para base_datos (ya filtrado y ordenado por el store)
   const comprasParaTabla = activeTab === 'base_datos' ? comprasFiltradas : compras;
 
+  // DEBUG LOG CRÍTICO
+  generalLogger.debug('📊 ESTADO CRÍTICO:', {
+    activeTab,
+    expectedTab: 'base_datos',
+    tabsMatch: activeTab === 'base_datos',
+    comprasLength: compras.length,
+    comprasFiltradasLength: comprasFiltradas.length,
+    comprasParaTablaLength: comprasParaTabla.length,
+    primeraCompra: compras[0],
+    primeraCompraFiltrada: comprasFiltradas[0],
+  });
+
   // Error handler específico para el dashboard
   const handleDashboardError = (error: Error, errorInfo: ErrorInfo) => {
     generalLogger.error('Error en Dashboard:', {
@@ -224,25 +233,36 @@ export default function DashboardPage() {
   };
 
   const comprasComoTabla = activeTab === 'base_datos'
-    ? comprasParaTabla.map(c => {
-        const categoria = categorizarProducto(c.producto);
-        const categoriaInfo = CATEGORIAS_INFO[categoria];
-        const row = [
-          formatearFecha(c.fecha),
-          c.tienda,
-          c.producto,
-          `${categoriaInfo.icono} ${categoriaInfo.nombre}`,
-          c.precioUnitario.toFixed(2).replace('.00', ''),
-          c.cantidad.toString(),
-          c.total.toFixed(2).replace('.00', ''),
-          c.telefono || '',
-          c.direccion || ''
-        ];
-        // Solo debug en desarrollo
-        if (process.env.NODE_ENV === 'development') {
-          generalLogger.debug('Row de compra:', { row, types: row.map(r => typeof r) });
+    ? comprasParaTabla.map((c, idx) => {
+        try {
+          const categoria = categorizarProducto(c.producto);
+          const categoriaInfo = CATEGORIAS_INFO[categoria];
+          const row = [
+            formatearFecha(c.fecha),
+            c.tienda || '',
+            c.producto || '',
+            `${categoriaInfo?.icono || ''} ${categoriaInfo?.nombre || ''}`,
+            c.precioUnitario?.toFixed(2).replace('.00', '') || '0',
+            c.cantidad?.toString() || '0',
+            c.total?.toFixed(2).replace('.00', '') || '0',
+            c.telefono || '',
+            c.direccion || ''
+          ];
+
+          // Log primera compra para debug
+          if (idx === 0) {
+            generalLogger.debug('📄 Primera compra como tabla:', {
+              compraOriginal: c,
+              row,
+              categoria,
+            });
+          }
+
+          return row;
+        } catch (err) {
+          generalLogger.error('Error procesando compra:', { compra: c, error: err });
+          return [];
         }
-        return row;
       })
     : [];
 
@@ -258,6 +278,17 @@ export default function DashboardPage() {
   let datosTabla = activeTab === 'base_datos'
     ? [cabecerasHistorico, ...comprasComoTabla]
     : activeData;
+
+  // DEBUG LOG - Ver datos que se van a renderizar
+  generalLogger.debug('📊 Datos a renderizar:', {
+    activeTab,
+    comprasLength: compras.length,
+    comprasFiltradasLength: comprasFiltradas.length,
+    comprasComoTablaLength: comprasComoTabla.length,
+    datosTablaLength: datosTabla.length,
+    primeraFila: datosTabla[0],
+    tieneDatos: datosTabla.length > 1,
+  });
 
   // Normalizar cabeceras en todas las pestañas
   if (datosTabla.length > 0) {
