@@ -490,7 +490,10 @@ export default function DashboardPage() {
   });
 
   // Normalizar cabeceras en todas las pestañas
-  if (datosTabla.length > 0) {
+  // EXCEPTO para producto_costoso y gasto_tienda que ya tienen cabeceras personalizadas
+  const debeNormalizarCabeceras = activeTab !== 'producto_costoso' && activeTab !== 'gasto_tienda';
+
+  if (datosTabla.length > 0 && debeNormalizarCabeceras) {
       // Para otras pestañas, normalizar normalmente
       datosTabla = datosTabla.map((row, idx) => {
         if (idx === 0) {
