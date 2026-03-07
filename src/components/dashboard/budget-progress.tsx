@@ -17,13 +17,15 @@ const PRESUPUESTO_DEFECTO = 3000;
 
 export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressProps) {
   const [presupuesto, setPresupuesto] = useState<number>(presupuestoInicial || PRESUPUESTO_DEFECTO);
+  const [fuentePresupuesto, setFuentePresupuesto] = useState<'calculado' | 'explicito' | 'fallback'>('fallback');
+  const [descripcionPresupuesto, setDescripcionPresupuesto] = useState<string>('');
   const [cargandoPresupuesto, setCargandoPresupuesto] = useState(true);
   const [guardando, setGuardando] = useState(false);
 
   const [editando, setEditando] = useState(false);
   const [nuevoPresupuesto, setNuevoPresupuesto] = useState(presupuesto.toString());
 
-  // Cargar presupuesto desde Supabase al montar
+  // Cargar presupuesto calculado desde Supabase al montar
   useEffect(() => {
     async function cargarPresupuesto() {
       try {
@@ -31,18 +33,23 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
         const mes = hoy.getMonth() + 1;
         const anio = hoy.getFullYear();
 
-        const response = await fetch(`/api/presupuesto-mensual?mes=${mes}&anio=${anio}`);
+        // Usar el nuevo endpoint que calcula automáticamente basado en historial
+        const response = await fetch(`/api/presupuesto-calculado?mes=${mes}&anio=${anio}&meses_a_considerar=3`);
         const result = await response.json();
 
         if (result.success && result.data.monto > 0) {
           setPresupuesto(result.data.monto);
           setNuevoPresupuesto(result.data.monto.toString());
+          setFuentePresupuesto(result.data.fuente);
+          setDescripcionPresupuesto(result.data.descripcion);
           // También guardar en localStorage como backup
           if (typeof window !== 'undefined') {
             localStorage.setItem(LOCAL_STORAGE_KEY, result.data.monto.toString());
+            localStorage.setItem('elpatio-presupuesto-fuente', result.data.fuente);
+            localStorage.setItem('elpatio-presupuesto-descripcion', result.data.descripcion);
           }
         } else {
-          // Si no hay presupuesto en Supabase, intentar usar localStorage
+          // Si no hay presupuesto, intentar usar localStorage
           const guardado = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY) : null;
           if (guardado) {
             setPresupuesto(parseFloat(guardado));
@@ -191,9 +198,24 @@ export function BudgetProgress({ compras, presupuestoInicial }: BudgetProgressPr
             <Wallet className={`w-6 h-6 ${colores.text}`} strokeWidth={2} />
           </div>
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-              Presupuesto Mensual - {mesInfo.nombre} {mesInfo.anio}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Presupuesto Mensual - {mesInfo.nombre} {mesInfo.anio}
+              </p>
+              {fuentePresupuesto === 'calculado' && (
+                <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded-full">
+                  Auto
+                </span>
+              )}
+              {fuentePresupuesto === 'explicito' && (
+                <span className="text-xs px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/30 rounded-full">
+                  Manual
+                </span>
+              )}
+            </div>
+            {descripcionPresupuesto && fuentePresupuesto === 'calculado' && (
+              <p className="text-xs text-muted-foreground mb-2">{descripcionPresupuesto}</p>
+            )}
             {editando ? (
               <div className="flex items-center gap-2">
                 <Input

@@ -73,8 +73,36 @@ export default function DashboardPage() {
   // Estado de exportación
   const [isExporting, setIsExporting] = useState(false);
 
+  // Estado del presupuesto calculado dinámicamente
+  const [presupuestoDinamico, setPresupuestoDinamico] = useState<number>(3000);
+  const [presupuestoMetadata, setPresupuestoMetadata] = useState<any>(null);
+
   // Toast notifications
   const toast = useToast();
+
+  // Cargar presupuesto calculado al inicio
+  useEffect(() => {
+    const fetchPresupuesto = async () => {
+      try {
+        const response = await fetch('/api/presupuesto-calculado?meses_a_considerar=3');
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setPresupuestoDinamico(result.data.monto);
+          setPresupuestoMetadata({
+            fuente: result.data.fuente,
+            descripcion: result.data.descripcion,
+            metadata: result.data.metadata,
+          });
+          generalLogger.info('Presupuesto cargado:', result.data);
+        }
+      } catch (error) {
+        generalLogger.error('Error cargando presupuesto:', error);
+      }
+    };
+
+    fetchPresupuesto();
+  }, []);
 
   // Sincronizar compras con el store cuando cambian
   useEffect(() => {
@@ -460,7 +488,7 @@ export default function DashboardPage() {
       ) : (
         <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
           <KPIsPrincipales
-            presupuesto={3000}
+            presupuesto={presupuestoDinamico}
             gastoQuincenal={kpiData?.gastoQuincenal}
             facturasProcesadas={kpiData?.facturasProcesadas}
             recordatorios={kpiData?.numeroDeRecordatorios}
