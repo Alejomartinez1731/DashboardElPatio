@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Compra, KPIData } from '@/types';
 import { normalizarFecha } from '@/lib/data-utils';
 import { apiLogger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
+import { requireSupabase } from '@/lib/supabase';
 
 export interface UseSupabaseDashboardResult {
   compras: Compra[];
@@ -106,14 +106,8 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
       setError(null);
       setWarning(null);
 
-      // Verificar que Supabase está configurado
-      if (!supabase) {
-        const errorMsg = 'Supabase no está configurado. Verifica las variables NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.';
-        console.error('❌', errorMsg);
-        setError(errorMsg);
-        setWarning('El dashboard funcionará en modo limitado sin conexión a Supabase.');
-        return; // Retornar en lugar de lanzar error
-      }
+      // Obtener cliente de Supabase
+      const supabase = requireSupabase();
 
       apiLogger.debug('📊 Iniciando fetch desde Supabase...');
 
