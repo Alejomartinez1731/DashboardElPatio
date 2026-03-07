@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/error/error-boundary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { BudgetProgress } from '@/components/dashboard/budget-progress';
+import { ComparacionPeriodoCard } from '@/components/dashboard/comparacion-periodo-card';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardKPIs } from '@/components/dashboard/dashboard-kpis';
 import { KPIsPrincipales } from '@/components/dashboard/dashboard-kpis-principales';
@@ -354,6 +355,9 @@ export default function DashboardPage() {
 
       {/* Presupuesto Mensual */}
       {showSkeletons ? <BudgetSkeleton /> : <BudgetProgress compras={compras} />}
+
+      {/* Comparación de Período */}
+      <ComparacionPeriodoCard />
 
       {/* Quick Actions */}
       {showSkeletons ? (

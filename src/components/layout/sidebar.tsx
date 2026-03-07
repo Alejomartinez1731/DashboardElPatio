@@ -12,6 +12,7 @@ import {
   Bell,
   Settings,
   BarChart3,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const navegacion = [
   { titulo: 'Panel General', href: '/dashboard', icono: LayoutDashboard },
   { titulo: 'Registro de Compras', href: '/registro', icono: FileText },
   { titulo: 'Análisis de Precios', href: '/precios', icono: TrendingUp },
+  { titulo: 'Análisis de Inflación', href: '/inflacion', icono: Activity },
   { titulo: 'Proveedores', href: '/proveedores', icono: Store },
   { titulo: 'Recordatorios', href: '/dashboard/recordatorios', icono: Bell },
   { titulo: 'Facturas', href: '/facturas', icono: Receipt },
@@ -56,7 +58,7 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4">
             Principal
           </div>
-          {navegacion.slice(0, 3).map((item) => {
+          {navegacion.slice(0, 4).map((item) => {
             const Icono = item.icono;
             const isActive = pathname === item.href;
 
@@ -80,7 +82,7 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
             Gestión
           </div>
-          {navegacion.slice(3, 6).map((item) => {
+          {navegacion.slice(4, 7).map((item) => {
             const Icono = item.icono;
             const isActive = pathname === item.href;
 
@@ -104,7 +106,7 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-2 px-4 mt-6">
             Sistema
           </div>
-          {navegacion.slice(6).map((item) => {
+          {navegacion.slice(7).map((item) => {
             const Icono = item.icono;
             const isActive = pathname === item.href;
 

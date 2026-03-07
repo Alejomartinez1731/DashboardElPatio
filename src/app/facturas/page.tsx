@@ -5,7 +5,7 @@ import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
 import { Receipt, Calendar, Store, ShoppingCart, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase';
+import { requireSupabase } from '@/lib/supabase';
 
 interface FacturaConDetalle {
   id: string;
@@ -30,29 +30,17 @@ export default function FacturasPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [facturaExpandida, setFacturaExpandida] = useState<string | null>(null);
+  const [cargandoCompras, setCargandoCompras] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDatos() {
       try {
-        // Verificar que Supabase está configurado
-        if (!supabase) {
-          throw new Error('Supabase no está configurado. Por favor verifica las variables de entorno.');
-        }
+        const supabase = requireSupabase();
 
-        // Llamada directa a Supabase - sin API route intermedia
+        // Llamada directa a Supabase - solo facturas, sin relación con compras
         const { data, error } = await supabase
           .from('facturas')
-          .select(`
-            *,
-            compras (
-              id,
-              fecha,
-              descripcion,
-              cantidad,
-              precio_unitario,
-              total
-            )
-          `)
+          .select('*')
           .order('fecha', { ascending: false })
           .order('created_at', { ascending: false });
 
@@ -106,8 +94,57 @@ export default function FacturasPage() {
     return acc;
   }, {} as Record<string, FacturaConDetalle[]>);
 
-  const toggleFactura = (id: string) => {
-    setFacturaExpandida(facturaExpandida === id ? null : id);
+  const toggleFactura = async (factura: FacturaConDetalle) => {
+    // Si ya está expandida, colapsar
+    if (facturaExpandida === factura.id) {
+      setFacturaExpandida(null);
+      return;
+    }
+
+    // Si la factura ya tiene las compras cargadas, solo expandir
+    if (factura.compras && factura.compras.length > 0) {
+      setFacturaExpandida(factura.id);
+      return;
+    }
+
+    // Cargar las compras de esta factura
+    try {
+      setCargandoCompras(factura.id);
+      const supabase = requireSupabase();
+
+      // Buscar compras que coincidan con la fecha y tienda de la factura
+      const fechaFactura = new Date(factura.fecha);
+      const inicioDia = new Date(fechaFactura.setHours(0, 0, 0, 0)).toISOString();
+      const finDia = new Date(fechaFactura.setHours(23, 59, 59, 999)).toISOString();
+
+      const { data: compras, error } = await supabase
+        .from('compras')
+        .select('id, descripcion, cantidad, precio_unitario, total')
+        .gte('fecha', inicioDia)
+        .lte('fecha', finDia)
+        .ilike('tienda', `%${factura.tienda}%`)
+        .order('descripcion');
+
+      if (error) {
+        console.error('Error cargando compras:', error);
+        return;
+      }
+
+      // Actualizar la factura con sus compras
+      setFacturas(prevFacturas =>
+        prevFacturas.map(f =>
+          f.id === factura.id
+            ? { ...f, compras: compras || [] }
+            : f
+        )
+      );
+
+      setFacturaExpandida(factura.id);
+    } catch (err) {
+      console.error('Error cargando compras de factura:', err);
+    } finally {
+      setCargandoCompras(null);
+    }
   };
 
   if (cargando) {
@@ -214,6 +251,7 @@ export default function FacturasPage() {
                 const expandida = facturaExpandida === factura.id;
                 const tiendaNormalizada = normalizarTienda(factura.tienda);
                 const colorTienda = COLORES_TIENDA[tiendaNormalizada] || COLORES_TIENDA['Otros'];
+                const cargandoEstaFactura = cargandoCompras === factura.id;
                 return (
                   <Card
                     key={factura.id}
@@ -224,7 +262,7 @@ export default function FacturasPage() {
                     {/* Header de factura */}
                     <div
                       className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => toggleFactura(factura.id)}
+                      onClick={() => toggleFactura(factura)}
                     >
                       <div className="flex items-center gap-4">
                         {/* Icono de tienda con color */}
@@ -241,8 +279,12 @@ export default function FacturasPage() {
                           </div>
                           <div className="flex items-center gap-3 text-sm">
                             <span className="text-muted-foreground">{factura.num_productos} productos</span>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-muted-foreground">ID: {factura.id}</span>
+                            {factura.nombre_archivo && (
+                              <>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="text-muted-foreground truncate max-w-[200px]">{factura.nombre_archivo}</span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -253,7 +295,9 @@ export default function FacturasPage() {
 
                         {/* Toggle icon */}
                         <div className="ml-4">
-                          {expandida ? (
+                          {cargandoEstaFactura ? (
+                            <div className="w-5 h-5 border-2 border-[#f59e0b] border-t-transparent rounded-full animate-spin" />
+                          ) : expandida ? (
                             <ChevronUp className="w-5 h-5 text-muted-foreground" />
                           ) : (
                             <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -267,7 +311,7 @@ export default function FacturasPage() {
                       <div className="border-t border-border bg-muted/30">
                         <div className="p-4">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-3">
-                            Productos de esta factura
+                            Productos de esta factura ({factura.compras.length})
                           </p>
                           <div className="space-y-2">
                             {factura.compras.map((item) => (
