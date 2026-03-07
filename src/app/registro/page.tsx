@@ -1,7 +1,7 @@
 'use client';
 import { generalLogger } from '@/lib/logger';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Compra } from '@/types';
 import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import { normalizarTienda, COLORES_TIENDA } from '@/lib/data-utils';
@@ -17,75 +17,135 @@ export default function RegistroPage() {
   const [compras, setCompras] = useState<Compra[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [busqueda, setBusqueda] = useState('');
+  const [busqueda, setBusqueda] = useState(''); // Estado que causa el fetch
+  const [busquedaInput, setBusquedaInput] = useState(''); // Estado local del input (inmediato)
   const [filtroTienda, setFiltroTienda] = useState<string>('todas');
   const [sortField, setSortField] = useReactState<SortField>('fecha');
   const [sortOrder, setSortOrder] = useReactState<SortOrder>('desc');
   const [pagina, setPagina] = useReactState(1);
   const [totalCompras, setTotalCompras] = useState(0); // Nuevo estado para el total
+  const [todasLasTiendas, setTodasLasTiendas] = useState<string[]>([]); // Todas las tiendas únicas
   const ITEMS_POR_PAGINA = 25;
 
+  const busquedaRef = useRef(busqueda); // Ref para trackear busqueda sin causar re-render
+  const paginaRef = useRef(pagina);
+  const filtroTiendaRef = useRef(filtroTienda);
+
+  // Sincronizar refs con estados
   useEffect(() => {
-    async function fetchDatos() {
+    busquedaRef.current = busqueda;
+    paginaRef.current = pagina;
+    filtroTiendaRef.current = filtroTienda;
+  }, [busqueda, pagina, filtroTienda]);
+
+  // Función de fetch memoizada - SOLO depende de refs, no de estados directamente
+  const fetchDatos = useCallback(async () => {
+    try {
+      setCargando(true);
+      setError(null);
+
+      // Construir query params usando refs
+      const params = new URLSearchParams({
+        limit: ITEMS_POR_PAGINA.toString(),
+        offset: ((paginaRef.current - 1) * ITEMS_POR_PAGINA).toString(),
+      });
+
+      // Aplicar filtros de búsqueda
+      if (filtroTiendaRef.current !== 'todas') {
+        params.append('tienda', filtroTiendaRef.current);
+      }
+      if (busquedaRef.current.trim() !== '') {
+        params.append('producto', busquedaRef.current.trim());
+      }
+
+      // Fetch a Supabase API
+      const response = await fetch(`/api/compras?${params}`);
+
+      if (!response.ok) {
+        throw new Error('Error al obtener datos');
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Error desconocido');
+      }
+
+      // Transformar datos de Supabase al formato Compra
+      const comprasTransformadas: Compra[] = (result.data || []).map((c: any) => ({
+        id: c.id,
+        fecha: new Date(c.fecha),
+        tienda: c.tienda,
+        producto: c.descripcion,
+        cantidad: c.cantidad,
+        precioUnitario: c.precio_unitario,
+        total: c.total,
+      }));
+
+      setCompras(comprasTransformadas);
+
+      // Actualizar conteo total (para paginación)
+      setTotalCompras(result.pagination?.total || 0);
+
+    } catch (err) {
+      generalLogger.error('Error:', err);
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setCargando(false);
+    }
+  }, [pagina, filtroTienda]); // fetchDatos depende de pagina y filtroTienda para usar en el query
+
+  // Ref para fetchDatos - permite usarlo en ejecutarBusqueda sin causar dependencia circular
+  const fetchDatosRef = useRef(fetchDatos);
+
+  // Sincronizar el ref cuando fetchDatos cambia
+  useEffect(() => {
+    fetchDatosRef.current = fetchDatos;
+  }, [fetchDatos]);
+
+  // Actualizar input inmediatamente para feedback visual
+  const handleBusquedaChange = (value: string) => {
+    setBusquedaInput(value);
+  };
+
+  // Ejecutar búsqueda cuando el usuario presiona Enter o hace clic en el botón
+  const ejecutarBusqueda = useCallback(async () => {
+    // Actualizar refs y estado
+    busquedaRef.current = busquedaInput;
+    setBusqueda(busquedaInput);
+    setPagina(1); // Resetear a página 1 cuando cambia la búsqueda
+
+    // Ejecutar fetch directamente usando el ref (evita dependencia circular)
+    await fetchDatosRef.current();
+  }, [busquedaInput]);
+
+  // useEffect que ejecuta fetchDatos cuando cambian pagina o filtroTienda
+  useEffect(() => {
+    fetchDatos();
+  }, [pagina, filtroTienda]); // Solo depende de pagina y filtroTienda, NO de busqueda
+
+  // Cargar todas las tiendas únicas al inicio (para el dropdown)
+  useEffect(() => {
+    async function fetchTiendas() {
       try {
-        setCargando(true);
-        setError(null);
-
-        // Construir query params
-        const params = new URLSearchParams({
-          limit: ITEMS_POR_PAGINA.toString(),
-          offset: ((pagina - 1) * ITEMS_POR_PAGINA).toString(),
-        });
-
-        // Aplicar filtros de búsqueda
-        if (filtroTienda !== 'todas') {
-          params.append('tienda', filtroTienda);
+        const response = await fetch('/api/tiendas');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setTodasLasTiendas(result.data);
+          }
         }
-        if (busqueda.trim() !== '') {
-          params.append('producto', busqueda.trim());
-        }
-
-        // Fetch a Supabase API
-        const response = await fetch(`/api/compras?${params}`);
-
-        if (!response.ok) {
-          throw new Error('Error al obtener datos');
-        }
-
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.error || 'Error desconocido');
-        }
-
-        // Transformar datos de Supabase al formato Compra
-        const comprasTransformadas: Compra[] = (result.data || []).map((c: any) => ({
-          id: c.id,
-          fecha: new Date(c.fecha),
-          tienda: c.tienda,
-          producto: c.descripcion,
-          cantidad: c.cantidad,
-          precioUnitario: c.precio_unitario,
-          total: c.total,
-        }));
-
-        setCompras(comprasTransformadas);
-
-        // Actualizar conteo total (para paginación)
-        setTotalCompras(result.pagination?.total || 0);
-
       } catch (err) {
-        generalLogger.error('Error:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-      } finally {
-        setCargando(false);
+        generalLogger.error('Error obteniendo tiendas:', err);
       }
     }
-    fetchDatos();
-  }, [pagina, filtroTienda, busqueda]); // Re-fetch cuando cambian filtros o página
+    fetchTiendas();
+  }, []); // Solo al inicio
 
-  // Obtener tiendas únicas del listado de compras (puede variar según filtros)
-  const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda))));
+  // Usar todasLasTiendas si está disponible, si no calcular de las compras actuales
+  const tiendasUnicas = todasLasTiendas.length > 0
+    ? todasLasTiendas
+    : Array.from(new Set(compras.map(c => normalizarTienda(c.tienda))));
 
   // NOTA: El filtrado ahora lo hace el servidor
   // Solo mantenemos el ordenamiento en cliente si se desea cambiar el orden por defecto
@@ -168,17 +228,29 @@ export default function RegistroPage() {
       <Card className="p-4 bg-card border-border">
         <div className="flex flex-wrap gap-4">
           {/* Búsqueda */}
-          <div className="flex-1 min-w-[250px]">
-            <div className="relative">
+          <div className="flex-1 min-w-[300px] flex gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar por producto o tienda..."
-                value={busqueda}
-                onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
+                placeholder="Buscar por producto o tienda... (Enter)"
+                value={busquedaInput}
+                onChange={(e) => handleBusquedaChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    ejecutarBusqueda();
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
               />
             </div>
+            <button
+              onClick={ejecutarBusqueda}
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-all flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              Buscar
+            </button>
           </div>
 
           {/* Filtro por tienda */}

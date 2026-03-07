@@ -132,7 +132,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="p-4 border-t border-border bg-gradient-to-t from-[#f59e0b]/5 to-transparent">
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-          <span>Google Sheets</span>
+          <span>Supabase</span>
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse"></span>
             Conectado

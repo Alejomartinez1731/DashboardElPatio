@@ -141,12 +141,53 @@ export default function DashboardPage() {
     setShowFilters(!showFilters);
   };
 
-  // Obtener tiendas únicas (sin dependencia de comprasFiltradas)
-  const tiendasUnicas = Array.from(new Set(compras.map(c => normalizarTienda(c.tienda)))).sort();
+  // Obtener tiendas únicas de TODOS los datos disponibles (compras + sheetsData)
+  // Memoizar extensamente para evitar recalcular con cada cambio
+  const tiendasUnicas = useMemo(() => {
+    const tiendasSet = new Set<string>();
+    const tiendasOriginalesSet = new Set<string>();
+
+    // Añadir tiendas desde compras (Supabase)
+    compras.forEach(c => {
+      const tiendaNormalizada = normalizarTienda(c.tienda);
+      tiendasSet.add(tiendaNormalizada);
+      tiendasOriginalesSet.add(c.tienda); // Guardar original también para debug
+    });
+
+    console.log('🔍 Tiendas desde compras:', Array.from(tiendasSet));
+    console.log('🔍 Tiendas originales desde compras:', Array.from(tiendasOriginalesSet));
+
+    // Añadir tiendas desde sheetsData (incluye registro_diario)
+    // Pero solo si sheetsData tiene datos (evitar recalcular innecesariamente)
+    if (sheetsData && Object.keys(sheetsData).length > 0) {
+      Object.entries(sheetsData).forEach(([sheetName, data]) => {
+        if (data && data.length > 1) { // length > 1 para saltar cabeceras
+          const tiendaIdx = data[0]?.findIndex((h: string) => h.toLowerCase().includes('tienda'));
+          if (tiendaIdx !== undefined && tiendaIdx >= 0) {
+            for (let i = 1; i < data.length; i++) {
+              const tienda = data[i][tiendaIdx];
+              if (tienda) {
+                const tiendaNormalizada = normalizarTienda(tienda);
+                tiendasSet.add(tiendaNormalizada);
+                tiendasOriginalesSet.add(tienda);
+              }
+            }
+          }
+          console.log(`🔍 Tiendas desde sheet [${sheetName}]:`, Array.from(tiendasSet));
+        }
+      });
+    }
+
+    const resultado = Array.from(tiendasSet).sort();
+    console.log('✅ Tiendas únicas FINAL:', resultado.length, resultado);
+    console.log('✅ Todas las tiendas originales:', Array.from(tiendasOriginalesSet));
+    return resultado;
+  }, [compras.length, JSON.stringify(compras.slice(0, 5)), Object.keys(sheetsData).length]); // Depender de longitudes y muestra, no de referencias de objetos
 
   // Debug: log tiendas únicas
   console.log('🏪 Tiendas únicas encontradas:', tiendasUnicas);
   console.log('🏪 Total compras:', compras.length);
+  console.log('🏪 SheetsData keys:', Object.keys(sheetsData));
   console.log('🏪 Tiendas originales (primeras 10):', compras.slice(0, 10).map(c => c.tienda));
 
   // Función para ordenar - usa acciones del store

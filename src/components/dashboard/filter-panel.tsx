@@ -1,7 +1,7 @@
 'use client';
 import { componentLogger } from '@/lib/logger';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react';
 import { X, Calendar, Store, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Compra } from '@/types';
@@ -24,16 +24,31 @@ interface FilterPanelProps {
   compras: Compra[];
 }
 
-export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
+const FilterPanelComponent = function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
   const [expandido, setExpandido] = useState(true);
   const [busquedaLocal, setBusquedaLocal] = useState(filtros.busqueda); // Estado local para input inmediato
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const filtrosRef = useRef(filtros); // Ref para evitar re-renders
+  const onFiltrosChangeRef = useRef(onFiltrosChange); // Ref para onFiltrosChange también
+  const isTypingRef = useRef(false); // Para detectar si el usuario está escribiendo
+  const renderCountRef = useRef(0); // Para diagnosticar re-renders
 
-  // Sincronizar el ref cuando cambian los filtros (sin causar re-render)
+  // Sincronizar los refs cuando cambian las props (sin causar re-renders)
   useEffect(() => {
     filtrosRef.current = filtros;
-  }, [filtros]);
+    onFiltrosChangeRef.current = onFiltrosChange;
+  }, [filtros, onFiltrosChange]);
+
+  // Diagnosticar re-renders
+  useEffect(() => {
+    renderCountRef.current++;
+    console.log('🔄 FilterPanel render #' + renderCountRef.current, {
+      tiendasUnicasCount: tiendasUnicas.length,
+      comprasCount: compras.length,
+      busquedaLocal,
+      filtrosBusqueda: filtros.busqueda,
+    });
+  });
 
   // Memoizar cálculo de precios para evitar recalcular en cada render
   const { precioMinGlobal, precioMaxGlobal } = useMemo(() => {
@@ -47,6 +62,14 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
       precioMaxGlobal: precios.length > 0 ? Math.max(...precios) : 100,
     };
   }, [compras]);
+
+  const handleTiendaToggle = useCallback((tienda: string) => {
+    const nuevasTiendas = filtrosRef.current.tiendas.includes(tienda)
+      ? filtrosRef.current.tiendas.filter(t => t !== tienda)
+      : [...filtrosRef.current.tiendas, tienda];
+    componentLogger.debug('Toggle tienda', { tienda, resultado: nuevasTiendas });
+    onFiltrosChangeRef.current({ ...filtrosRef.current, tiendas: nuevasTiendas });
+  }, []); // Sin dependencias - completamente estable
 
   const handleRangoFechaChange = (rango: typeof filtros.rangoFecha) => {
     componentLogger.debug('📅 Cambiando rango de fecha:', rango);
@@ -78,21 +101,16 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
         break;
     }
 
-    const nuevosFiltros = { ...filtros, rangoFecha: rango, fechaInicio: inicio, fechaFin: fin };
+    const nuevosFiltros = { ...filtrosRef.current, rangoFecha: rango, fechaInicio: inicio, fechaFin: fin };
     componentLogger.debug('📅 Nuevos filtros:', nuevosFiltros);
-    onFiltrosChange(nuevosFiltros);
+    onFiltrosChangeRef.current(nuevosFiltros);
   };
 
-  const handleTiendaToggle = useCallback((tienda: string) => {
-    const nuevasTiendas = filtrosRef.current.tiendas.includes(tienda)
-      ? filtrosRef.current.tiendas.filter(t => t !== tienda)
-      : [...filtrosRef.current.tiendas, tienda];
-    componentLogger.debug('Toggle tienda', { tienda, resultado: nuevasTiendas });
-    onFiltrosChange({ ...filtrosRef.current, tiendas: nuevasTiendas });
-  }, [onFiltrosChange]); // Solo onFiltrosChange como dependencia
-
-  // Debounce para búsqueda de producto - CORREGIDO sin dependencias de filtros
+  // Debounce para búsqueda de producto - sin dependencias que causen re-creación
   const handleBusquedaChange = useCallback((value: string) => {
+    // Marcar que el usuario está escribiendo
+    isTypingRef.current = true;
+
     // Actualizar estado local inmediatamente para feedback visual
     setBusquedaLocal(value);
 
@@ -101,22 +119,30 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
       clearTimeout(debounceRef.current);
     }
 
-    // Esperar 300ms antes de propagar el cambio al store
+    // Esperar 150ms antes de propagar el cambio al store
     debounceRef.current = setTimeout(() => {
       componentLogger.debug('🔍 Búsqueda debounce aplicada:', value);
-      // Usar el ref para obtener los filtros actuales sin causar re-render
-      onFiltrosChange({ ...filtrosRef.current, busqueda: value });
-    }, 300);
-  }, [onFiltrosChange]); // Solo onFiltrosChange como dependencia
+      // Usar el ref para evitar dependencias cíclicas
+      onFiltrosChangeRef.current({ ...filtrosRef.current, busqueda: value });
+      // Indicar que ya no estamos escribiendo después de aplicar el cambio
+      setTimeout(() => {
+        isTypingRef.current = false;
+      }, 50);
+    }, 150); // 150ms = respuesta rápida sin sobrecargar la API
+  }, []); // Sin dependencias - completamente estable
 
   // Sincronizar busquedaLocal cuando filtros.busqueda cambia externamente
+  // Solo si el usuario NO está escribiendo (para evitar sobrescribir el input activo)
   useEffect(() => {
-    setBusquedaLocal(filtros.busqueda);
-  }, [filtros.busqueda]);
+    if (!isTypingRef.current && busquedaLocal !== filtros.busqueda) {
+      setBusquedaLocal(filtros.busqueda);
+    }
+  }, [filtros.busqueda]); // SOLO depende de filtros.busqueda, NO de busquedaLocal
 
   // Limpiar timeout al desmontar
   useEffect(() => {
     return () => {
+      isTypingRef.current = false;
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -124,8 +150,9 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   }, []);
 
   const limpiarFiltros = () => {
+    isTypingRef.current = false; // Resetear flag al limpiar
     setBusquedaLocal(''); // Limpiar también el estado local
-    onFiltrosChange({
+    onFiltrosChangeRef.current({
       ...filtrosRef.current, // Mantener otros filtros que puedan existir
       fechaInicio: null,
       fechaFin: null,
@@ -137,12 +164,15 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     });
   };
 
-  const hayFiltrosActivos =
+  // Memoizar el cálculo de hayFiltrosActivos para evitar re-calculos
+  const hayFiltrosActivos = useMemo(() =>
     filtros.rangoFecha !== 'todo' ||
     filtros.tiendas.length > 0 ||
     filtros.busqueda !== '' ||
     filtros.precioMin !== null ||
-    filtros.precioMax !== null;
+    filtros.precioMax !== null,
+    [filtros.rangoFecha, filtros.tiendas.length, filtros.busqueda, filtros.precioMin, filtros.precioMax]
+  );
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -225,7 +255,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
             </div>
             {filtros.tiendas.length > 0 && (
               <button
-                onClick={() => onFiltrosChange({ ...filtrosRef.current, tiendas: [] })}
+                onClick={() => onFiltrosChangeRef.current({ ...filtrosRef.current, tiendas: [] })}
                 className="text-xs text-muted-foreground underline hover:text-primary"
               >
                 Deseleccionar todas
@@ -251,9 +281,10 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
               {busquedaLocal && (
                 <button
                   onClick={() => {
+                    isTypingRef.current = false;
                     if (debounceRef.current) clearTimeout(debounceRef.current);
                     setBusquedaLocal('');
-                    onFiltrosChange({ ...filtrosRef.current, busqueda: '' });
+                    onFiltrosChangeRef.current({ ...filtrosRef.current, busqueda: '' });
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                 >
@@ -275,7 +306,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                 <input
                   type="number"
                   value={filtros.precioMin ?? ''}
-                  onChange={(e) => onFiltrosChange({ ...filtros, precioMin: e.target.value ? parseFloat(e.target.value) : null })}
+                  onChange={(e) => onFiltrosChangeRef.current({ ...filtrosRef.current, precioMin: e.target.value ? parseFloat(e.target.value) : null })}
                   placeholder={precioMinGlobal.toFixed(2)}
                   className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
                 />
@@ -286,7 +317,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                 <input
                   type="number"
                   value={filtros.precioMax ?? ''}
-                  onChange={(e) => onFiltrosChange({ ...filtros, precioMax: e.target.value ? parseFloat(e.target.value) : null })}
+                  onChange={(e) => onFiltrosChangeRef.current({ ...filtrosRef.current, precioMax: e.target.value ? parseFloat(e.target.value) : null })}
                   placeholder={precioMaxGlobal.toFixed(2)}
                   className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-primary"
                 />
@@ -308,4 +339,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
       )}
     </div>
   );
-}
+};
+
+// Memoizar el componente para evitar re-renders innecesarios
+export const FilterPanel = memo(FilterPanelComponent);
