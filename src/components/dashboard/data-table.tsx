@@ -27,7 +27,9 @@ export function DataTable({
   sortOrder,
   onSort,
 }: DataTableProps) {
-  const isEmpty = (numRows === 0 && activeTab !== 'base_datos') || (activeTab === 'base_datos' && (numFilasBaseDatos ?? 0) === 0);
+  const isEmpty = (numRows === 0 && activeTab !== 'base_datos' && activeTab !== 'producto_costoso') ||
+    (activeTab === 'base_datos' && (numFilasBaseDatos ?? 0) === 0) ||
+    (activeTab === 'producto_costoso' && datosTabla.length <= 1); // length <= 1 significa solo cabeceras
 
   if (isEmpty) {
     return (
@@ -38,7 +40,7 @@ export function DataTable({
     );
   }
 
-  const isSortable = activeTab === 'base_datos';
+  const isSortable = activeTab === 'base_datos'; // Solo base_datos es ordenable
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border" data-testid="data-table">

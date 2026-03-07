@@ -77,6 +77,10 @@ export default function DashboardPage() {
   const [presupuestoDinamico, setPresupuestoDinamico] = useState<number>(3000);
   const [presupuestoMetadata, setPresupuestoMetadata] = useState<any>(null);
 
+  // Estado para productos costosos
+  const [productosCostosos, setProductosCostosos] = useState<any[]>([]);
+  const [cargandoProductosCostosos, setCargandoProductosCostosos] = useState(false);
+
   // Toast notifications
   const toast = useToast();
 
@@ -108,6 +112,30 @@ export default function DashboardPage() {
   useEffect(() => {
     setCompras(compras);
   }, [compras, setCompras]);
+
+  // Cargar productos costosos cuando la pestaña activa cambia
+  useEffect(() => {
+    const fetchProductosCostosos = async () => {
+      if (activeTab === 'producto_costoso') {
+        setCargandoProductosCostosos(true);
+        try {
+          const response = await fetch('/api/productos-costosos?limit=10');
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            setProductosCostosos(result.data);
+            generalLogger.info('Productos costosos cargados:', result.data.length);
+          }
+        } catch (error) {
+          generalLogger.error('Error cargando productos costosos:', error);
+        } finally {
+          setCargandoProductosCostosos(false);
+        }
+      }
+    };
+
+    fetchProductosCostosos();
+  }, [activeTab]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -365,7 +393,28 @@ export default function DashboardPage() {
   // Para base_datos, calcular el número real de filas desde compras
   const numFilasBaseDatos = activeTab === 'base_datos' ? comprasComoTabla.length : numRows;
 
-  generalLogger.debug('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos });
+  // Transformar productos costosos a formato de tabla
+  const cabecerasCostosos = ['RANKING', 'PRODUCTO', 'TIENDA', 'PRECIO UNITARIO', 'CANTIDAD', 'TOTAL'];
+  const productosCostososComoTabla = activeTab === 'producto_costoso' && productosCostosos.length > 0
+    ? productosCostosos.map((p, idx) => {
+        try {
+          const row = [
+            `#${idx + 1}`,
+            p.producto || '',
+            p.tienda || '',
+            p.precioUnitario?.toFixed(2).replace('.00', '') || '0',
+            p.cantidad?.toString() || '0',
+            p.total?.toFixed(2).replace('.00', '') || '0',
+          ];
+          return row;
+        } catch (err) {
+          generalLogger.error('Error procesando producto costoso:', { producto: p, error: err });
+          return [];
+        }
+      })
+    : [];
+
+  generalLogger.debug('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos, productosCostososLength: productosCostosos.length });
 
   // Cabeceras personalizadas para Histórico
   const cabecerasHistorico = ['FECHA', 'TIENDA', 'PRODUCTO', 'CATEGORÍA', 'PRECIO', 'CANTIDAD', 'TOTAL', 'TELÉFONO', 'DIRECCIÓN'];
@@ -373,6 +422,8 @@ export default function DashboardPage() {
   // Para pestañas que no son histórico, arreglar cabeceras si es necesario
   let datosTabla = activeTab === 'base_datos'
     ? [cabecerasHistorico, ...comprasComoTabla]
+    : activeTab === 'producto_costoso' && productosCostososComoTabla.length > 0
+    ? [cabecerasCostosos, ...productosCostososComoTabla]
     : activeData;
 
   // DEBUG LOG - Ver datos que se van a renderizar
