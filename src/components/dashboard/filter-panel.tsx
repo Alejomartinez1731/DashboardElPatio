@@ -28,6 +28,12 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   const [expandido, setExpandido] = useState(true);
   const [busquedaLocal, setBusquedaLocal] = useState(filtros.busqueda); // Estado local para input inmediato
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const filtrosRef = useRef(filtros); // Ref para evitar re-renders
+
+  // Sincronizar el ref cuando cambian los filtros (sin causar re-render)
+  useEffect(() => {
+    filtrosRef.current = filtros;
+  }, [filtros]);
 
   // Memoizar cálculo de precios para evitar recalcular en cada render
   const { precioMinGlobal, precioMaxGlobal } = useMemo(() => {
@@ -78,14 +84,14 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   };
 
   const handleTiendaToggle = useCallback((tienda: string) => {
-    const nuevasTiendas = filtros.tiendas.includes(tienda)
-      ? filtros.tiendas.filter(t => t !== tienda)
-      : [...filtros.tiendas, tienda];
+    const nuevasTiendas = filtrosRef.current.tiendas.includes(tienda)
+      ? filtrosRef.current.tiendas.filter(t => t !== tienda)
+      : [...filtrosRef.current.tiendas, tienda];
     componentLogger.debug('Toggle tienda', { tienda, resultado: nuevasTiendas });
-    onFiltrosChange({ ...filtros, tiendas: nuevasTiendas });
-  }, [filtros.tiendas, filtros, onFiltrosChange]);
+    onFiltrosChange({ ...filtrosRef.current, tiendas: nuevasTiendas });
+  }, [onFiltrosChange]); // Solo onFiltrosChange como dependencia
 
-  // Debounce para búsqueda de producto - CORREGIDO
+  // Debounce para búsqueda de producto - CORREGIDO sin dependencias de filtros
   const handleBusquedaChange = useCallback((value: string) => {
     // Actualizar estado local inmediatamente para feedback visual
     setBusquedaLocal(value);
@@ -98,9 +104,10 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
     // Esperar 300ms antes de propagar el cambio al store
     debounceRef.current = setTimeout(() => {
       componentLogger.debug('🔍 Búsqueda debounce aplicada:', value);
-      onFiltrosChange({ ...filtros, busqueda: value });
+      // Usar el ref para obtener los filtros actuales sin causar re-render
+      onFiltrosChange({ ...filtrosRef.current, busqueda: value });
     }, 300);
-  }, [filtros, onFiltrosChange]);
+  }, [onFiltrosChange]); // Solo onFiltrosChange como dependencia
 
   // Sincronizar busquedaLocal cuando filtros.busqueda cambia externamente
   useEffect(() => {
@@ -119,6 +126,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
   const limpiarFiltros = () => {
     setBusquedaLocal(''); // Limpiar también el estado local
     onFiltrosChange({
+      ...filtrosRef.current, // Mantener otros filtros que puedan existir
       fechaInicio: null,
       fechaFin: null,
       rangoFecha: 'todo',
@@ -217,7 +225,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
             </div>
             {filtros.tiendas.length > 0 && (
               <button
-                onClick={() => onFiltrosChange({ ...filtros, tiendas: [] })}
+                onClick={() => onFiltrosChange({ ...filtrosRef.current, tiendas: [] })}
                 className="text-xs text-muted-foreground underline hover:text-primary"
               >
                 Deseleccionar todas
@@ -245,7 +253,7 @@ export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, 
                   onClick={() => {
                     if (debounceRef.current) clearTimeout(debounceRef.current);
                     setBusquedaLocal('');
-                    onFiltrosChange({ ...filtros, busqueda: '' });
+                    onFiltrosChange({ ...filtrosRef.current, busqueda: '' });
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                 >

@@ -48,14 +48,17 @@ export function normalizarTienda(tienda: string): string {
     .replace(/[\u0300-\u036f]/g, '')  // Quitar acentos
     .trim();
 
-  // Mapeo explícito según requisitos
+  // Mapeo explícito según requisitos - mejorado con más variaciones
   if (nombre.includes('mercadona')) return 'Mercadona';
   if (nombre.includes('bonarea') || nombre.includes('bon area') || nombre.includes('bonificación')) return 'BonArea';
   if (nombre.includes('lidl')) return 'Lidl';
   if (nombre.includes('carrefour')) return 'Carrefour';
   if (nombre.includes('aldi')) return 'Aldi';
   if (nombre.includes('consum')) return 'Consum';
-  if (nombre.includes('guissona') || nombre.includes('corporacion alimentaria')) return 'Corporación Alimentaria Guissona';
+  // Corregido: ahora busca "guison" o "guiss" para cubrir ambas variaciones
+  if (nombre.includes('guison') || nombre.includes('corporacion') && nombre.includes('alimentaria')) {
+    return 'Corporación Alimentaria Guissona';
+  }
   if (nombre.includes('eroski')) return 'Eroski';
   if (nombre.includes('dia') && !nombre.includes('media')) return 'Dia';
   if (nombre.includes('condis')) return 'Condis';
