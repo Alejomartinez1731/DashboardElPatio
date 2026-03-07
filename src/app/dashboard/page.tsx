@@ -184,6 +184,18 @@ export default function DashboardPage() {
   const activeData = sheetsData[activeSheetName] || [];
   const numRows = activeData.length;
 
+  // DEBUG LOG
+  generalLogger.debug('📊 Estado del Dashboard:', {
+    activeTab,
+    activeSheetName,
+    comprasLength: compras.length,
+    comprasFiltradasLength: comprasFiltradas.length,
+    numRows,
+    activeDataLength: activeData.length,
+    sheetsDataKeys: Object.keys(sheetsData),
+    firstCompra: compras[0],
+  });
+
   // Usar comprasFiltradas del store (ya incluye filtros y ordenamiento)
   const numFilasFiltradas = comprasFiltradas.length;
 
