@@ -144,40 +144,6 @@ export async function GET(request: NextRequest) {
         _filterValue: tienda,
       });
     }
-
-    if (error) {
-      apiLogger.error('Error obteniendo compras:', error);
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Error al obtener compras',
-          details: error.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    const total = count || 0;
-
-    apiLogger.info('✅ Compras obtenidas:', {
-      count: data?.length || 0,
-      total,
-      limit,
-      offset,
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: data || [],
-      pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
-      },
-      timestamp: new Date().toISOString(),
-      _source: 'supabase',
-    });
   } catch (error) {
     const err = error as Error;
     apiLogger.error('❌ Error en GET /api/compras:', err);
