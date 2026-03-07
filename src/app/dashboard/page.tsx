@@ -447,6 +447,15 @@ export default function DashboardPage() {
   const gastoPorTiendaComoTabla = activeTab === 'gasto_tienda' && gastoPorTienda.length > 0
     ? gastoPorTienda.map((item) => {
         try {
+          // Debug: ver qué datos están llegando
+          generalLogger.debug('🔍 Item gasto_tienda:', {
+            tienda: item.tienda,
+            gasto_total: item.gasto_total,
+            precio_promedio: item.precio_promedio,
+            ultima_compra: item.ultima_compra,
+            total_compras: item.total_compras,
+          });
+
           const fechaUltimaCompra = item.ultima_compra ? formatearFecha(new Date(item.ultima_compra)) : 'N/A';
           const row = [
             `#${item.ranking}`,
@@ -456,6 +465,10 @@ export default function DashboardPage() {
             formatearMoneda(item.precio_promedio || 0),
             fechaUltimaCompra,
           ];
+
+          // Debug: ver la fila formateada
+          generalLogger.debug('📄 Fila formateada:', row);
+
           return row;
         } catch (err) {
           generalLogger.error('Error procesando gasto por tienda:', { item, error: err });

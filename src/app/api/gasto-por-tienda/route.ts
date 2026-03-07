@@ -51,10 +51,10 @@ export async function GET(request: NextRequest) {
         existente.gasto_total += item.gasto_total;
         existente.total_compras += item.total_compras;
 
-        // Actualizar precio promedio ponderado
-        const totalGasto = existente.gasto_total;
-        const totalCompras = existente.total_compras;
-        existente.precio_promedio = totalGasto / totalCompras;
+        // Acumular suma de precios para promedio correcto
+        // precio_promedio ya viene calculado en la vista, pero necesitamos promediarlos
+        existente.suma_precios_promedios = (existente.suma_precios_promedios || 0) + (item.precio_promedio || 0);
+        existente.contador_precios = (existente.contador_precios || 0) + 1;
 
         // Mantener la fecha más reciente
         const fechaExistente = new Date(existente.ultima_compra);
@@ -69,7 +69,8 @@ export async function GET(request: NextRequest) {
           tienda_normalizada: tiendaNormalizada,
           gasto_total: item.gasto_total,
           total_compras: item.total_compras,
-          precio_promedio: item.precio_promedio,
+          suma_precios_promedios: item.precio_promedio || 0,
+          contador_precios: 1,
           ultima_compra: item.ultima_compra,
         });
       }
@@ -79,15 +80,16 @@ export async function GET(request: NextRequest) {
     const gastoPorTienda = Array.from(mapaTiendas.values())
       .sort((a, b) => b.gasto_total - a.gasto_total)
       .slice(0, limit)
-      .map((item, idx) => ({
-        ranking: idx + 1,
+      .map((item) => ({
+        ranking: 0, // Se asigna después
         tienda: item.tienda_normalizada,
         tienda_original: item.tienda_original, // Para debug
         gasto_total: item.gasto_total,
         total_compras: item.total_compras,
-        precio_promedio: item.precio_promedio,
+        precio_promedio: item.suma_precios_promedios / item.contador_precios, // Promedio correcto
         ultima_compra: item.ultima_compra,
-      }));
+      }))
+      .map((item, idx) => ({ ...item, ranking: idx + 1 }));
 
     apiLogger.info('✅ Gasto por tienda obtenido y normalizado:', {
       total_antes: data?.length || 0,
