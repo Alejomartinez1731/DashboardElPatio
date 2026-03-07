@@ -129,10 +129,10 @@ export function QuincenaChart({ datos, titulo = 'Evolución Quincenal', numQuinc
                 borderRadius: '8px',
                 color: '#F8FAFC',
               }}
-              formatter={(valor: any, name: string) => {
+              formatter={(valor: any, name?: string) => {
                 if (name === 'gasto') return [formatearMoneda(Number(valor) || 0), 'Gasto'];
                 if (name === 'compras') return [valor, 'Compras'];
-                return [valor, name];
+                return [valor, name || ''];
               }}
               labelStyle={{ color: '#94A3B8' }}
             />

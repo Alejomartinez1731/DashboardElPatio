@@ -104,7 +104,10 @@ export default function DashboardPage() {
         });
 
         if (result.success && result.data) {
-          generalLogger.info('✅ Setting presupuestoDinamico to:', result.data.monto, '(was:', presupuestoDinamico, ')');
+          generalLogger.info('✅ Setting presupuestoDinamico to:', {
+            nuevoValor: result.data.monto,
+            valorAnterior: presupuestoDinamico
+          });
           setPresupuestoDinamico(result.data.monto);
           setPresupuestoMetadata({
             fuente: result.data.fuente,
