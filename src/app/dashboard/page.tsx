@@ -81,6 +81,10 @@ export default function DashboardPage() {
   const [productosCostosos, setProductosCostosos] = useState<any[]>([]);
   const [cargandoProductosCostosos, setCargandoProductosCostosos] = useState(false);
 
+  // Estado para gasto por tienda
+  const [gastoPorTienda, setGastoPorTienda] = useState<any[]>([]);
+  const [cargandoGastoPorTienda, setCargandoGastoPorTienda] = useState(false);
+
   // Toast notifications
   const toast = useToast();
 
@@ -135,6 +139,30 @@ export default function DashboardPage() {
     };
 
     fetchProductosCostosos();
+  }, [activeTab]);
+
+  // Cargar gasto por tienda cuando la pestaña activa cambia
+  useEffect(() => {
+    const fetchGastoPorTienda = async () => {
+      if (activeTab === 'gasto_tienda') {
+        setCargandoGastoPorTienda(true);
+        try {
+          const response = await fetch('/api/gasto-por-tienda?limit=50');
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            setGastoPorTienda(result.data);
+            generalLogger.info('Gasto por tienda cargado:', result.data.length);
+          }
+        } catch (error) {
+          generalLogger.error('Error cargando gasto por tienda:', error);
+        } finally {
+          setCargandoGastoPorTienda(false);
+        }
+      }
+    };
+
+    fetchGastoPorTienda();
   }, [activeTab]);
 
   const handleRefresh = async () => {
@@ -414,6 +442,28 @@ export default function DashboardPage() {
       })
     : [];
 
+  // Transformar gasto por tienda a formato de tabla
+  const cabecerasGastoTienda = ['RANKING', 'TIENDA', 'GASTO TOTAL', 'Nº COMPRAS', 'PRECIO PROMEDIO', 'ÚLTIMA COMPRA'];
+  const gastoPorTiendaComoTabla = activeTab === 'gasto_tienda' && gastoPorTienda.length > 0
+    ? gastoPorTienda.map((item) => {
+        try {
+          const fechaUltimaCompra = item.ultima_compra ? new Date(item.ultima_compra).toLocaleDateString('es-ES') : 'N/A';
+          const row = [
+            `#${item.ranking}`,
+            item.tienda || '',
+            item.gasto_total?.toFixed(2).replace('.00', '') || '0',
+            item.total_compras?.toString() || '0',
+            item.precio_promedio?.toFixed(2).replace('.00', '') || '0',
+            fechaUltimaCompra,
+          ];
+          return row;
+        } catch (err) {
+          generalLogger.error('Error procesando gasto por tienda:', { item, error: err });
+          return [];
+        }
+      })
+    : [];
+
   generalLogger.debug('Renderizando tabla:', { activeTab, activeSheetName, numRows, activeDataLength: activeData.length, numFilasBaseDatos, productosCostososLength: productosCostosos.length });
 
   // Cabeceras personalizadas para Histórico
@@ -424,6 +474,8 @@ export default function DashboardPage() {
     ? [cabecerasHistorico, ...comprasComoTabla]
     : activeTab === 'producto_costoso' && productosCostososComoTabla.length > 0
     ? [cabecerasCostosos, ...productosCostososComoTabla]
+    : activeTab === 'gasto_tienda' && gastoPorTiendaComoTabla.length > 0
+    ? [cabecerasGastoTienda, ...gastoPorTiendaComoTabla]
     : activeData;
 
   // DEBUG LOG - Ver datos que se van a renderizar

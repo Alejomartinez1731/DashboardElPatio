@@ -27,9 +27,9 @@ export function DataTable({
   sortOrder,
   onSort,
 }: DataTableProps) {
-  const isEmpty = (numRows === 0 && activeTab !== 'base_datos' && activeTab !== 'producto_costoso') ||
+  const isEmpty = (numRows === 0 && activeTab !== 'base_datos' && activeTab !== 'producto_costoso' && activeTab !== 'gasto_tienda') ||
     (activeTab === 'base_datos' && (numFilasBaseDatos ?? 0) === 0) ||
-    (activeTab === 'producto_costoso' && datosTabla.length <= 1); // length <= 1 significa solo cabeceras
+    ((activeTab === 'producto_costoso' || activeTab === 'gasto_tienda') && datosTabla.length <= 1); // length <= 1 significa solo cabeceras
 
   if (isEmpty) {
     return (
