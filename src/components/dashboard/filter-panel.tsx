@@ -26,7 +26,7 @@ interface FilterPanelProps {
 
 export function FilterPanel({ filtros, onFiltrosChange, onReset, tiendasUnicas, compras }: FilterPanelProps) {
   const [expandido, setExpandido] = useState(true);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Memoizar cálculo de precios para evitar recalcular en cada render
   const { precioMinGlobal, precioMaxGlobal } = useMemo(() => {
