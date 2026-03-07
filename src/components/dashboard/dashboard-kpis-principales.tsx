@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Wallet, Receipt, ShoppingCart, Zap } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { formatearMoneda } from '@/lib/formatters';
+import { formatearMoneda, formatearFecha } from '@/lib/formatters';
 import type { KPIsAvanzados } from '@/lib/calculadoras-financieras';
 
 interface KPIsPrincipalesProps {
@@ -16,6 +16,8 @@ interface KPIsPrincipalesProps {
   anio?: number;
   mes?: number;
   gastoQuincenal?: number;
+  fechaInicioQuincena?: Date;
+  fechaFinQuincena?: Date;
   facturasProcesadas?: number;
   recordatorios?: number;
   className?: string;
@@ -35,6 +37,8 @@ export function KPIsPrincipales({
   anio,
   mes,
   gastoQuincenal = 0,
+  fechaInicioQuincena,
+  fechaFinQuincena,
   facturasProcesadas = 0,
   recordatorios = 0,
   className = '',
@@ -73,6 +77,9 @@ export function KPIsPrincipales({
     icono: <Wallet className="w-5 h-5" />,
     color: 'text-blue-500',
     loading: false,
+    trend: fechaInicioQuincena && fechaFinQuincena
+      ? `${formatearFecha(fechaInicioQuincena)} - ${formatearFecha(fechaFinQuincena)}`
+      : undefined,
   };
 
   // KPI 2: Margen de Ahorro (nuevo - importante)

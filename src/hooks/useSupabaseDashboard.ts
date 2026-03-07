@@ -124,15 +124,16 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       // Fetch directamente a Supabase con timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout para más datos
 
       let comprasResult;
       try {
+        // Eliminar límite para obtener TODAS las compras
+        // Si hay problemas de rendimiento en el futuro, considerar paginación
         comprasResult = await supabase
           .from('compras')
           .select('*')
-          .order('fecha', { ascending: false })
-          .limit(1000);
+          .order('fecha', { ascending: false });
       } catch (err) {
         clearTimeout(timeoutId);
         throw err;
@@ -215,6 +216,8 @@ export function useSupabaseDashboard(tabs: TabConfig[]): UseSupabaseDashboardRes
 
       const kpis: KPIData = {
         gastoQuincenal,
+        fechaInicioQuincena: hace15Dias,
+        fechaFinQuincena: hoy,
         facturasProcesadas: facturasUnicas.size,
         numeroDeRecordatorios: recordatoriosCountFinal,
       };

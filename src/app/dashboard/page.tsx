@@ -593,6 +593,8 @@ export default function DashboardPage() {
           <KPIsPrincipales
             presupuesto={presupuestoDinamico}
             gastoQuincenal={kpiData?.gastoQuincenal}
+            fechaInicioQuincena={kpiData?.fechaInicioQuincena}
+            fechaFinQuincena={kpiData?.fechaFinQuincena}
             facturasProcesadas={kpiData?.facturasProcesadas}
             recordatorios={kpiData?.numeroDeRecordatorios}
           />

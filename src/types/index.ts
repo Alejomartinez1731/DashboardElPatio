@@ -53,6 +53,8 @@ export interface AlertaPrecio {
 // KPIs del Dashboard
 export interface KPIData {
   gastoQuincenal: number;
+  fechaInicioQuincena?: Date;
+  fechaFinQuincena?: Date;
   facturasProcesadas: number;
   numeroDeRecordatorios: number;  // Cambiado de alertasDePrecio
 }
