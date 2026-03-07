@@ -447,13 +447,13 @@ export default function DashboardPage() {
   const gastoPorTiendaComoTabla = activeTab === 'gasto_tienda' && gastoPorTienda.length > 0
     ? gastoPorTienda.map((item) => {
         try {
-          const fechaUltimaCompra = item.ultima_compra ? new Date(item.ultima_compra).toLocaleDateString('es-ES') : 'N/A';
+          const fechaUltimaCompra = item.ultima_compra ? formatearFecha(new Date(item.ultima_compra)) : 'N/A';
           const row = [
             `#${item.ranking}`,
             item.tienda || '',
-            item.gasto_total?.toFixed(2).replace('.00', '') || '0',
+            formatearMoneda(item.gasto_total || 0),
             item.total_compras?.toString() || '0',
-            item.precio_promedio?.toFixed(2).replace('.00', '') || '0',
+            formatearMoneda(item.precio_promedio || 0),
             fechaUltimaCompra,
           ];
           return row;
