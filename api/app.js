@@ -237,17 +237,15 @@ function capitalizeFirst(str) {
 }
 
 // ============================================
-// CONFIGURACIÓN DE WEBHOOKS N8N
+// CONFIGURACIÓN DE WEBHOOKS N8N (CON PROXY LOCAL)
 // ============================================
-
-// Detectar si estamos en localhost o producción
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
 const CONFIG = {
-    // 🔧 Usar proxy en ambos entornos para evitar CORS
-    // - Localhost: proxy local (http://localhost:3000/webhook -> n8n)
-    // - Vercel: serverless function (/webhook -> /api/webhook -> n8n)
-    baseUrl: '/webhook',
+    // 🔄 Usar Proxy API de Vercel (recomendado)
+    // El proxy usa variables de entorno configuradas en Vercel
+    baseUrl: '/api/n8n-proxy?path=',
+
+    // ❌ URL directa (NO usar en producción - solo para desarrollo local sin proxy)
+    // baseUrl: 'https://micro-bits-n8n.aejhww.easypanel.host/webhook',
 
     endpoints: {
         estudiantes: '/dashboard-estudiantes',
@@ -255,11 +253,7 @@ const CONFIG = {
         temas: '/dashboard-temas',
         contador: '/dashboard-contador',
         cursos: '/dashboard-cursos',
-        toggleEstudiante: '/toggle-estudiante',
-        // 📅 Gestión de eventos del calendario
-        eventosGuardar: '/Guardar-Evento',
-        eventosListar: '/obtener-eventos',
-        eventosEliminar: '/Eliminar-evento'
+        toggleEstudiante: '/toggle-estudiante'
     },
     itemsPerPage: 10
 };
@@ -299,49 +293,14 @@ let state = {
 // ============================================
 // INICIALIZACIÓN
 // ============================================
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     inicializarNavegacion();
+    inicializarCalendario();
     inicializarFecha();
     inicializarEventos();
     inicializarMetricasInteractivas();
     cargarCursos();
-
-    // Esperar a que se carguen los eventos ANTES de renderizar el calendario
-    await cargarEventosCalendario();
-
-    // Ahora renderizar el calendario (ya tenemos los eventos cargados)
-    inicializarCalendario();
-
-    // Event delegation GLOBAL para botones de editar/eliminar eventos
-    // Se agrega una sola vez al documento y maneja todos los clicks futuros
-    document.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.event-action-btn.edit');
-        const deleteBtn = e.target.closest('.event-action-btn.delete');
-
-        if (editBtn) {
-            const eventId = editBtn.dataset.eventId;
-            console.log('🖊️ Click en editar evento:', eventId);
-            if (eventId) {
-                editarEvento(eventId);
-            }
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-
-        if (deleteBtn) {
-            const eventId = deleteBtn.dataset.eventId;
-            console.log('🗑️ Click en eliminar evento:', eventId);
-            if (eventId) {
-                eliminarEvento(eventId);
-            }
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-    });
-
-    console.log('✅ Event delegation global configurado para botones de eventos');
+    cargarEventosCalendario();
 });
 
 // ============================================
@@ -443,50 +402,27 @@ function inicializarCalendario() {
 function generarFestivosCatalunya() {
     const año = new Date().getFullYear();
 
-    // ============================================
-    // FESTIVOS NACIONALES (España)
-    // ============================================
+    // Festivos nacionales fijos
     const festivos = [
-        { fecha: `${año}-01-01`, nombre: 'Año Nuevo', tipo: 'nacional' },
-        { fecha: `${año}-01-06`, nombre: 'Epifanía del Señor', tipo: 'nacional' },
-        { fecha: `${año}-05-01`, nombre: 'Fiesta del Trabajo', tipo: 'nacional' },
-        { fecha: `${año}-08-15`, nombre: 'Asunción de la Virgen', tipo: 'nacional' },
-        { fecha: `${año}-11-01`, nombre: 'Todos los Santos', tipo: 'nacional' },
-        { fecha: `${año}-12-06`, nombre: 'Día de la Constitución', tipo: 'nacional' },
-        { fecha: `${año}-12-08`, nombre: 'Inmaculada Concepción', tipo: 'nacional' },
-        { fecha: `${año}-12-25`, nombre: 'Natividad del Señor', tipo: 'nacional' },
-        { fecha: `${año}-12-26`, nombre: 'Sant Esteve', tipo: 'nacional' }
+        { fecha: `${año}-01-01`, nombre: 'Año Nuevo' },
+        { fecha: `${año}-01-06`, nombre: 'Epifanía del Señor' },
+        { fecha: `${año}-05-01`, nombre: 'Fiesta del Trabajo' },
+        { fecha: `${año}-08-15`, nombre: 'Asunción de la Virgen' },
+        { fecha: `${año}-11-01`, nombre: 'Todos los Santos' },
+        { fecha: `${año}-12-06`, nombre: 'Día de la Constitución' },
+        { fecha: `${año}-12-08`, nombre: 'Inmaculada Concepción' },
+        { fecha: `${año}-12-25`, nombre: 'Natividad del Señor' },
+        { fecha: `${año}-12-26`, nombre: 'Sant Esteve' }
     ];
 
-    // ============================================
-    // FESTIVOS DE CATALUÑA
-    // ============================================
+    // Festivos de Cataluña
     festivos.push(
-        { fecha: `${año}-02-12`, nombre: 'Santa Eulàlia', tipo: 'catalunya' },
-        { fecha: `${año}-06-24`, nombre: 'Sant Joan', tipo: 'catalunya' },
-        { fecha: `${año}-09-11`, nombre: 'Diada de Catalunya', tipo: 'catalunya' }
+        { fecha: `${año}-02-12`, nombre: 'Santa Eulàlia' },
+        { fecha: `${año}-06-24`, nombre: 'Sant Joan' },
+        { fecha: `${año}-09-11`, nombre: 'Diada de Catalunya' }
     );
 
-    // ============================================
-    // FESTIVOS LOCALES DE REUS
-    // ============================================
-    festivos.push(
-        // Sant Pere - Patrón de Reus (29 de junio)
-        { fecha: `${año}-06-29`, nombre: 'Sant Pere (Patrón de Reus)', tipo: 'reus' },
-
-        // Fiesta Mayor de Reus (24 de junio)
-        { fecha: `${año}-06-24`, nombre: 'Fiesta Mayor de Reus', tipo: 'reus' },
-
-        // Santiago Apóstol (25 de julio)
-        { fecha: `${año}-07-25`, nombre: 'Santiago Apóstol (Reus)', tipo: 'reus' },
-
-        // Mare de Déu de la Misericòrdia (25 de septiembre) - Festivo importante de Reus
-        { fecha: `${año}-09-25`, nombre: 'Mare de Déu de la Misericòrdia', tipo: 'reus' }
-    );
-
-    // ============================================
-    // SEMANA SANTA (cálculo dinámico)
-    // ============================================
+    // Semana Santa (cálculo aproximado)
     // Pascua = Primer domingo después de la luna llena siguiente al equinoccio de primavera
     const pascua = calcularPascua(año);
 
@@ -503,27 +439,12 @@ function generarFestivosCatalunya() {
     lunesPascua.setDate(lunesPascua.getDate() + 1);
 
     festivos.push(
-        { fecha: formatearFechaISO(juevesSanto), nombre: 'Jueves Santo', tipo: 'nacional' },
-        { fecha: formatearFechaISO(viernesSanto), nombre: 'Viernes Santo', tipo: 'nacional' },
-        { fecha: formatearFechaISO(lunesPascua), nombre: 'Lunes de Pascua', tipo: 'catalunya' }
+        { fecha: formatearFechaISO(juevesSanto), nombre: 'Jueves Santo' },
+        { fecha: formatearFechaISO(viernesSanto), nombre: 'Viernes Santo' },
+        { fecha: formatearFechaISO(lunesPascua), nombre: 'Lunes de Pascua' }
     );
 
-    // ============================================
-    // FESTIVOS MÓVILES ADICIONALES DE REUS
-    // ============================================
-    // Corpus Christi (60 días después de Pascua)
-    const corpusChristi = new Date(pascua);
-    corpusChristi.setDate(corpusChristi.getDate() + 60);
-
-    festivos.push(
-        { fecha: formatearFechaISO(corpusChristi), nombre: 'Corpus Christi (Reus)', tipo: 'reus' }
-    );
-
-    // Guardar en el estado
     state.calendario.festivosCatalunya = festivos;
-
-    console.log('📅 Festivos generados:', festivos.length, 'días festivos');
-    console.log('📅 Festivos de Reus:', festivos.filter(f => f.tipo === 'reus').length, 'días');
 }
 
 function calcularPascua(año) {
@@ -570,10 +491,7 @@ function renderizarCalendario() {
     monthLabel.textContent = `${meses[state.calendario.mesActual]} ${state.calendario.añoActual}`;
 
     // Primer día del mes y número de días
-    // Convertir para que la semana empiece en LUNES (lunes=0, ..., domingo=6)
-    const getDayMondayFirst = (date) => (date.getDay() + 6) % 7;
-
-    const primerDia = getDayMondayFirst(new Date(state.calendario.añoActual, state.calendario.mesActual, 1));
+    const primerDia = new Date(state.calendario.añoActual, state.calendario.mesActual, 1).getDay();
     const diasMes = new Date(state.calendario.añoActual, state.calendario.mesActual + 1, 0).getDate();
     const diasMesAnterior = new Date(state.calendario.añoActual, state.calendario.mesActual, 0).getDate();
 
@@ -635,23 +553,14 @@ function renderizarCalendario() {
 }
 
 function renderizarEventosDia() {
-    console.log('🔄 renderizarEventosDia() ejecutándose');
     const container = document.getElementById('events-list');
     const fecha = `${state.calendario.añoActual}-${String(state.calendario.mesActual + 1).padStart(2, '0')}-${String(state.calendario.diaSeleccionado).padStart(2, '0')}`;
-    console.log('📅 Fecha seleccionada:', fecha);
-    console.log('📅 Total de eventos en state.calendario.eventos:', state.calendario.eventos.length);
-
-    // Debug: mostrar todos los eventos y sus fechas
-    state.calendario.eventos.forEach((e, i) => {
-        console.log(`  Evento ${i + 1}: "${e.titulo}" - Fecha: "${e.fecha}" - ¿Coincide? ${e.fecha === fecha}`);
-    });
 
     // Buscar festivos
     const festivo = state.calendario.festivosCatalunya.find(f => f.fecha === fecha);
 
     // Buscar eventos del día
     const eventos = state.calendario.eventos.filter(e => e.fecha === fecha);
-    console.log('📋 Eventos encontrados para esta fecha:', eventos.length);
 
     if (!festivo && eventos.length === 0) {
         container.innerHTML = `
@@ -667,40 +576,14 @@ function renderizarEventosDia() {
 
     // Renderizar festivo si existe
     if (festivo) {
-        // Determinar el tipo de festivo para mostrar icono y descripción apropiados
-        const tipoFestivo = festivo.tipo || 'catalunya';
-
-        let iconoFestivo = 'fa-crown';
-        let descripcionFestivo = 'Festivo en Cataluña';
-        let claseEspecial = 'holiday';
-
-        switch(tipoFestivo) {
-            case 'nacional':
-                iconoFestivo = 'fa-flag';
-                descripcionFestivo = 'Festivo Nacional';
-                claseEspecial = 'national';
-                break;
-            case 'reus':
-                iconoFestivo = 'fa-landmark';
-                descripcionFestivo = '🏛️ Festivo Local - Reus';
-                claseEspecial = 'reus';
-                break;
-            case 'catalunya':
-            default:
-                iconoFestivo = 'fa-crown';
-                descripcionFestivo = 'Festivo en Cataluña';
-                claseEspecial = 'holiday';
-                break;
-        }
-
         html += `
-            <div class="event-item ${claseEspecial}-event">
-                <div class="event-item-icon ${claseEspecial}">
-                    <i class="fas ${iconoFestivo}"></i>
+            <div class="event-item">
+                <div class="event-item-icon holiday">
+                    <i class="fas fa-crown"></i>
                 </div>
                 <div class="event-item-content">
                     <div class="event-item-title">${festivo.nombre}</div>
-                    <div class="event-item-description">${descripcionFestivo}</div>
+                    <div class="event-item-description">Festivo en Cataluña</div>
                 </div>
             </div>
         `;
@@ -732,10 +615,10 @@ function renderizarEventosDia() {
                     </div>
                 </div>
                 <div class="event-item-actions">
-                    <button class="event-action-btn edit" data-event-id="${evento.id}" title="Editar">
+                    <button class="event-action-btn edit" onclick="editarEvento('${evento.id}')" title="Editar">
                         <i class="fas fa-pen"></i>
                     </button>
-                    <button class="event-action-btn delete" data-event-id="${evento.id}" title="Eliminar">
+                    <button class="event-action-btn delete" onclick="eliminarEvento('${evento.id}')" title="Eliminar">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -744,13 +627,6 @@ function renderizarEventosDia() {
     });
 
     container.innerHTML = html;
-    console.log('✅ HTML insertado en contenedor');
-
-    // Verificar que los botones existen en el DOM
-    const botonesEditar = container.querySelectorAll('.event-action-btn.edit');
-    const botonesEliminar = container.querySelectorAll('.event-action-btn.delete');
-    console.log('🔘 Botones editar encontrados:', botonesEditar.length);
-    console.log('🔘 Botones eliminar encontrados:', botonesEliminar.length);
 }
 
 function formatearFechaMostrar(fechaISO) {
@@ -762,137 +638,15 @@ function formatearFechaMostrar(fechaISO) {
 // ============================================
 // GESTIÓN DE EVENTOS
 // ============================================
-
-async function cargarEventosCalendario() {
-    console.log('📅 Cargando eventos desde N8N...');
-    console.log('📡 Endpoint:', CONFIG.baseUrl + CONFIG.endpoints.eventosListar);
-
-    try {
-        // Intentar cargar desde N8N
-        const rawData = await fetchData(CONFIG.endpoints.eventosListar);
-        console.log('📦 Respuesta de N8N:', rawData);
-        console.log('📋 Tipo de dato:', typeof rawData);
-        console.log('📋 Es array:', Array.isArray(rawData));
-
-        if (rawData && Array.isArray(rawData)) {
-            // Transformar datos del formato de n8n al formato interno
-            const eventos = rawData
-                .filter(row => row['Fecha'] && row['Fecha'].trim() !== '') // Filtrar eventos sin fecha
-                .map(row => ({
-                    id: String(row['ID']),
-                    titulo: row['Titulo del evento '] || 'Sin título',
-                    fecha: row['Fecha'],
-                    tipo: row['Tipo'] || 'other',
-                    descripcion: row['Descripción'] || '',
-                    curso: row['Curso'] || ''
-                }));
-
-            console.log(`✅ ${eventos.length} eventos transformados de ${rawData.length} filas`);
-            eventos.forEach((e, i) => {
-                console.log(`  Evento ${i + 1}:`, e.titulo, '-', e.fecha);
-            });
-
-            state.calendario.eventos = eventos;
-
-            // Guardar en localStorage como backup
-            localStorage.setItem('microbits-calendario-eventos', JSON.stringify(eventos));
-            console.log('💾 Eventos guardados en localStorage como backup');
-        } else {
-            console.warn('⚠️ La respuesta de N8N no es un array válido');
-            // Intentar cargar de localStorage como fallback
-            const guardados = localStorage.getItem('microbits-calendario-eventos');
-            if (guardados) {
-                state.calendario.eventos = JSON.parse(guardados);
-                console.log('⚠️ Cargados desde localStorage (fallback):', state.calendario.eventos.length, 'eventos');
-            } else {
-                state.calendario.eventos = [];
-                console.log('📭 No hay eventos en localStorage');
-            }
-        }
-    } catch (error) {
-        console.error('❌ Error cargando eventos desde N8N:', error);
-        // Fallback a localStorage
-        const guardados = localStorage.getItem('microbits-calendario-eventos');
-        if (guardados) {
-            state.calendario.eventos = JSON.parse(guardados);
-            console.log('⚠️ Cargados desde localStorage (fallback tras error):', state.calendario.eventos.length, 'eventos');
-        } else {
-            state.calendario.eventos = [];
-            console.log('📭 No hay eventos en localStorage');
-        }
+function cargarEventosCalendario() {
+    const guardados = localStorage.getItem('microbits-calendario-eventos');
+    if (guardados) {
+        state.calendario.eventos = JSON.parse(guardados);
     }
-
-    console.log('📊 Total de eventos en state:', state.calendario.eventos.length);
 }
 
-async function guardarEventosCalendario() {
-    // Ya no guardamos en localStorage, se guarda automáticamente en N8N
-    // Esta función se mantiene por compatibilidad pero no hace nada
-    console.log('ℹ️ Los eventos se guardan automáticamente en N8N al crear/editar');
-}
-
-async function migrarEventosAN8N() {
-    // Migrar eventos de localStorage a N8N
-    const eventosLocales = state.calendario.eventos;
-    if (eventosLocales.length === 0) return;
-
-    console.log(`🔄 Migrando ${eventosLocales.length} eventos a N8N...`);
-
-    for (const evento of eventosLocales) {
-        try {
-            await guardarEventoEnN8N(evento);
-        } catch (error) {
-            console.error('Error migrando evento:', error);
-        }
-    }
-
-    console.log('✅ Migración completada');
-    // Limpiar localStorage después de migrar
-    localStorage.removeItem('microbits-calendario-eventos');
-}
-
-async function guardarEventoEnN8N(evento) {
-    const url = CONFIG.baseUrl + CONFIG.endpoints.eventosGuardar;
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            action: 'guardar',
-            evento: evento
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-}
-
-async function eliminarEventoDeN8N(eventoId) {
-    const url = CONFIG.baseUrl + CONFIG.endpoints.eventosEliminar;
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            action: 'eliminar',
-            eventoId: eventoId
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
+function guardarEventosCalendario() {
+    localStorage.setItem('microbits-calendario-eventos', JSON.stringify(state.calendario.eventos));
 }
 
 function abrirModalEvento(evento = null) {
@@ -928,7 +682,7 @@ function cerrarModalEvento() {
     modal.classList.add('hidden');
 }
 
-async function guardarEvento() {
+function guardarEvento() {
     const form = document.getElementById('event-form');
     const editId = form.dataset.editId;
 
@@ -938,63 +692,26 @@ async function guardarEvento() {
         fecha: document.getElementById('event-date').value,
         tipo: document.getElementById('event-type').value,
         descripcion: document.getElementById('event-description').value,
-        curso: document.getElementById('event-course').value || null,
-        // Agregar metadata
-        creado_por: 'docente', // Se puede cambiar por el nombre del docente autenticado
-        fecha_creacion: new Date().toISOString()
+        curso: document.getElementById('event-course').value || null
     };
 
-    // Mostrar loading
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-    submitBtn.disabled = true;
-
-    try {
-        if (editId) {
-            // Actualizar evento existente (en N8N)
-            await guardarEventoEnN8N(evento);
-
-            // Actualizar estado local
-            const index = state.calendario.eventos.findIndex(e => e.id === editId);
-            if (index !== -1) {
-                state.calendario.eventos[index] = evento;
-            }
-
-            // Guardar en localStorage para persistencia
-            localStorage.setItem('microbits-calendario-eventos', JSON.stringify(state.calendario.eventos));
-            console.log('💾 Evento actualizado en localStorage');
-
-            mostrarToast('Evento actualizado correctamente', 'success');
-        } else {
-            // Crear nuevo evento (en N8N)
-            const resultado = await guardarEventoEnN8N(evento);
-
-            // Actualizar estado local con el ID que devuelve N8N
-            if (resultado && resultado.id) {
-                evento.id = resultado.id;
-            }
-            state.calendario.eventos.push(evento);
-
-            // Guardar en localStorage para persistencia
-            localStorage.setItem('microbits-calendario-eventos', JSON.stringify(state.calendario.eventos));
-            console.log('💾 Evento guardado en localStorage');
-
-            mostrarToast('Evento creado correctamente', 'success');
+    if (editId) {
+        // Actualizar evento existente
+        const index = state.calendario.eventos.findIndex(e => e.id === editId);
+        if (index !== -1) {
+            state.calendario.eventos[index] = evento;
         }
-
-        cerrarModalEvento();
-        renderizarCalendario();
-        renderizarEventosDia();
-
-    } catch (error) {
-        console.error('❌ Error guardando evento:', error);
-        mostrarToast('Error al guardar el evento: ' + error.message, 'error');
-    } finally {
-        // Restaurar botón
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+        mostrarToast('Evento actualizado correctamente', 'success');
+    } else {
+        // Crear nuevo evento
+        state.calendario.eventos.push(evento);
+        mostrarToast('Evento creado correctamente', 'success');
     }
+
+    guardarEventosCalendario();
+    cerrarModalEvento();
+    renderizarCalendario();
+    renderizarEventosDia();
 }
 
 function editarEvento(id) {
@@ -1004,42 +721,13 @@ function editarEvento(id) {
     }
 }
 
-async function eliminarEvento(id) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-        return;
-    }
-
-    console.log('🗑️ Iniciando eliminación del evento:', id);
-
-    // Mostrar loading
-    mostrarLoading(true);
-
-    try {
-        // Intentar eliminar de N8N (no bloquear si falla)
-        try {
-            await eliminarEventoDeN8N(id);
-            console.log('✅ Evento eliminado de N8N');
-        } catch (n8nError) {
-            console.warn('⚠️ No se pudo eliminar de N8N, pero se eliminará localmente:', n8nError.message);
-        }
-
-        // Actualizar estado local (SIEMPRE ejecutar)
+function eliminarEvento(id) {
+    if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
         state.calendario.eventos = state.calendario.eventos.filter(e => e.id !== id);
-
-        // Guardar en localStorage para persistencia
-        localStorage.setItem('microbits-calendario-eventos', JSON.stringify(state.calendario.eventos));
-        console.log('💾 Evento eliminado de localStorage');
-        console.log('📋 Eventos restantes:', state.calendario.eventos.length);
-
+        guardarEventosCalendario();
         renderizarCalendario();
         renderizarEventosDia();
         mostrarToast('Evento eliminado correctamente', 'success');
-
-    } catch (error) {
-        console.error('❌ Error eliminando evento:', error);
-        mostrarToast('Error al eliminar el evento: ' + error.message, 'error');
-    } finally {
-        mostrarLoading(false);
     }
 }
 
@@ -1777,8 +1465,8 @@ async function cargarTodosDatos() {
 }
 
 async function fetchData(endpoint, params = {}) {
-    // Construir URL con query params (conexión directa a N8N)
-    let url = CONFIG.baseUrl + endpoint;
+    // Construir URL con query params para el proxy
+    let url = CONFIG.baseUrl + encodeURIComponent(endpoint);
 
     // Agregar parámetros adicionales
     const queryParams = new URLSearchParams();
@@ -1787,46 +1475,27 @@ async function fetchData(endpoint, params = {}) {
     });
 
     if (queryParams.toString()) {
-        url += '?' + queryParams.toString();
+        url += '&' + queryParams.toString();
     }
 
-    console.log('🔍 Fetching N8N:', url);
-    console.log('🔍 Endpoint:', endpoint);
-    console.log('🔍 Params:', params);
+    console.log('🔍 Fetching via proxy:', url);
 
-    // Crear AbortController para timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
-
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        console.log('📡 Response status:', response.status);
-
-        if (!response.ok) {
-            console.error('❌ Error response:', response.status, response.statusText);
-            throw new Error(`HTTP error! status: ${response.status}`);
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
         }
+    });
 
-        const data = await response.json();
-        console.log('✅ Data received:', data);
-        return data;
-    } catch (error) {
-        console.error('❌ Fetch error:', error);
+    console.log('📡 Response status:', response.status);
 
-        if (error.name === 'AbortError') {
-            throw new Error('Timeout: La petición tardó más de 15 segundos');
-        }
-        throw error;
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+    console.log('✅ Data received:', data);
+    return data;
 }
 
 function cargarDatosEjemplo() {
@@ -2036,41 +1705,11 @@ function renderizarPreguntas() {
         return nombre.includes(state.busqueda) || pregunta.includes(state.busqueda);
     });
 
-    // 🔍 DEBUG: Mostrar la primera pregunta para ver los campos
-    if (datos.length > 0) {
-        console.log('🔍 Campos de la primera pregunta:', datos[0]);
-        console.log('🔍 Todos los campos disponibles:', Object.keys(datos[0]));
-    }
-
     // Ordenar por fecha más reciente
     datos.sort((a, b) => {
-        // Función para extraer timestamp de fecha ISO
-        const getTimestamp = (obj) => {
-            const camposFecha = [
-                obj['Fecha de Pregunta'],
-                obj.fecha,
-                obj.Fecha,
-                obj.created_at,
-                obj.timestamp
-            ].filter(f => f); // Filtrar campos que existen
-
-            if (camposFecha.length === 0) return 0;
-
-            const fechaStr = camposFecha[0].toString();
-            // Extraer timestamp manualmente de formato ISO
-            const match = fechaStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-            if (match) {
-                const [, año, mes, dia, hora, min, sec] = match;
-                // Crear fecha manualmente
-                return new Date(año, mes - 1, dia, hora, min, sec).getTime();
-            }
-            return 0;
-        };
-
-        const timestampA = getTimestamp(a);
-        const timestampB = getTimestamp(b);
-
-        return timestampB - timestampA; // Orden descendente (más reciente primero)
+        const fechaA = new Date(a['Fecha de Pregunta'] || a.fecha || a.Fecha || 0);
+        const fechaB = new Date(b['Fecha de Pregunta'] || b.fecha || b.Fecha || 0);
+        return fechaB - fechaA;
     });
 
     if (datos.length === 0) {
@@ -2085,25 +1724,8 @@ function renderizarPreguntas() {
     actualizarPaginacion(total);
 
     tbody.innerHTML = paginados.map(preg => {
-        // Buscar la fecha en diferentes campos posibles (más opciones)
-        const fecha = preg['Fecha de Pregunta'] ||
-                      preg.fecha ||
-                      preg.Fecha ||
-                      preg.created_at ||
-                      preg.timestamp ||
-                      preg.date ||
-                      '';
-
-        // Si no hay fecha, mostrar debug completo
-        if (!fecha) {
-            console.log('⚠️ Pregunta sin fecha:', preg);
-            console.log('⚠️ Campos disponibles:', Object.keys(preg));
-            console.log('⚠️ Valores de todos los campos:', Object.entries(preg).reduce((obj, [key, val]) => {
-                obj[key] = val;
-                return obj;
-            }, {}));
-        }
-
+        // Buscar la fecha en diferentes campos posibles
+        const fecha = preg['Fecha de Pregunta'] || preg.fecha || preg.Fecha || '';
         const textoPregunta = preg['Preguntas Frecuentes'] || preg.Pregunta || '';
 
         return `
@@ -2227,15 +1849,15 @@ async function toggleEstudiante(chatId, estadoActual) {
     toggleEl.classList.add('loading');
 
     try {
-        // Construir URL para N8N (conexión directa)
-        const url = CONFIG.baseUrl + CONFIG.endpoints.toggleEstudiante;
+        // Construir URL para el proxy con POST
+        const url = CONFIG.baseUrl + encodeURIComponent(CONFIG.endpoints.toggleEstudiante);
         const body = {
             chat_id: chatId,
             habilitado: !estadoActual,
             curso: state.cursoActual
         };
 
-        console.log('🔄 Toggle estudiante:', url, body);
+        console.log('🔄 Toggle estudiante via proxy:', url, body);
 
         await fetch(url, {
             method: 'POST',
@@ -2291,55 +1913,28 @@ function actualizarPaginacion(totalPaginas) {
 }
 
 function formatearFecha(fechaISO) {
-    if (!fechaISO || fechaISO === '') return '-';
+    if (!fechaISO) return '-';
 
     try {
-        // Limpiar el string de caracteres problemáticos
-        const fechaLimpia = fechaISO.toString().trim();
-
-        console.log('📅 Procesando fecha:', fechaLimpia, 'Tipo:', typeof fechaLimpia);
-
-        // Crear fecha desde string ISO
-        const fecha = new Date(fechaLimpia);
+        const fecha = new Date(fechaISO);
 
         // Verificar si la fecha es válida
-        const timestamp = fecha.getTime();
-        console.log('📅 Timestamp:', timestamp, 'isNaN:', isNaN(timestamp));
-
-        if (isNaN(timestamp)) {
-            console.warn('❌ Fecha inválida (getTime es NaN):', fechaLimpia);
-
-            // Intento alternativo: parsear manualmente
-            // Formato esperado: YYYY-MM-DDTHH:mm:ss.sssZ
-            const match = fechaLimpia.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-            if (match) {
-                const [, año, mes, dia] = match;
-                console.log('✅ Fecha parseada manualmente:', `${dia}/${mes}/${año}`);
-                return `${dia}/${mes}/${año}`;
-            }
-
+        if (isNaN(fecha.getTime())) {
+            console.warn('Fecha inválida:', fechaISO);
             return '-';
         }
 
-        // Verificar año razonable (entre 2000 y 2100)
-        const año = fecha.getFullYear();
-        if (año < 2000 || año > 2100) {
-            console.warn('❌ Fecha fuera de rango:', fechaLimpia, 'Año:', año);
-            return '-';
-        }
-
-        // Formatear solo día, mes y año (sin hora)
         const opciones = {
             day: '2-digit',
             month: 'short',
-            year: 'numeric'
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         };
 
-        const fechaFormateada = fecha.toLocaleDateString('es-ES', opciones);
-        console.log('✅ Fecha formateada:', fechaLimpia, '→', fechaFormateada);
-        return fechaFormateada;
+        return fecha.toLocaleDateString('es-ES', opciones);
     } catch (error) {
-        console.error('❌ Error formateando fecha:', error, 'Input:', fechaISO, 'Tipo:', typeof fechaISO);
+        console.error('Error formateando fecha:', error, 'Input:', fechaISO);
         return '-';
     }
 }
