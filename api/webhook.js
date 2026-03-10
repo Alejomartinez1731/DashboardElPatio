@@ -17,11 +17,29 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Construir URL completa
-        const endpoint = req.url.replace('/api/webhook', '');
-        const url = N8N_WEBHOOK_URL + endpoint;
+        // Obtener la ruta después de /api/webhook o /webhook
+        // Vercel reescribe /webhook/* a /api/webhook, así que usamos query o la ruta completa
+        let path = req.url;
 
-        console.log('📡 Proxy request:', req.method, url);
+        // Remover prefijos que pueda agregar Vercel
+        if (path.startsWith('/api/webhook')) {
+            path = path.replace('/api/webhook', '');
+        } else if (path.startsWith('/webhook')) {
+            path = path.replace('/webhook', '');
+        }
+
+        // Eliminar query params si existen
+        const urlParts = path.split('?');
+        path = urlParts[0];
+
+        // Construir URL completa para n8n
+        const url = N8N_WEBHOOK_URL + path;
+
+        // Agregar query params si existen
+        const queryParams = urlParts[1];
+        const fullUrl = queryParams ? `${url}?${queryParams}` : url;
+
+        console.log('📡 [Vercel Proxy]', req.method, fullUrl);
 
         // Configurar opciones de fetch
         const options = {
@@ -37,10 +55,20 @@ export default async function handler(req, res) {
         }
 
         // Hacer petición a n8n
-        const response = await fetch(url, options);
+        const response = await fetch(fullUrl, options);
 
-        // Obtener respuesta
-        const data = await response.json();
+        // Obtener respuesta como texto primero para debug
+        const text = await response.text();
+        console.log('📡 [Vercel Proxy] Response status:', response.status);
+
+        // Intentar parsear como JSON
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            // Si no es JSON, devolver el texto tal cual
+            data = text || { success: true };
+        }
 
         // Devolver respuesta con CORS
         res.status(response.status).json(data);
