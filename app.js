@@ -1754,6 +1754,13 @@ async function cargarTodosDatos() {
             }
         });
 
+        // 🔧 Si no hay contador pero hay preguntas, calcular contador desde preguntas
+        if (state.datos.contador.length === 0 && state.datos.preguntas.length > 0) {
+            console.log('🔧 Calculando contador desde preguntas...');
+            state.datos.contador = calcularContadorDesdePreguntas(state.datos.preguntas);
+            console.log(`✅ Contador calculado: ${state.datos.contador.length} estudiantes`);
+        }
+
         // Verificar si tenemos al menos algunos datos
         const tieneDatos = state.datos.estudiantes.length > 0 ||
                           state.datos.preguntas.length > 0 ||
@@ -1775,6 +1782,47 @@ async function cargarTodosDatos() {
         mostrarLoading(false);
     }
 }
+
+// ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+
+/**
+ * Calcula el contador de preguntas por estudiante desde la lista de preguntas
+ * @param {Array} preguntas - Array de preguntas con estructura {Nombre, Chat_id, ...}
+ * @returns {Array} - Array de contador con estructura {Nombre, Chat_id, Contador}
+ */
+function calcularContadorDesdePreguntas(preguntas) {
+    // Crear mapa para contar preguntas por estudiante
+    const contadorMap = new Map();
+
+    preguntas.forEach(pregunta => {
+        const chatId = pregunta.Chat_id;
+        const nombre = pregunta.Nombre;
+
+        if (!chatId) return;
+
+        if (!contadorMap.has(chatId)) {
+            contadorMap.set(chatId, {
+                Nombre: nombre,
+                Chat_id: chatId,
+                Contador: 0
+            });
+        }
+
+        contadorMap.get(chatId).Contador++;
+    });
+
+    // Convertir mapa a array y ordenar por contador descendente
+    const contador = Array.from(contadorMap.values());
+    contador.sort((a, b) => b.Contador - a.Contador);
+
+    return contador;
+}
+
+// ============================================
+// FETCH DATA
+// ============================================
 
 async function fetchData(endpoint, params = {}) {
     // Construir URL con query params (conexión directa a N8N)
@@ -2224,20 +2272,44 @@ function renderizarTemas() {
 // ============================================
 async function toggleEstudiante(chatId, estadoActual) {
     const toggleEl = document.querySelector(`[data-chatid="${chatId}"]`);
+    if (!toggleEl) {
+        console.error('❌ No se encontró el toggle element');
+        return;
+    }
+
     toggleEl.classList.add('loading');
+    const nuevoEstado = !estadoActual;
+
+    // Debug: Mostrar estado completo
+    console.log('='.repeat(50));
+    console.log('🔄 TOGGLE ESTUDIANTE - DEBUG INFO');
+    console.log('='.repeat(50));
+    console.log('📌 chatId:', chatId, 'Tipo:', typeof chatId);
+    console.log('📌 estadoActual:', estadoActual, 'Tipo:', typeof estadoActual);
+    console.log('📌 nuevoEstado:', nuevoEstado, 'Tipo:', typeof nuevoEstado);
+    console.log('📌 state.cursoActual:', state.cursoActual, 'Tipo:', typeof state.cursoActual);
+    console.log('📌 Select valor:', document.getElementById('curso-select')?.value);
+
+    if (!state.cursoActual) {
+        console.error('❌ ERROR: state.cursoActual está VACÍO');
+        mostrarToast('Error: No hay curso seleccionado', 'error');
+        toggleEl.classList.remove('loading');
+        return;
+    }
 
     try {
-        // Construir URL para N8N (conexión directa)
+        // Construir URL para N8N
         const url = CONFIG.baseUrl + CONFIG.endpoints.toggleEstudiante;
         const body = {
             chat_id: chatId,
-            habilitado: !estadoActual,
+            habilitado: nuevoEstado,
             curso: state.cursoActual
         };
 
-        console.log('🔄 Toggle estudiante:', url, body);
+        console.log('📡 URL completa:', url);
+        console.log('📦 Body a enviar:', JSON.stringify(body, null, 2));
 
-        await fetch(url, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2245,22 +2317,38 @@ async function toggleEstudiante(chatId, estadoActual) {
             body: JSON.stringify(body)
         });
 
+        console.log('📡 Response status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Respuesta de n8n:', data);
+
         // Actualizar estado local
         const estudiante = state.datos.estudiantes.find(e => e.Chat_id === chatId);
         if (estudiante) {
-            estudiante.habilitado = !estadoActual;
+            estudiante.habilitado = nuevoEstado;
+            console.log('✅ Estudiante actualizado localmente');
         }
 
         renderizarEstudiantes();
         mostrarToast(
-            `Estudiante ${!estadoActual ? 'habilitado' : 'deshabilitado'} correctamente`,
+            `Estudiante ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente`,
             'success'
         );
     } catch (error) {
-        console.error('Error toggling estudiante:', error);
-        mostrarToast('Error al cambiar estado del estudiante', 'error');
-    } finally {
+        console.error('❌ Error toggling estudiante:', error);
+        mostrarToast(`Error: ${error.message}`, 'error');
+
+        // Revertir UI en caso de error
         toggleEl.classList.remove('loading');
+        return;
+    } finally {
+        if (toggleEl) {
+            toggleEl.classList.remove('loading');
+        }
     }
 }
 
