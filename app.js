@@ -363,6 +363,7 @@ function irAInicio() {
 }
 
 function irADashboard(cursoId, cursoNombre) {
+    console.log('🎯 irADashboard llamado:', { cursoId, cursoNombre });
     state.vistaActual = 'dashboard';
     state.cursoActual = cursoId;
 
@@ -378,6 +379,7 @@ function irADashboard(cursoId, cursoNombre) {
     document.getElementById('dashboard-container').classList.remove('hidden');
     document.getElementById('fab-home').classList.add('visible');
 
+    console.log('🔄 Llamando a cargarTodosDatos()...');
     // Cargar datos del curso
     cargarTodosDatos();
 }
@@ -1764,14 +1766,23 @@ async function cargarTodosDatos() {
         // Verificar si tenemos al menos algunos datos
         const tieneDatos = state.datos.estudiantes.length > 0 ||
                           state.datos.preguntas.length > 0 ||
-                          state.datos.temas.length > 0;
+                          state.datos.temas.length > 0 ||
+                          state.datos.contador.length > 0;
+
+        console.log('📊 tieneDatos:', tieneDatos);
+        console.log('📊 estudiantes:', state.datos.estudiantes.length);
+        console.log('📊 preguntas:', state.datos.preguntas.length);
+        console.log('📊 temas:', state.datos.temas.length);
+        console.log('📊 contador:', state.datos.contador.length);
 
         if (tieneDatos) {
+            console.log('✅ Llamando a actualizarMetricas()...');
             actualizarMetricas();
             renderizarTablaActual();
             mostrarToast('Datos actualizados correctamente', 'success');
         } else {
             // Si no hay datos de ningún endpoint, cargar ejemplos
+            console.warn('⚠️ No hay datos, cargando ejemplos...');
             cargarDatosEjemplo();
         }
     } catch (error) {
@@ -1922,24 +1933,68 @@ function cargarDatosEjemplo() {
 // MÉTRICAS
 // ============================================
 function actualizarMetricas() {
-    // Estudiantes activos (aquellos con Contador > 0)
-    const estudiantesActivos = state.datos.contador.filter(e => e.Contador > 0).length;
-    document.getElementById('estudiantes-activos').textContent = estudiantesActivos;
+    console.log('🔄 actualizarMetricas() llamado');
+    console.log('📊 state.datos:', state.datos);
 
-    // Preguntas totales (suma de todos los contadores)
-    const preguntasTotales = state.datos.contador.reduce((sum, e) => sum + (e.Contador || 0), 0);
-    document.getElementById('preguntas-totales').textContent = preguntasTotales;
+    // Validación de datos
+    if (!state.datos || !state.datos.contador) {
+        console.warn('⚠️ state.datos.contador no existe');
+        return;
+    }
 
-    // Promedio de preguntas
-    const promedio = estudiantesActivos > 0 ? (preguntasTotales / estudiantesActivos).toFixed(1) : 0;
-    document.getElementById('promedio-preguntas').textContent = promedio;
+    try {
+        // Estudiantes activos (aquellos con Contador > 0)
+        const estudiantesActivos = state.datos.contador.filter(e => e.Contador > 0).length;
+        console.log('✅ Estudiantes activos:', estudiantesActivos);
 
-    // Temas únicos consultados
-    const temasUnicos = new Set(state.datos.temas.map(t => t.Tema)).size;
-    document.getElementById('temas-consultados').textContent = temasUnicos;
+        const elEstudiantes = document.getElementById('estudiantes-activos');
+        if (elEstudiantes) {
+            elEstudiantes.textContent = estudiantesActivos;
+        } else {
+            console.error('❌ Elemento estudiantes-activos no encontrado');
+        }
 
-    // Actualizar textos de detalle en las tarjetas
-    actualizarDetalleMetricas(estudiantesActivos, preguntasTotales, promedio, temasUnicos);
+        // Preguntas totales (suma de todos los contadores)
+        const preguntasTotales = state.datos.contador.reduce((sum, e) => sum + (e.Contador || 0), 0);
+        console.log('✅ Preguntas totales:', preguntasTotales);
+
+        const elPreguntas = document.getElementById('preguntas-totales');
+        if (elPreguntas) {
+            elPreguntas.textContent = preguntasTotales;
+        } else {
+            console.error('❌ Elemento preguntas-totales no encontrado');
+        }
+
+        // Promedio de preguntas
+        const promedio = estudiantesActivos > 0 ? (preguntasTotales / estudiantesActivos).toFixed(1) : 0;
+        console.log('✅ Promedio:', promedio);
+
+        const elPromedio = document.getElementById('promedio-preguntas');
+        if (elPromedio) {
+            elPromedio.textContent = promedio;
+        } else {
+            console.error('❌ Elemento promedio-preguntas no encontrado');
+        }
+
+        // Temas únicos consultados
+        const temasUnicos = new Set(state.datos.temas.map(t => t.Tema)).size;
+        console.log('✅ Temas únicos:', temasUnicos);
+
+        const elTemas = document.getElementById('temas-consultados');
+        if (elTemas) {
+            elTemas.textContent = temasUnicos;
+        } else {
+            console.error('❌ Elemento temas-consultados no encontrado');
+        }
+
+        // Actualizar textos de detalle en las tarjetas
+        actualizarDetalleMetricas(estudiantesActivos, preguntasTotales, promedio, temasUnicos);
+
+        console.log('✅ actualizarMetricas() completado');
+    } catch (error) {
+        console.error('❌ Error en actualizarMetricas():', error);
+        mostrarToast('Error al calcular métricas', 'error');
+    }
 }
 
 function actualizarDetalleMetricas(estudiantes, preguntas, promedio, temas) {
